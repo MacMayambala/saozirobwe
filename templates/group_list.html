@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <!-- Header -->
+        <h2 class="mb-4 fw-bold text-center">
+            <i class="bi bi-shield-lock me-2"></i> Manage Group Permissions
+        </h2>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Group Name</th>
+                        <th>Manage Permissions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for group in groups %}
+                    <tr>
+                        <td>{{ group.name }}</td>
+                        <td>
+                            <a href="{% url 'manage_group_permissions' group.id %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-gear me-1"></i> Manage Permissions
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-center text-muted">No groups found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    /* Container */
+    .container {
+        max-width: 900px;
+        margin: 0 auto 40px;
+        font-family: 'Nunito', Arial, sans-serif;
+        padding: 0 20px;
+        background: #f4f6f9;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Card */
+    .card {
+        border: none;
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 2rem;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Header */
+    h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2c3e50;
+        padding-bottom: 12px;
+        border-bottom: 3px solid #16508e;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+    }
+
+    /* Table */
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        background: #ffffff;
+    }
+
+    .table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table thead th {
+        background: linear-gradient(135deg, #16508e 0%, #1a5ca5 100%);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 16px;
+        border: none;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .table tbody tr {
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    .table tbody tr:hover {
+        background: #f1f3f5;
+        transform: translateY(-2px);
+    }
+
+    .table tbody td {
+        padding: 16px;
+        font-size: 0.95rem;
+        color: #2c3e50;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+        font-weight: 500;
+    }
+
+    .table tbody td.text-muted {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    /* Button */
+    .btn-primary {
+        background: linear-gradient(135deg, #16508e 0%, #1a5ca5 100%);
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        color: #ffffff;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #123e6b 0%, #164f8e 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        color: #ffffff;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 15px;
+            margin-top: 20px;
+        }
+        .card {
+            padding: 1.5rem;
+        }
+        h2 {
+            font-size: 1.75rem;
+        }
+        .table thead th {
+            font-size: 0.9rem;
+            padding: 12px;
+        }
+        .table tbody td {
+            font-size: 0.9rem;
+            padding: 12px;
+        }
+        .btn-primary {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+    }
+</style>
+{% endblock %}

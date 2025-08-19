@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Member Target & Account Management - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <!-- MEMBER SUMMARY -->
+    <div class="card shadow-sm rounded mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h3 class="mb-1">{{ delegate.customer.first_name }} {{ delegate.customer.surname }}</h3>
+                <p class="text-muted mb-0">{{ delegate.customer.member_number }} at {{ delegate.customer.branch }}</p>
+                <span class="badge bg-success mt-2">Active</span>
+            </div>
+            <div>
+                <p class="mb-1"><strong>Available Balance:</strong> UGX {{ delegate.customer.available_balance|default:"0" }}</p>
+                <p class="mb-1"><strong>Actual Balance:</strong> UGX {{ delegate.customer.actual_balance|default:"0" }}</p>
+                <div class="mt-2">
+                    <button class="btn btn-primary btn-sm">+ Deposit</button>
+                    <button class="btn btn-danger btn-sm">- Withdraw</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGN TARGET & TRANSACTION FORMS -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded p-4">
+                <h5>Assign New Target</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ target_form.as_p }}
+                    <button type="submit" name="add_target" class="btn btn-primary btn-sm mt-2">Assign Target</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-sm rounded p-4">
+                <h5>Record Transaction</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ transaction_form.as_p }}
+                    <button type="submit" name="add_transaction" class="btn btn-success btn-sm mt-2">Add Transaction</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARGET PERFORMANCE -->
+    <div class="card shadow rounded mb-4">
+        <div class="card-body">
+            <h4 class="mb-3">Target Performance</h4>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm table-striped">
+                    <thead class="bg-primary text-white">
+                        <tr>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Target Value</th>
+                            <th>Actual Value</th>
+                            <th>Achievement (%)</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for perf in target_performance %}
+                        <tr>
+                            <td>{{ perf.target.description }}</td>
+                            <td>{{ perf.unit }}</td>
+                            <td>{{ perf.target.target_value }}</td>
+                            <td>{{ perf.total_actual }}</td>
+                            <td>{{ perf.percentage|floatformat:2 }}%</td>
+                            <td>{{ perf.target.start_date }}</td>
+                            <td>{{ perf.target.end_date }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-3">No targets assigned.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSACTIONS TABLE -->
+    <div class="card shadow rounded">
+        <div class="card-body">
+            <h4 class="mb-3">Recent Transactions</h4>
+            <div class="table-responsive">
+                <table class="table table-sm table-borderless">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Target</th>
+                            <th>Type</th>
+                            <th>Value (UGX)</th>
+                            <th>Ref</th>
+                            <th>Channel</th>
+                            <th>Balance After</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for tx in transactions %}
+                        <tr class="{% if tx.transaction_type == 'Withdrawal' %}table-danger{% else %}table-success{% endif %}">
+                            <td>{{ tx.transaction_date }}</td>
+                            <td>{{ tx.target.description }}</td>
+                            <td>{{ tx.transaction_type }}</td>
+                            <td>{{ tx.actual_value }}</td>
+                            <td>{{ tx.reference }}</td>
+                            <td>{{ tx.channel }}</td>
+                            <td>{{ tx.balance_after }}</td>
+                            <td>{{ tx.description }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-3">No transactions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STYLING -->
+<style>
+    .card {
+        border-radius: 12px;
+    }
+    .btn-sm {
+        padding: 4px 10px;
+        font-size: 0.8rem;
+    }
+    .badge {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
+    .table thead th {
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }
+    .table td {
+        vertical-align: middle;
+        font-size: 0.9rem;
+    }
+    .table-success {
+        background-color: #d4edda;
+    }
+    .table-danger {
+        background-color: #f8d7da;
+    }
+</style>
+{% endblock %}

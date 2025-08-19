@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Membership Expiration - Sao Zirobwe SACCO</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f5f6f5;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #1e40af; /* Professional blue */
+            padding: 16px;
+            color: #ffffff;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header img {
+            height: 40px;
+            width: auto;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .content {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .content p {
+            font-size: 15px;
+            margin-bottom: 16px;
+            color: #374151;
+        }
+
+        .content .greeting {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .expiration-notice {
+            font-size: 18px;
+            font-weight: 600;
+            color: #dc2626; /* Alert red */
+            background-color: #fef2f2;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: block;
+            margin: 20px 0;
+            border: 1px solid #fee2e2;
+        }
+
+        .membership-details {
+            background-color: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .membership-details p {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .renewal-button {
+            display: inline-block;
+            background-color: #059669; /* Professional green */
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 16px 0;
+        }
+
+        .content .signature {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+
+        .footer {
+            background-color: #f9fafb;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer a {
+            color: #1e40af;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                margin: 12px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 12px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .header img {
+                height: 32px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .expiration-notice {
+                font-size: 16px;
+                padding: 10px 16px;
+            }
+
+            .content p {
+                font-size: 14px;
+            }
+
+            .content .greeting {
+                font-size: 15px;
+            }
+
+            .content .signature {
+                font-size: 12px;
+            }
+
+            .footer {
+                padding: 10px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            
+            <h1>Munomukabi Membership Expiration</h1>
+        </div>
+        <div class="content">
+            <p class="greeting">Dear {{ first_name }} {{ surname }},</p>
+            <p>We wish to inform you that your Munomukabi membership has expired.</p>
+            <p class="expiration-notice">Your membership expired on {{ subscription_end|date:"d M Y" }}</p>
+            
+            <div class="membership-details">
+                <p><strong>Account Number:</strong> {{ member_number }}</p>
+                <p><strong>Subscription Period:</strong> {{ subscription_start|date:"d M Y" }} to {{ subscription_end|date:"d M Y" }}</p>
+            </div>
+            
+            <p>To continue enjoying our services and benefits, please renew your membership as soon as possible.</p>
+            <a href="#" class="renewal-button">Renew Membership</a>
+            
+            <p>If you have any questions about your membership or the renewal process, please don't hesitate to contact our office.</p>
+            
+            <p class="signature">Best regards,<br>IT Department<br>Sao Zirobwe SACCO</p>
+        </div>
+        <div class="footer">
+            <p>© {% now "Y" %}  <a href="https://saozirobwe.co.ug">Sao Zirobwe SACCO</a>. All rights reserved.</p>
+            <p>Contact us: <a href="mailto:info@saozirobwe.co.ug">info@saozirobwe.co.ug</a> | +256 776 203 790</p>
+        </div>
+    </div>
+</body>
+</html>

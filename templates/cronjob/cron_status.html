@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Manage Cron Job{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h1 class="mb-4">Manage Cron Job</h1>
+    <div class="card shadow p-4">
+        <div id="cron-info">
+            {% if cron_status.running %}
+                <div class="alert alert-warning">🔄 Cron Job is Running...</div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 100%"></div>
+                </div>
+            {% else %}
+                <div class="alert alert-success">✅ Cron Job is Idle. Last run: {{ cron_status.last_run|default:"Never" }}</div>
+            {% endif %}
+        </div>
+
+        <div class="text-center mt-4">
+            <button id="run-cron-btn" class="btn btn-primary btn-lg" {% if cron_status.running %}disabled{% endif %}>
+                ▶️ Run Now
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const runBtn = document.getElementById("run-cron-btn");
+
+    runBtn.addEventListener("click", function() {
+        fetch("{% url 'start_cron' %}")
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            runBtn.disabled = true;
+        });
+    });
+
+    function refreshStatus() {
+        fetch("{% url 'cron_status_api' %}")
+        .then(response => response.json())
+        .then(data => {
+            const cronInfo = document.getElementById('cron-info');
+            if (data.running) {
+                cronInfo.innerHTML = `
+                    <div class="alert alert-warning">🔄 Cron Job is Running...</div>
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 100%"></div>
+                    </div>
+                `;
+                runBtn.disabled = true;
+            } else {
+                cronInfo.innerHTML = `
+                    <div class="alert alert-success">✅ Cron Job is Idle. Last run: ${data.last_run}</div>
+                `;
+                runBtn.disabled = false;
+            }
+        });
+    }
+
+    setInterval(refreshStatus, 5000); // Refresh every 5 seconds
+});
+</script>
+{% endblock %}

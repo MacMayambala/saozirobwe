@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <style>
+        :root {
+            --primary-color: hsl(250, 91%, 32%);
+            --accent-color: #4CAF50;
+            --accent-hover: #45a049;
+            --error-color: #dc3545;
+            --background-light: #0b4681;
+            --border-color: #d1d5db;
+            --text-dark: #1f2937;
+            --text-muted: #6c757d;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --dark-bg: #1f2937;
+            --dark-card-bg: #374151;
+            --dark-accent: #4b5563;
+            --text-light: #032f87;
+            --border-dark: #4b5563;
+        }
+
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background: var(--background-light);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 1400px;
+            padding: 0 20px;
+            margin: 2rem auto;
+        }
+
+        .card {
+            border-radius: 12px;
+            border: none;
+            background: #fff;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: #fff;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 6px rgba(37, 99, 235, 0.2);
+            outline: none;
+        }
+
+        .input-group-text {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            border-right: none;
+            border-radius: 8px 0 0 8px;
+            color: var(--text-muted);
+            padding: 0 10px;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .table-header {
+            background: var(--primary-color);
+            color: #241099;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table-header th {
+            padding: 12px 15px;
+            text-align: center;
+            border: none;
+        }
+
+        .table-striped tbody tr:nth-of-type(odd) {
+            background-color: #034a90;
+        }
+
+        .member-list td {
+            padding: 12px 15px;
+            font-size: 0.9rem;
+            color: var(--text-dark);
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.4em 0.8em;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .pagination .page-link {
+            border-radius: 6px;
+            margin: 0 5px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            color: var(--primary-color);
+            border: 1px solid var(--border-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .pagination .page-link:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: var(--text-muted);
+            background-color: #f1f3f5;
+            border-color: var(--border-color);
+            pointer-events: none;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        #loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+        }
+
+        .spinner-border {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-color: var(--primary-color);
+            border-right-color: transparent;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .card {
+                padding: 10px;
+            }
+
+            .member-list td {
+                font-size: 0.85rem;
+                padding: 10px;
+            }
+
+            .table-header th {
+                font-size: 0.8rem;
+                padding: 10px;
+            }
+
+            .btn-primary {
+                padding: 5px 10px;
+                font-size: 0.85rem;
+            }
+
+            .pagination .page-link {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+        }
+
+        .dark-mode body {
+            background: var(--dark-bg);
+            color: var(--text-light);
+        }
+
+        .dark-mode .card {
+            background: var(--dark-card-bg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark-mode .table-striped tbody tr:nth-of-type(odd) {
+            background-color: var(--dark-accent);
+        }
+
+        .dark-mode .member-list td {
+            color: var(--text-light);
+        }
+
+        .dark-mode .form-control {
+            background: var(--dark-card-bg);
+            color: var(--text-light);
+            border-color: var(--border-dark);
+        }
+
+        .dark-mode .input-group-text {
+            background: var(--dark-card-bg);
+            border-color: var(--border-dark);
+            color: var(--text-light);
+        }
+
+        .dark-mode .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 6px rgba(37, 99, 235, 0.3);
+        }
+
+        .dark-mode .pagination .page-link {
+            color: var(--text-light);
+            border-color: var(--border-dark);
+            background: var(--dark-card-bg);
+        }
+
+        .dark-mode .pagination .page-link:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        .dark-mode .pagination .page-item.disabled .page-link {
+            color: var(--text-muted);
+            background-color: var(--dark-accent);
+            border-color: var(--border-dark);
+        }
+    </style>
+
+    <!-- Hidden div to store the member detail URL pattern -->
+    <div id="member-detail-url" data-url="{% url 'mun_detail' 0 %}" style="display: none;"></div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <!-- Search Form -->
+    <form method="get" class="card shadow-lg p-4 mb-4" id="filter-form" aria-label="Member search form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="search" class="form-label">Search by Name or Member Number</label>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" id="search" name="search" class="form-control border-start-0" value="{{ search_query|default:'' }}" placeholder="Enter name or member number" aria-describedby="search-icon">
+            </div>
+        </div>
+    </form>
+
+    <!-- Members Table -->
+    <div class="card shadow-lg">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0" aria-label="Members table">
+                <thead class="table-header">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Account Number</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">Subscription End</th>
+                        <th scope="col">Branch</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="member-list" id="member-list">
+                    {% for member in members %}
+                    <tr>
+                        <td>{{ member.customer.first_name }} {{ member.customer.surname }}</td>
+                        <td>{{ member.customer.member_number }}</td>
+                        <td>{{ member.customer.phone|default:"" }}</td>
+                        <td>{{ member.subscription_end|date:"Y-m-d"|default:"" }}</td>
+                        <td>{{ member.customer.branch|default:"" }}</td>
+                        <td>
+                            {% if member.status == "active" %}
+                            <span class="badge bg-success">Active</span>
+                            {% elif member.status == "expired" %}
+                            <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'mun_detail' member.id %}" class="btn btn-sm btn-primary" aria-label="View member details">
+                                <i class="bi bi-eye me-1"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No records found for the search criteria.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="pagination mt-4 d-flex justify-content-center align-items-center" aria-label="Pagination" id="pagination">
+        <ul class="pagination mb-0">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a href="#" data-page="{{ page_obj.previous_page_number }}" class="page-link pagination-link">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a href="#" class="page-link">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a href="#" data-page="{{ page_obj.next_page_number }}" class="page-link pagination-link">Next</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <a href="#" class="page-link">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+
+<!-- JavaScript for Dynamic Filtering and Pagination -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("filter-form");
+    const memberList = document.getElementById("member-list");
+    const paginationContainer = document.getElementById("pagination");
+    const spinner = document.getElementById("loading-spinner");
+    const memberDetailUrlTemplate = document.getElementById("member-detail-url").dataset.url;
+
+    let debounceTimer;
+
+    function fetchMembers(page = 1) {
+        console.log("Fetching members for page:", page, "Search:", form.querySelector('#search').value);
+        const formData = new FormData(form);
+        formData.set("page", page);
+        const queryString = new URLSearchParams(formData).toString();
+        spinner.style.display = "block";
+        memberList.style.opacity = "0.5";
+
+        fetch(`/muno/?${queryString}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => {
+            console.log("Response status:", response.status);
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            console.log("Received data:", data);
+            spinner.style.display = "none";
+            memberList.style.opacity = "1";
+            memberList.innerHTML = "";
+
+            if (data.error) {
+                memberList.innerHTML = `<tr><td colspan="7" class="text-center text-muted py-4">${data.error}</td></tr>`;
+                paginationContainer.innerHTML = '';
+                return;
+            }
+
+            if (data.members.length === 0) {
+                memberList.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No records found for the search criteria.</td></tr>';
+            } else {
+                data.members.forEach(member => {
+                    const row = `
+                        <tr>
+                            <td>${member.customer.first_name} ${member.customer.surname}</td>
+                            <td>${member.customer.member_number}</td>
+                            <td>${member.customer.phone || ''}</td>
+                            <td>${member.subscription_end || ''}</td>
+                            <td>${member.customer.branch || ''}</td>
+                            <td>
+                                ${member.status === "active" ? '<span class="badge bg-success">Active</span>' : 
+                                  member.status === "expired" ? '<span class="badge bg-danger">Expired</span>' : ""}
+                            </td>
+                            <td>
+                                <a href="${memberDetailUrlTemplate.replace('0', member.id)}" class="btn btn-sm btn-primary" aria-label="View member details">
+                                    <i class="bi bi-eye me-1"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                    `;
+                    memberList.innerHTML += row;
+                });
+            }
+
+            paginationContainer.innerHTML = `
+                <ul class="pagination mb-0">
+                    ${data.has_previous ? `<li class="page-item"><a href="#" data-page="${data.previous_page}" class="page-link pagination-link">Previous</a></li>` : 
+                                        '<li class="page-item disabled"><a href="#" class="page-link">Previous</a></li>'}
+                    <li class="page-item disabled"><span class="page-link">Page ${data.current_page} of ${data.total_pages}</span></li>
+                    ${data.has_next ? `<li class="page-item"><a href="#" data-page="${data.next_page}" class="page-link pagination-link">Next</a></li>` : 
+                                      '<li class="page-item disabled"><a href="#" class="page-link">Next</a></li>'}
+                </ul>
+            `;
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+            spinner.style.display = "none";
+            memberList.style.opacity = "1";
+            memberList.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">Error loading data. Please try again.</td></tr>';
+            paginationContainer.innerHTML = '';
+        });
+    }
+
+    // Event delegation for pagination links
+    paginationContainer.addEventListener("click", function(e) {
+        if (e.target.classList.contains("pagination-link")) {
+            e.preventDefault();
+            const page = e.target.getAttribute("data-page");
+            if (page) {
+                fetchMembers(page);
+            }
+        }
+    });
+
+    // Auto-search on input with debounce
+    form.addEventListener("input", function(e) {
+        if (e.target.matches("input")) {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                console.log("Search triggered with value:", e.target.value);
+                fetchMembers(1);
+            }, 300);
+        }
+    });
+
+    // Prevent form submission
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        console.log("Form submission prevented");
+    });
+
+    // Initial fetch
+    fetchMembers({{ page_obj.number|default:1 }});
+});
+</script>
+{% endblock %}

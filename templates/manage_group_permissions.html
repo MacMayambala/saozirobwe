@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <!-- Header -->
+        <h2 class="mb-4 fw-bold text-center">
+            <i class="bi bi-shield-lock me-2"></i> Manage Permissions for Group: {{ group.name }}
+        </h2>
+
+        <!-- Form -->
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-4">
+                <h4 class="mb-3">Available Permissions</h4>
+                <div class="row">
+                    {% for permission in permissions %}
+                    <div class="col-md-4 mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" 
+                                   name="permissions" 
+                                   value="{{ permission.id }}" 
+                                   class="form-check-input" 
+                                   id="perm-{{ permission.id }}"
+                                   {% if permission.id in group_permissions %}checked{% endif %}>
+                            <label class="form-check-label" for="perm-{{ permission.id }}">
+                                {{ permission.name }} ({{ permission.codename }})
+                            </label>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="col-12 text-muted text-center">No permissions available.</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'group_list' %}" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left me-1"></i> Back
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save me-1"></i> Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    /* Container */
+    .container {
+        max-width: 900px;
+        margin: 0 auto 40px;
+        font-family: 'Nunito', Arial, sans-serif;
+        padding: 0 20px;
+        background: #f4f6f9;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Card */
+    .card {
+        border: none;
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 2rem;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Header */
+    h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2c3e50;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #16508e;
+        letter-spacing: 0.5px;
+    }
+
+    h4 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #16508e;
+        padding-left: 10px;
+        border-left: 4px solid #16508e;
+        line-height: 1.2;
+    }
+
+    /* Form Checkboxes */
+    .form-check {
+        padding: 12px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e9ecef;
+    }
+    .form-check:hover {
+        background: #e9ecef;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-check-input {
+        margin-right: 10px;
+        cursor: pointer;
+        border-color: #16508e;
+    }
+    .form-check-input:checked {
+        background-color: #16508e;
+        border-color: #16508e;
+    }
+
+    .form-check-label {
+        font-size: 0.95rem;
+        color: #2c3e50;
+        font-weight: 500;
+        cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(135deg, #16508e 0%, #1a5ca5 100%);
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #123e6b 0%, #164f8e 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #7e868c 100%);
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 10px 20px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 15px;
+            margin-top: 20px;
+        }
+        .card {
+            padding: 1.5rem;
+        }
+        h2 {
+            font-size: 1.75rem;
+        }
+        h4 {
+            font-size: 1.35rem;
+        }
+        .form-check {
+            padding: 10px;
+        }
+        .form-check-label {
+            font-size: 0.9rem;
+        }
+        .btn-primary, .btn-secondary {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+        .row {
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .col-md-4 {
+            flex: 0 0 100%;
+            max-width: 100%;
+        }
+    }
+</style>
+{% endblock %}

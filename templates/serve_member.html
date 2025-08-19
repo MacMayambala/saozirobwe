@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+        <style>
+            body {
+                font-family: 'Nunito', Arial, sans-serif;
+                background: #f8f9fa;
+            }
+            #main {
+                padding: 60px;
+                max-width: 1100px;
+                margin: auto;
+            }
+            .container {
+                max-width: 900px;
+            }
+            .card {
+                border-radius: 15px;
+                box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+                border: none;
+                padding: 20px;
+            }
+            .header-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 25px;
+            }
+            .header-section h2 {
+                font-size: 1.75rem;
+                font-weight: 700;
+                color: #2c3e50;
+                margin: 0;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            .form-group label {
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 5px;
+                display: block;
+            }
+            .form-group input, .form-group textarea {
+                width: 100%;
+                padding: 10px 15px;
+                border: 1px solid #ced4da;
+                border-radius: 8px;
+                font-size: 0.9rem;
+                transition: border-color 0.3s ease;
+            }
+            .form-group input:focus, .form-group textarea:focus {
+                border-color: #16508e;
+                box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25);
+                outline: none;
+            }
+            .form-group textarea {
+                min-height: 100px;
+                resize: vertical;
+            }
+            .form-group input[readonly] {
+                background-color: #e9ecef;
+                opacity: 1;
+            }
+            .btn-primary {
+                background-color: #16508e;
+                border: none;
+                font-weight: 600;
+                padding: 10px 20px;
+                border-radius: 8px;
+                color: #ffffff;
+                transition: background-color 0.3s ease;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+            }
+            .error-message {
+                color: #dc3545;
+                font-size: 0.85rem;
+                margin-top: 5px;
+            }
+        </style>
+
+        <!-- Header Section -->
+        <div class="header-section">
+            <h2><i class="fas fa-user-plus me-2"></i> Register Service for {{ customer.first_name }} {{ customer.surname }}</h2>
+        </div>
+
+        <!-- Service Registration Form -->
+        <form method="POST" action="">
+            {% csrf_token %}
+
+            <!-- Read-Only Customer Information -->
+            <div class="form-group">
+                <label>Customer Name</label>
+                <input type="text" value="{{ customer.first_name }} {{ customer.surname }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Member Number</label>
+                <input type="text" value="{{ customer.member_number }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Branch</label>
+                <input type="text" value="{{ customer.branch|default:'N/A' }}" readonly>
+            </div>
+            <div class="form-group">
+                <label>Gender</label>
+                <input type="text" value="{{ customer.gender|default:'N/A' }}" readonly>
+            </div>
+
+            <!-- Editable Service Information -->
+            <div class="form-group">
+                <label for="amount_given">Amount Given (UGX)</label>
+                <input type="number" name="amount_given" id="amount_given" step="0.01" min="0" required placeholder="e.g., 50000.00">
+            </div>
+            <div class="form-group">
+                <label for="reason">Reason</label>
+                <textarea name="reason" id="reason" required placeholder="Enter the reason for serving this member"></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-2"></i> Register Service</button>
+                <a href="{% url 'member_list' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+
+            <!-- Error Messages -->
+            {% if errors %}
+            <div class="error-message">
+                <p>Please correct the following errors:</p>
+                <ul>
+                    {% for key, value in errors.items %}
+                        <li>{{ key }}: {{ value }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+</div>
+{% endblock %}

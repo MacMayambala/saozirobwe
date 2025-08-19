@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}2FA Setup - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container">
+    <h2 class="mt-4 mb-4">Set Up Google Authenticator</h2>
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if is_setup %}
+        <p>Google Authenticator is already set up for your account.</p>
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">Return to Dashboard</a>
+    {% else %}
+        <p>Scan the QR code below with the Google Authenticator app, or enter the key manually.</p>
+        <img src="{{ qrcode }}" alt="QR Code" style="max-width: 200px; margin: 20px 0;">
+        <p>Manual Key: <strong>{{ secret_key }}</strong></p>
+        <form method="post" action="{% url 'two_factor_setup' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="code" class="form-label">Enter 6-Digit Code</label>
+                <input type="text" class="form-control" id="code" name="code" required pattern="\d{6}" maxlength="6" placeholder="123456">
+            </div>
+            <button type="submit" class="btn btn-primary">Verify and Save</button>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

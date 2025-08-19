@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Factor Authentication - Sao Zirobwe SACCO</title>
+    <meta content="Two Factor Authentication for Sao Zirobwe SACCO" name="description">
+    <meta content="SACCO, 2FA, authentication, Sao Zirobwe" name="keywords">
+
+    {% load static %}
+
+    <!-- Favicons -->
+    <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
+    <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary: #16508e;
+            --primary-dark: #123e6b;
+            --success: #28a745;
+            --danger: #dc3545;
+            --light-bg: #f4f6f9;
+            --text-dark: #2c3e50;
+            --text-muted: #6c757d;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--light-bg);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("{% static 'assets/img/logo.png' %}");
+            background-size: 50%;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.05;
+            z-index: 0;
+        }
+
+        .auth-container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: var(--shadow-dark);
+            text-align: center;
+            max-width: 400px; /* Unchanged as requested */
+            position: relative;
+            z-index: 2;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .auth-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .auth-title {
+            font-weight: 700;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--text-dark);
+            letter-spacing: 0.5px;
+        }
+
+        p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+        }
+
+        .form-check {
+            text-align: left;
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .form-check-label {
+            color: var(--text-dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+        }
+        .form-check-input:checked + .radio-label-group .form-check-label {
+            color: var(--primary);
+        }
+
+        .form-check-input {
+            margin-top: 0;
+            accent-color: var(--primary);
+        }
+
+        .radio-label-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            transition: background-color 0.3s ease;
+        }
+        .radio-label-group:hover {
+            background: #f1f3f5;
+            border-radius: 6px;
+        }
+        .radio-label-group i {
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+
+        .email-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            background: #f8f9fa;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: border-color 0.3s ease;
+        }
+        .email-info:hover {
+            border-color: var(--primary-dark);
+        }
+        .email-info::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background-color: #6f42c1;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a5ca5 100%);
+            border: none;
+            font-weight: 600;
+            padding: 12px;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: var(--shadow-light);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #164f8e 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-dark);
+        }
+        .btn-primary i {
+            margin-right: 8px;
+        }
+
+        /* Message Box */
+        .alert {
+            box-shadow: var(--shadow-dark);
+            border-radius: 12px;
+            padding: 15px 25px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #ffffff;
+            border: none;
+        }
+        .alert-success {
+            background: var(--success);
+        }
+        .alert-danger {
+            background: var(--danger);
+        }
+        .alert .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+        .alert .btn-close:hover {
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .auth-container {
+                padding: 20px;
+            }
+            .auth-title {
+                font-size: 1.35rem;
+            }
+            p {
+                font-size: 0.9rem;
+            }
+            .form-check-label {
+                font-size: 0.9rem;
+            }
+            .email-info {
+                font-size: 0.85rem;
+                padding: 8px 12px;
+            }
+            .btn-primary {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Message Box -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050; max-width: 400px;">
+        {% if messages %}
+            {% for message in messages %}
+                {% if forloop.first %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert" id="message-box">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <script>
+                        setTimeout(function() {
+                            document.getElementById('message-box').style.display = 'none';
+                        }, 5000); // 5 seconds
+                    </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="auth-container">
+        <h3 class="auth-title">Two Factor Authentication</h3>
+        <p>A code is required for authentication. Please select either Email or Google Authenticator.</p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-check">
+                <div class="radio-label-group">
+                    <input class="form-check-input" type="radio" name="method" value="google_auth" id="googleAuth">
+                    <label class="form-check-label" for="googleAuth">
+                        <i class="bi bi-shield-lock me-1"></i> Google Authenticator
+                    </label>
+                </div>
+            </div>
+            <div class="form-check">
+                <div class="radio-label-group">
+                    <input class="form-check-input" type="radio" name="method" value="email" id="emailAuth" checked>
+                    <label class="form-check-label" for="emailAuth">
+                        <i class="bi bi-envelope me-1"></i> Email Address
+                    </label>
+                </div>
+                <div class="email-info">
+                    {% if request.user.is_authenticated %}
+                        {{ request.user.email }}
+                    {% elif user_email %}
+                        {{ user_email }}
+                    {% else %}
+                        Not available
+                    {% endif %}
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary mt-4">
+                <i class="bi bi-send"></i> Send Code
+            </button>
+        </form>
+    </div>
+
+    <!-- Vendor JS Files -->
+    <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+</body>
+</html>

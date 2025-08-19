@@ -1,0 +1,311 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Department - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-building-fill me-2"></i>Add New Department</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'staff_management:add_branch' %}" class="btn btn-primary"><i class="bi bi-building-add me-2"></i>Add Branch</a>
+            <a href="{% url 'staff_management:staff_dashboard' %}" class="btn btn-secondary"><i class="bi bi-arrow-left me-2"></i>Back to Dashboard</a>
+        </div>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Display Django messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Form -->
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="name" class="form-label">Department Name <span class="text-danger">*</span></label>
+                    <input type="text" name="name" id="name" class="form-control" placeholder="Enter department name" required aria-required="true" value="{{ request.POST.name|default:'' }}">
+                    <small class="form-text text-muted">Must be unique (e.g., "Human Resources", "Finance").</small>
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description (Optional)</label>
+                    <textarea name="description" id="description" class="form-control" placeholder="Enter description (optional)" rows="4">{{ request.POST.description|default:'' }}</textarea>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-save me-2"></i>Save Department</button>
+                    <a href="{% url 'staff_management:staff_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: var(--primary, #16508e);
+        --secondary-color: var(--text-muted, #6c757d);
+        --text-dark: var(--text-dark, #2c3e50);
+        --background-light: var(--light-bg, #f4f6f9);
+        --error-color: var(--danger, #dc3545);
+        --success-color: var(--success, #28a745);
+        --shadow: var(--shadow-light, 0 4px 15px rgba(0, 0, 0, 0.1));
+        --dark-card-bg: var(--dark-card-bg, #2a3435);
+        --border-dark: var(--border-dark, #3a4445);
+    }
+
+    .container {
+        max-width: 600px; /* Compact for a simple form */
+        margin: 0 auto;
+        padding: 30px 20px; /* Aligned with base.html main content padding */
+        width: 100%;
+    }
+
+    .main.active .container {
+        max-width: 700px; /* Slightly wider when sidebar is collapsed */
+    }
+
+    h2 {
+        color: var(--text-dark);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        font-family: 'Ubuntu', sans-serif;
+        font-size: 1.75rem;
+    }
+
+    .dark-mode h2 {
+        color: var(--text-light);
+    }
+
+    .card {
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        width: 100%;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+    }
+
+    .card-body {
+        padding: 2rem; /* Comfortable padding for a compact form */
+    }
+
+    .form-label {
+        color: var(--text-dark);
+        font-weight: 500;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .dark-mode .form-label {
+        color: var(--text-light);
+    }
+
+    .form-control, textarea.form-control {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 0.95rem;
+        background: var(--background-light);
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .dark-mode .form-control, .dark-mode textarea.form-control {
+        background: #3a4445;
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+
+    .form-control:focus, textarea.form-control:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 8px rgba(22, 80, 142, 0.2);
+        outline: none;
+    }
+
+    .dark-mode .form-control:focus, .dark-mode textarea.form-control:focus {
+        background: #ffffff;
+        color: var(--text-dark);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #ffffff;
+        transition: all 0.3s ease;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-dark);
+    }
+
+    .btn-secondary {
+        background: var(--secondary-color);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #ffffff;
+        transition: all 0.3s ease;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-dark);
+    }
+
+    .alert {
+        border-radius: 10px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #ffffff;
+        box-shadow: var(--shadow);
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-success {
+        background: var(--success-color);
+    }
+
+    .alert-danger {
+        background: var(--error-color);
+    }
+
+    .alert .btn-close {
+        filter: invert(1);
+        opacity: 0.8;
+    }
+
+    .alert .btn-close:hover {
+        opacity: 1;
+    }
+
+    .alert ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+    }
+
+    .dark-mode .form-text {
+        color: var(--text-light);
+    }
+
+    .text-danger {
+        font-size: 0.85rem;
+    }
+
+    .d-flex.gap-2 {
+        gap: 0.75rem;
+    }
+
+    @media (max-width: 991px) {
+        .container {
+            padding: 20px 15px;
+        }
+
+        .main.active .container {
+            max-width: 100%;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-control, textarea.form-control {
+            font-size: 0.9rem;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 15px 10px;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+
+        .form-control, textarea.form-control {
+            font-size: 0.85rem;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<script>
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function () {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.style.display = 'none', 500);
+            }, 5000);
+        });
+
+        // Bootstrap form validation
+        const forms = document.querySelectorAll('.needs-validation');
+        forms.forEach(form => {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% block title %}
+    Staff Performance - Sao Zirobwe SACCO
+{% endblock %}
+
+{% block content %}
+<main id="main">
+    <!-- Page Title -->
+    <div class="page-header">
+        <h1 class="title">Staff Performance</h1>
+        <nav>
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                <li class="breadcrumb-item active">Staff Performance</li>
+            </ol>
+        </nav>
+    </div>
+
+    <section class="staff-performance">
+        <div class="performance-container">
+            <div class="info-card">
+                <div class="card-body">
+                    <h5 class="card-title">Staff Performance <span>| All Time</span></h5>
+                    {% if staff_list %}
+                    <div class="chart-container">
+                        <div class="chart-wrapper">
+                            <h6>Average Completion Percentage</h6>
+                            <canvas id="completionChart"></canvas>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h6>Total Shares Brought</h6>
+                            <canvas id="sharesChart"></canvas>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="no-data-message">
+                        <p>No staff performance data available. Please ensure staff records are properly added to the database.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Chart.js Script -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get staff data from database
+        const staffNames = [{% for staff in staff_list %}"{{ staff.first_name }} {{ staff.last_name }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+        
+        const completionData = [{% for staff in staff_list %}{{ staff.avg_completion|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+        
+        const sharesData = [{% for staff in staff_list %}{{ staff.total_shares|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}];
+
+        // Bar Chart: Average Completion Percentage
+        const completionChart = new Chart(document.getElementById('completionChart'), {
+            type: 'bar',
+            data: {
+                labels: staffNames,
+                datasets: [{
+                    label: 'Avg Completion %',
+                    data: completionData,
+                    backgroundColor: 'rgba(22, 80, 142, 0.6)', // --primary: #16508e
+                    borderColor: 'rgba(22, 80, 142, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Percentage',
+                            color: '#2c3e50' // --text-dark
+                        },
+                        ticks: {
+                            color: '#2c3e50'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#2c3e50'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#2c3e50'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Pie Chart: Total Shares Brought
+        const sharesChart = new Chart(document.getElementById('sharesChart'), {
+            type: 'pie',
+            data: {
+                labels: staffNames,
+                datasets: [{
+                    label: 'Total Shares',
+                    data: sharesData,
+                    backgroundColor: [
+                        'rgba(22, 80, 142, 0.6)', // --primary
+                        'rgba(220, 53, 69, 0.6)', // --danger
+                        'rgba(40, 167, 69, 0.6)', // --success
+                        'rgba(108, 117, 125, 0.6)', // --text-muted
+                        'rgba(255, 193, 7, 0.6)' // Additional color
+                    ],
+                    borderColor: [
+                        'rgba(22, 80, 142, 1)',
+                        'rgba(220, 53, 69, 1)',
+                        'rgba(40, 167, 69, 1)',
+                        'rgba(108, 117, 125, 1)',
+                        'rgba(255, 193, 7, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            color: '#2c3e50'
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+
+<!-- Custom CSS -->
+<style>
+    /* Main Content */
+    #main {
+        padding: 80px 150px;
+        max-width: flex;
+        margin: 0 auto;
+        background: #f4f6f9;
+        font-family: 'Nunito', Arial, sans-serif;
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #16508e;
+    }
+
+    .title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2c3e50;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
+
+    .breadcrumb {
+        margin: 0;
+        padding: 0;
+        background: none;
+        font-size: 0.9rem;
+    }
+    .breadcrumb-item a {
+        color: #16508e;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    .breadcrumb-item a:hover {
+        color: #123e6b;
+    }
+    .breadcrumb-item.active {
+        color: #6c757d;
+    }
+
+    /* Performance Layout */
+    .performance-container {
+        display: flex;
+        gap: 25px;
+    }
+
+    /* Info Cards */
+    .info-card {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e9ecef;
+    }
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-body {
+        padding: 0;
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+    .card-title span {
+        font-size: 0.9rem;
+        font-weight: 400;
+        color: #6c757d;
+    }
+
+    /* Chart Container */
+    .chart-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+    
+    .chart-wrapper {
+        flex: 1;
+        min-width: 300px;
+        height: 300px;
+        position: relative;
+        padding: 10px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+    
+    .chart-wrapper h6 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    /* No Data Message */
+    .no-data-message {
+        padding: 40px 20px;
+        text-align: center;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 1px dashed #dee2e6;
+    }
+    
+    .no-data-message p {
+        color: #6c757d;
+        font-size: 1rem;
+        margin: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .performance-container {
+            flex-direction: column;
+        }
+        .chart-wrapper {
+            min-width: 100%;
+            margin-bottom: 20px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #main {
+            padding: 20px 30px;
+        }
+        .title {
+            font-size: 1.75rem;
+        }
+        .card-title {
+            font-size: 1.15rem;
+        }
+        .chart-wrapper {
+            height: 250px;
+        }
+    }
+</style>
+{% endblock %}

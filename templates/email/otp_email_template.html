@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OTP Verification - Sao Zirobwe SACCO</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #16508e;
+            --primary-dark: #123e6b;
+            --secondary-color: #6c757d;
+            --text-dark: #2c3e50;
+            --text-light: #e9ecef;
+            --background-light: #f4f6f9;
+            --error-color: #dc3545;
+            --success-color: #28a745;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.3);
+            --dark-card-bg: #2a3435;
+            --border-dark: #3a4445;
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-light);
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            color: var(--text-dark);
+        }
+
+        .dark-mode body {
+            background: #1a202c;
+            color: var(--text-light);
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            overflow: hidden;
+            backdrop-filter: blur(6px);
+            transition: var(--transition);
+        }
+
+        .dark-mode .container {
+            background: var(--dark-card-bg);
+            border: 1px solid var(--border-dark);
+            box-shadow: var(--shadow-dark);
+        }
+
+        .header {
+            background: var(--primary-color);
+            padding: 1rem;
+            color: #ffffff;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .dark-mode .header {
+            background: var(--primary-dark);
+        }
+
+        .header img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .content {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .content p {
+            font-size: 0.95rem;
+            font-weight: 400;
+            margin-bottom: 1rem;
+            color: var(--text-dark);
+        }
+
+        .dark-mode .content p {
+            color: var(--text-light);
+        }
+
+        .content .greeting {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.25rem;
+        }
+
+        .otp-code {
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: var(--success-color);
+            background: #f8f9fa;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            display: inline-block;
+            margin: 1.25rem 0;
+            border: 1px solid #e2e8f0;
+            letter-spacing: 3px;
+            animation: fadeIn 0.5s ease;
+            aria-label: "One-Time Password";
+        }
+
+        .dark-mode .otp-code {
+            background: var(--border-dark);
+            border-color: var(--border-dark);
+            color: var(--success-color);
+        }
+
+        .content .warning {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 0.75rem;
+        }
+
+        .content .signature {
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            margin-top: 1.25rem;
+            line-height: 1.6;
+        }
+
+        .dark-mode .content .signature {
+            color: var(--text-light);
+        }
+
+        .footer {
+            background: #f9fafb;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .dark-mode .footer {
+            background: var(--dark-card-bg);
+            border-top: 1px solid var(--border-dark);
+            color: var(--text-light);
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .dark-mode .footer a {
+            color: var(--text-light);
+        }
+
+        .footer a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+            transform: scale(1.05);
+        }
+
+        .dark-mode .footer a:hover {
+            color: #ffffff;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 0.75rem;
+            }
+
+            .header h1 {
+                font-size: 1.6rem;
+            }
+
+            .header img {
+                height: 36px;
+            }
+
+            .content {
+                padding: 1.25rem;
+            }
+
+            .otp-code {
+                font-size: 1.5rem;
+                padding: 0.5rem 1rem;
+                letter-spacing: 2px;
+            }
+
+            .content p {
+                font-size: 0.9rem;
+            }
+
+            .content .greeting {
+                font-size: 0.95rem;
+            }
+
+            .content .warning {
+                font-size: 0.8rem;
+            }
+
+            .content .signature {
+                font-size: 0.8rem;
+            }
+
+            .footer {
+                padding: 0.5rem;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Accessibility */
+        a:focus,
+        .otp-code:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            
+            <h1>OTP Verification</h1>
+        </div>
+        <div class="content">
+            <p class="greeting">Dear {{ user_name }},</p>
+            <p>Your One-Time Password (OTP) for verification is:</p>
+            <p class="otp-code" aria-live="polite">{{ otp }}</p>
+            <p>This OTP is valid for <strong>2 minutes</strong>.</p>
+            <p class="warning">For your security, do not share this code with anyone.</p>
+            <p>If you did not request this code, please contact our support team immediately.</p>
+            <p class="signature">Best regards,<br>IT Department<br>Sao Zirobwe SACCO</p>
+        </div>
+        <div class="footer">
+            <p>© {% now "Y" %} <a href="https://saozirobwe.co.ug" aria-label="Visit Sao Zirobwe SACCO Website">Sao Zirobwe SACCO</a>. All rights reserved.</p>
+            <p>Contact us: <a href="mailto:info@saozirobwe.co.ug" aria-label="Email Support">info@saozirobwe.co.ug</a> | <a href="tel:+256776203790" aria-label="Call Support">+256 776 203 790</a></p>
+        </div>
+    </div>
+</body>
+</html>

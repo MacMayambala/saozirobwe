@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Management - {{ staff.full_name }} - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-calendar-check me-2"></i>Leave Management for {{ staff.full_name }}</h2>
+        <a href="{% url 'staff_management:view_performance' staff_id=staff.id %}" class="btn btn-secondary" aria-label="Back to Performance"><i class="bi bi-arrow-left me-2"></i>Back to Performance</a>
+    </div>
+
+    <!-- Staff Leave Status Card -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            {% if has_approved_leave %}
+                {% with latest_leave=latest_approved_leave %}
+                    <h3 class="mb-3">Leave Status</h3>
+                    <p><strong>Status:</strong> On Leave</p>
+                    <p><strong>Remaining Days:</strong> {{ latest_leave.remaining_days }} days</p>
+                    <p><strong>Return Date:</strong> {{ latest_leave.end_date|date:"d/m/Y" }}</p>
+                {% endwith %}
+            {% else %}
+                <h3 class="mb-3">Leave Status</h3>
+                <p>No approved leave currently.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h3 class="mb-3">Request New Leave</h3>
+            <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="request">
+                <div class="mb-3">
+                    <label for="leave_type" class="form-label">Leave Type</label>
+                    <select name="leave_type" id="leave_type" class="form-control" required>
+                        <option value="">Select Leave Type</option>
+                        <option value="Annual">Annual</option>
+                        <option value="Sick">Sick</option>
+                        <option value="Maternity">Maternity</option>
+                        <option value="Paternity">Paternity</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="reason" class="form-label">Reason (Optional)</label>
+                    <textarea name="reason" id="reason" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Leave Request</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h3 class="mb-3">Leave History</h3>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Leave Type</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Duration (Days)</th>
+                            <th>Reason</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for leave in leaves %}
+                        <tr>
+                            <td>{{ leave.leave_type }}</td>
+                            <td>{{ leave.start_date }}</td>
+                            <td>{{ leave.end_date }}</td>
+                            <td>{{ leave.duration }}</td>
+                            <td>{{ leave.reason|default:"N/A" }}</td>
+                            <td>{{ leave.status }}</td>
+                            <td>
+                                <!-- Debug output -->
+                                <p style="display: none;">Status: {{ leave.status }}, Groups: {{ user.groups.all|join:", " }}</p>
+
+                                {# Manager can review when leave is Pending #}
+                                {% if leave.status == 'Pending' and is_manager %}
+                                    <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                                        <input type="hidden" name="action" value="review">
+                                        <button type="submit" class="btn btn-info btn-sm">Review</button>
+                                    </form>
+                                    <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                                        <input type="hidden" name="action" value="reject">
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+
+                                {# HR Manager can review when status is Reviewed #}
+                                {% elif leave.status == 'Reviewed' and is_hr_manager %}
+                                    <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                                        <input type="hidden" name="action" value="hr_review">
+                                        <button type="submit" class="btn btn-info btn-sm">HR Review</button>
+                                    </form>
+                                    <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                                        <input type="hidden" name="action" value="reject">
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+
+                                {# General Manager can approve/reject when status is HR_Reviewed #}
+                                {% elif leave.status == 'HR_Reviewed' and is_general_manager %}
+                                    <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                                        <input type="hidden" name="action" value="approve">
+                                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                    </form>
+                                    <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="leave_id" value="{{ leave.id }}">
+                                        <input type="hidden" name="action" value="reject">
+                                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center">No leave records found.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

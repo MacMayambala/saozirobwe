@@ -1,0 +1,453 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: hsl(250, 91%, 32%);
+        --secondary-color: hsl(0, 0%, 40%);
+        --accent-color: #4CAF50;
+        --accent-hover: #45a049;
+        --clear-color: #f44336;
+        --clear-hover: #d32f2f;
+        --error-color: #dc3545;
+        --background-light: #f8f9fa;
+        --border-color: #d1d5db;
+        --text-dark: #1f2937;
+        --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 1.5rem;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+    }
+
+    h2, h3 {
+        color: var(--primary-color);
+        font-family: 'Ubuntu', sans-serif;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.75rem;
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 1.25rem;
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    label {
+        flex: 0 0 150px;
+        text-align: right;
+        font-weight: 500;
+        color: var(--text-dark);
+        font-size: 0.95rem;
+        margin-right: 1rem;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    select {
+        flex: 1;
+        min-width: 200px;
+        max-width: 300px;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="date"]:focus,
+    input[type="number"]:focus,
+    select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 5px rgba(37, 99, 235, 0.2);
+        outline: none;
+    }
+
+    input[type="checkbox"] {
+        margin-left: 160px;
+        width: 1.25rem;
+        height: 1.25rem;
+        accent-color: var(--primary-color);
+    }
+
+    .missing {
+        border: 2px solid var(--error-color) !important;
+        box-shadow: 0 0 5px rgba(220, 53, 69, 0.3);
+    }
+
+    .alert {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    .btn-container {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    input[type="submit"],
+    input[type="button"] {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s, transform 0.2s;
+    }
+
+    input[type="submit"] {
+        background-color: var(--accent-color);
+        color: #fff;
+    }
+
+    input[type="submit"]:hover {
+        background-color: var(--accent-hover);
+        transform: translateY(-2px);
+    }
+
+    input[type="button"] {
+        background-color: var(--clear-color);
+        color: #fff;
+    }
+
+    input[type="button"]:hover {
+        background-color: var(--clear-hover);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .form-group {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        label {
+            flex: none;
+            width: 100%;
+            text-align: left;
+            margin-right: 0;
+            margin-bottom: 0.5rem;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="number"],
+        select {
+            width: 100%;
+            max-width: none;
+        }
+
+        input[type="checkbox"] {
+            margin-left: 0;
+        }
+
+        .btn-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        input[type="submit"],
+        input[type="button"] {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        h3 {
+            font-size: 1.1rem;
+        }
+
+        input, select {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<div class="container">
+    <h2><b>MEMBER REGISTRATION FORM</b></h2>
+
+    <!-- Display Success/Error Messages -->
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-dismissible fade show {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form action="{% url 'member_registration' %}" method="post" id="memberForm">
+        {% csrf_token %}
+        <h3>Branch and Registration Details</h3>
+        <div class="form-group">
+            <label for="branch">Branch:</label>
+            <select name="branch" id="branch" required aria-required="true">
+                <option value="">Select Branch</option>
+                {% for branch in branches %}
+                    <option value="{{ branch.id }}">{{ branch.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="mem_reg_date">Mem Reg Date:</label>
+            <input type="date" name="mem_reg_date" id="mem_reg_date" required aria-required="true">
+            <label for="member_number">Member Number:</label>
+            <input type="text" name="member_number" id="member_number" required aria-required="true">
+        </div>
+
+        <h3>Bio Data and Contact Information</h3>
+        <div class="form-group">
+            <label for="salutation">Salutation:</label>
+            <select name="salutation" id="salutation" required aria-required="true">
+                <option value="">Select</option>
+                <option value="Mr">Mr</option>
+                <option value="Miss">Miss</option>
+                <option value="Mrs">Mrs</option>
+            </select>
+            <label for="first_name">First Name:</label>
+            <input type="text" name="first_name" id="first_name" required aria-required="true">
+        </div>
+        <div class="form-group">
+            <label for="middle_name1">Middle Name 1:</label>
+            <input type="text" name="middle_name1" id="middle_name1">
+            <label for="middle_name2">Middle Name 2:</label>
+            <input type="text" name="middle_name2" id="middle_name2">
+        </div>
+        <div class="form-group">
+            <label for="surname">Surname:</label>
+            <input type="text" name="surname" id="surname" required aria-required="true">
+            <label for="gender">Gender:</label>
+            <select name="gender" id="gender" required aria-required="true">
+                <option value="">Select</option>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="marital_status">Marital Status:</label>
+            <select name="marital_status" id="marital_status" required aria-required="true">
+                <option value="">Select</option>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Divorced">Divorced</option>
+            </select>
+            <label for="is_pwd">Is PWD?</label>
+            <input type="checkbox" name="is_pwd" id="is_pwd">
+        </div>
+        <div class="form-group">
+            <label for="dob">Date of Birth:</label>
+            <input type="date" name="dob" id="dob" required aria-required="true">
+            <label for="home_ownership">Home Ownership:</label>
+            <select name="home_ownership" id="home_ownership" required aria-required="true">
+                <option value="">Select</option>
+                <option value="Owned">Owned</option>
+                <option value="Rented">Rented</option>
+            </select>
+        </div>
+
+        <h3>National Identification Details</h3>
+        <div class="form-group">
+            <label for="id_number">Identification Number:</label>
+            <input type="text" name="id_number" id="id_number" required aria-required="true">
+            <label for="card_number">Card Number:</label>
+            <input type="text" name="card_number" id="card_number" required aria-required="true">
+        </div>
+        <div class="form-group">
+            <label for="nin_village">NIN Village:</label>
+            <input type="text" name="nin_village" id="nin_village">
+            <label for="nin_parish">NIN Parish:</label>
+            <input type="text" name="nin_parish" id="nin_parish">
+        </div>
+        <div class="form-group">
+            <label for="nin_s_county">NIN S-County:</label>
+            <input type="text" name="nin_s_county" id="nin_s_county">
+            <label for="nin_county">NIN County:</label>
+            <input type="text" name="nin_county" id="nin_county">
+        </div>
+        <div class="form-group">
+            <label for="nin_district">NIN District:</label>
+            <input type="text" name="nin_district" id="nin_district">
+        </div>
+
+        <h3>Phone Numbers</h3>
+        <div class="form-group">
+            <label for="phone">Phone Number 1:</label>
+            <input type="text" name="phone" id="phone" required aria-required="true">
+            <label for="phone_number2">Phone Number 2:</label>
+            <input type="text" name="phone_number2" id="phone_number2">
+        </div>
+
+        <h3>Current Physical Address</h3>
+        <div class="form-group">
+            <label for="village">Village:</label>
+            <input type="text" name="village" id="village">
+            <label for="parish">Parish:</label>
+            <input type="text" name="parish" id="parish">
+        </div>
+        <div class="form-group">
+            <label for="s_county">S-County:</label>
+            <input type="text" name="s_county" id="s_county">
+            <label for="county">County:</label>
+            <input type="text" name="county" id="county">
+        </div>
+        <div class="form-group">
+            <label for="district">District:</label>
+            <input type="text" name="district" id="district">
+            <label for="sao_zone">SAO Zirobwe Zone:</label>
+            <select name="sao_zone" id="sao_zone" required aria-required="true">
+                <option value="">Select</option>
+                <option value="Bamunanika">Bamunanika</option>
+                <option value="Bukimu">Bukimu</option>
+                <option value="Busiika-Main">Busiika-Main</option>
+                <option value="Collective-A">Collective-A</option>
+                <option value="Collective-B">Collective-B</option>
+                <option value="Kabulanaka-Ngalonkalu">Kabulanaka-Ngalonkalu</option>
+                <option value="Kakakala">Kakakala</option>
+                <option value="Kikyusa">Kikyusa</option>
+                <option value="Kyetume-Bubbuubi">Kyetume-Bubbuubi</option>
+                <option value="Namawojja">Namawojja</option>
+                <option value="Sekamuli">Sekamuli</option>
+            </select>
+        </div>
+
+        <h3>Next of Kin Details</h3>
+        <div class="form-group">
+            <label for="kin_sname">Next of Kin Surname:</label>
+            <input type="text" name="kin_sname" id="kin_sname" required aria-required="true">
+            <label for="kin_fname">First Name:</label>
+            <input type="text" name="kin_fname" id="kin_fname" required aria-required="true">
+        </div>
+        <div class="form-group">
+            <label for="kin_sname2">Second Name:</label>
+            <input type="text" name="kin_sname2" id="kin_sname2">
+            <label for="kin_phone">Phone Number:</label>
+            <input type="text" name="kin_phone" id="kin_phone" required aria-required="true">
+        </div>
+        <div class="form-group">
+            <label for="kin_address">Physical Address:</label>
+            <input type="text" name="kin_address" id="kin_address">
+            <label for="kin_relationship">Relationship:</label>
+            <input type="text" name="kin_relationship" id="kin_relationship">
+        </div>
+
+        <h3>Current Employment Details</h3>
+        <div class="form-group">
+            <label for="employment">Employment:</label>
+            <input type="text" name="employment" id="employment">
+            <label for="occupation">Occupation:</label>
+            <input type="text" name="occupation" id="occupation">
+        </div>
+        <div class="form-group">
+            <label for="employer_name">Employer/Business Name:</label>
+            <input type="text" name="employer_name" id="employer_name">
+            <label for="employer_address">Emp/Business Address:</label>
+            <input type="text" name="employer_address" id="employer_address">
+        </div>
+        <div class="form-group">
+            <label for="employer_phone1">Employer Phone 1:</label>
+            <input type="text" name="employer_phone1" id="employer_phone1">
+            <label for="employer_phone2">Employer Phone 2:</label>
+            <input type="text" name="employer_phone2" id="employer_phone2">
+        </div>
+        <div class="form-group">
+            <label for="income_frequency">Income Frequency:</label>
+            <input type="text" name="income_frequency" id="income_frequency">
+            <label for="income_per_month">Income Per Month:</label>
+            <input type="text" name="income_per_month" id="income_per_month">
+        </div>
+
+        <div class="btn-container">
+            <input type="submit" value="Register Member">
+            <input type="button" value="Clear" onclick="clearForm();">
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('memberForm').onsubmit = function(event) {
+        // Remove existing red borders
+        let allInputs = document.querySelectorAll('input, select');
+        allInputs.forEach(input => input.classList.remove('missing'));
+
+        // Check required fields
+        let requiredFields = document.querySelectorAll('[required]');
+        let missingFields = [];
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                missingFields.push(field);
+                field.classList.add('missing');
+            }
+        });
+
+        if (missingFields.length > 0) {
+            event.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+
+        // Confirm submission
+        let confirmed = confirm('Confirm to Submit?');
+        if (!confirmed) {
+            event.preventDefault();
+        }
+        return confirmed;
+    };
+
+    function clearForm() {
+        let form = document.getElementById('memberForm');
+        form.reset();
+        let allInputs = document.querySelectorAll('input, select');
+        allInputs.forEach(input => input.classList.remove('missing'));
+    }
+</script>
+{% endblock %}

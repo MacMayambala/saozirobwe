@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4 rounded-3">
+        <!-- Header -->
+        <h2 class="mb-4 fw-bold">
+            <i class="bi bi-person-fill me-2"></i> Edit Member: {{ customer.first_name }} {{ customer.surname }}
+        </h2>
+        
+        <!-- Form -->
+        <form method="POST" class="needs-validation" novalidate>
+            {% csrf_token %}
+            
+            <!-- Read-Only Fields -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-muted">Customer ID</label>
+                    <input type="text" class="form-control readonly-input" value="{{ customer.cus_id }}" readonly>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold text-muted">Branch</label>
+                    <input type="text" class="form-control readonly-input" value="{{ customer.branch }}" readonly>
+                </div>
+            </div>
+            
+            <!-- Editable Fields (with widget tweaks, skipping image fields) -->
+            <div class="row g-4 editable-fields">
+                {% for field in form %}
+                    {% if field.name != 'branch' and field.name != 'photo' and field.name != 'profile_picture' and field.name != 'photo' and field.name != 'id_scan' and field.name != 'photo' and field.name != 'signature_photo' %}
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold text-dark">{{ field.label }}</label>
+                            {% render_field field class="form-control" %}
+                            {% if field.errors %}
+                                <div class="text-danger mt-1 small error-message">{{ field.errors }}</div>
+                            {% endif %}
+                            {% if field.help_text %}
+                                <small class="form-text text-muted help-text">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between mt-5">
+                <button type="submit" class="btn btn-primary btn-lg px-4 py-2 shadow-sm">
+                    <i class="bi bi-save me-2"></i> Update
+                </button>
+                <a href="{% url 'memberSum' customer.cus_id %}" class="btn btn-secondary btn-lg px-4 py-2 shadow-sm">
+                    <i class="bi bi-x-circle me-2"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom CSS (same as before) -->
+<style>
+    .container {
+        max-width: 900px;
+        margin: 0 auto;
+        font-family: 'Nunito', Arial, sans-serif;
+    }
+    .card {
+        border: none;
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        transition: transform 0.2s ease-in-out;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+    }
+    h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #2c3e50;
+    }
+
+    .readonly-input {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        background-color: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        cursor: not-allowed;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        border: 1px solid #ced4da;
+        background-color: #ffffff;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+    .form-control:hover {
+        border-color: #adb5bd;
+    }
+    .form-control:focus {
+        border-color: #16508e;
+        box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25);
+        outline: none;
+    }
+
+    .error-message {
+        color: #dc3545;
+        font-size: 0.8rem;
+    }
+    .help-text {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        font-family: 'Nunito', Arial, sans-serif;
+        transition: all 0.3s ease;
+    }
+    .btn-primary {
+        background-color: #16508e;
+        border-color: #16508e;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+        transform: translateY(-2px);
+    }
+    .btn-secondary {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
+    .btn-secondary:hover {
+        background-color: #c82333;
+        border-color: #c82333;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .col-md-3, .col-md-6 {
+            flex: 1 1 100%;
+        }
+        h2 {
+            font-size: 1.5rem;
+        }
+        .form-control, .readonly-input {
+            padding: 0.65rem 0.9rem;
+            font-size: 0.85rem;
+        }
+        .btn-lg {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<!-- Bootstrap Validation Script -->
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

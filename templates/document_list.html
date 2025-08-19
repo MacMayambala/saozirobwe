@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Messages Display -->
+    {% if messages %}
+        <div class="mb-4" role="alert">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="mb-4" role="alert" style="display: none;" id="no-messages">
+            <!-- Placeholder for debugging: no messages present -->
+        </div>
+    {% endif %}
+
+    <!-- Search Form -->
+    <form method="GET" action="" class="card shadow-lg p-4 mb-5" aria-label="Document search form">
+        {% csrf_token %}
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6 col-sm-12">
+                <label for="q" class="fw-bold mb-1">Search by Member Number:</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input type="text" name="q" id="q" class="form-control border-start-0" placeholder="Search by Member Number..." value="{{ query|default:'' }}" aria-describedby="search-icon">
+                </div>
+            </div>
+            <div class="col-md-2 col-sm-12 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search me-2"></i> Search</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Documents Table -->
+    <div class="card shadow-lg">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0" aria-label="Documents table">
+                <thead class="nav-tabs">
+                    <tr>
+                        <th scope="col">Member Number</th>
+                        <th scope="col">Member Name</th>
+                        <th scope="col">Document Type</th>
+                        <th scope="col">Storage Reason</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Requested By</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="document-list">
+                    {% for document in page_obj %}
+                    <tr data-document-id="{{ document.pk }}" data-customer-name="{{ document.customer.first_name }} {{ document.customer.surname }}" data-next-of-kin-name="{{ document.next_of_kin_name|default:'' }}">
+                        <td>{{ document.customer.member_number }}</td>
+                        <td>{{ document.customer.first_name }} {{ document.customer.surname }}</td>
+                        <td>{{ document.get_document_type_display }}</td>
+                        <td>{{ document.get_storage_reason_display }}</td>
+                        <td>
+                            {% if document.status == "Pending" %}
+                                <span class="badge bg-primary">Pending</span>
+                            {% elif document.status == "available" %}
+                                <span class="badge bg-success">Available</span>
+                            {% elif document.status == "requested" %}
+                                <span class="badge bg-warning">Requested</span>
+                            {% elif document.status == "released" %}
+                                <span class="badge bg-danger">Released</span>
+                            {% elif document.status == "branch" %}
+                                <span class="badge bg-info">Branch</span>
+                            {% elif document.status == "authorised" %}
+                                <span class="badge bg-primary">Authorised</span>
+                            {% elif document.status == "delivered" %}
+                                <span class="badge bg-success">Delivered</span>
+                            {% elif document.status == "returned" %}
+                                <span class="badge bg-secondary">Returned</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ document.requested_by.get_full_name|default:document.requested_by.username |default:"N/A" }}</td>
+                        <td>
+                            <a href="{% url 'document_detail' document.pk %}" class="btn btn-info btn-sm" aria-label="View document details">
+                                <i class="fas fa-eye me-1"></i> View
+                            </a>
+                            <!-- {% if document.status == "available" and not request.user.is_staff and not request.user.is_superuser %}
+                                <button onclick="confirmAndOpenModal('{% url 'request_document' document.pk %}', 'Request', {{ document.pk }})"
+                                        class="btn btn-primary btn-sm" aria-label="Request document">Request</button>
+                            {% endif %}
+                            {% if document.status == "Pending" and request.user.is_staff %}
+                                <button onclick="confirmAndOpenModal('{% url 'acknowledge_document' document.pk %}', 'Acknowledge', {{ document.pk }})"
+                                        class="btn btn-success btn-sm" aria-label="Acknowledge document">Acknowledge</button>
+                            {% endif %}
+                            {% if document.status == "branch" and request.user.is_staff %}
+                                <button onclick="confirmAndOpenModal('{% url 'approve_document' document.pk %}', 'Approve', {{ document.pk }})"
+                                        class="btn btn-success btn-sm" aria-label="Approve document">Approve</button>
+                            {% endif %}
+                            {% if document.status == "requested" and request.user.is_staff %}
+                                <button onclick="confirmAndOpenModal('{% url 'authorise_document' document.pk %}', 'Authorise', {{ document.pk }})"
+                                        class="btn btn-primary btn-sm" aria-label="Authorise document">Authorise</button>
+                            {% endif %}
+                            {% if document.status == "authorised" and request.user.is_staff %}
+                                <button onclick="confirmAndOpenModal('{% url 'release_document' document.pk %}', 'Release', {{ document.pk }})"
+                                        class="btn btn-danger btn-sm" aria-label="Release document">Release</button>
+                            {% endif %}
+                            {% if document.status == "released" and document.collected_by == request.user %}
+                                <button onclick="confirmAndOpenModal('{% url 'deliver_document' document.pk %}', 'Deliver', {{ document.pk }})"
+                                        class="btn btn-success btn-sm" aria-label="Deliver document">Deliver</button>
+                            {% endif %}
+                            {% if document.status == "delivered" and document.delivered_by == request.user %}
+                                <button onclick="confirmAndOpenModal('{% url 'return_document' document.pk %}', 'Return', {{ document.pk }})"
+                                        class="btn btn-warning btn-sm" aria-label="Return document">Return</button>
+                            {% endif %}
+                            {% if request.user.is_superuser %}
+                                <button onclick="confirmAndOpenModal('{% url 'reverse_action' document.pk %}', 'Reverse', {{ document.pk }})"
+                                        class="btn btn-secondary btn-sm" aria-label="Reverse document action">Reverse</button>
+                            {% endif %}
+                        </td> -->
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-3">No documents found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?q={{ query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?q={{ query }}&page={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?q={{ query }}&page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Next</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content card shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordModalLabel">Enter Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="passwordForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="passwordInput" class="form-label">Password</label>
+                        <input type="password" id="passwordInput" name="password" class="form-control" placeholder="Enter your password" required aria-required="true">
+                    </div>
+                    <div class="mb-3" id="commentInputDiv">
+                        <label for="commentInput" class="form-label">Comment (Optional)</label>
+                        <textarea id="commentInput" name="comment" class="form-control" placeholder="Enter your comment" rows="4" aria-describedby="commentHelp"></textarea>
+                        <small id="commentHelp" class="form-text text-muted">Add an optional comment for this action.</small>
+                    </div>
+                    <div class="mb-3" id="collectedByInputDiv" style="display: none;">
+                        <label for="collectedByInput" class="form-label">Collected By</label>
+                        <select name="collected_by" id="collectedByInput" class="form-select" required>
+                            <option value="" disabled selected>Select a user</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="userSelectInputDiv" style="display: none;">
+                        <label for="userSelectInput" class="form-label">Select User</label>
+                        <select name="user_select" id="userSelectInput" class="form-select" required>
+                            <option value="" disabled selected>Select a user</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="recipientInputDiv" style="display: none;">
+                        <label for="recipientInput" class="form-label">Recipient</label>
+                        <select name="recipient" id="recipientInput" class="form-select" required>
+                            <option value="" disabled selected>Select recipient</option>
+                            <!-- Options populated dynamically by JavaScript -->
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f8f9fa; color: #333; }
+    .container { max-width: 1400px; }
+    .card { border-radius: 15px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1); border: none; padding: 15px; background: #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); }
+    .btn { background-color: #16508e; border: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; color: #ffffff; transition: background-color 0.3s ease, transform 0.2s ease; }
+    .btn:hover { background-color: #0056b3; transform: translateY(-1px); }
+    .btn-sm { padding: 5px 10px; font-size: 0.85rem; }
+    .btn.disabled { background-color: #dee2e6; color: #adb5bd; pointer-events: none; }
+    .btn-primary { background-color: #007bff; }
+    .btn-primary:hover { background-color: #0056b3; }
+    .btn-success { background-color: #28a745; }
+    .btn-success:hover { background-color: #218838; }
+    .btn-danger { background-color: #dc3545; }
+    .btn-danger:hover { background-color: #c82333; }
+    .btn-warning { background-color: #ffc107; }
+    .btn-warning:hover { background-color: #e0a800; }
+    .btn-secondary { background-color: #6c757d; }
+    .btn-secondary:hover { background-color: #5a6268; }
+    .btn-info { background-color: #17a2b8; }
+    .btn-info:hover { background-color: #138496; }
+    .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; padding: 10px 15px; font-size: 0.9rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .form-control:focus, .form-select:focus { border-color: #16508e; box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); outline: none; }
+    .input-group-text { border-radius: 8px 0 0 8px; }
+    .nav-tabs { background-color: #16508e; color: #ffffff; border-bottom: none; }
+    .nav-tabs th { font-weight: 600; padding: 12px 20px; text-align: center; text-transform: uppercase; font-size: 0.9rem; }
+    .document-list td { font-size: 0.9rem; color: #6c757d; padding: 15px; text-align: center; vertical-align: middle; }
+    .document-list .badge { font-size: 0.8rem; padding: 0.5em 1em; font-weight: 500; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; }
+    .pagination a { text-decoration: none; }
+    .table-responsive { border-radius: 0 0 15px 15px; overflow: hidden; }
+    .table { margin-bottom: 0; }
+    .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0, 0, 0, 0.02); }
+    .bg-primary { background-color: #007bff; color: #fff; }
+    .bg-success { background-color: #28a745; color: #fff; }
+    .bg-warning { background-color: #ffc107; color: #212529; }
+    .bg-danger { background-color: #dc3545; color: #fff; }
+    .bg-info { background-color: #17a2b8; color: #fff; }
+    .bg-secondary { background-color: #6c757d; color: #fff; }
+    .alert { border-radius: 8px; font-size: 0.9rem; }
+    .alert-dismissible .btn-close { padding: 1rem; }
+</style>
+
+<!-- JavaScript for Confirmation and Modal -->
+<script>
+    let currentActionUrl = "";
+    let currentDocumentId = null;
+
+    function confirmAndOpenModal(url, actionType, documentId) {
+        if (confirm(`Are you sure you want to ${actionType.toLowerCase()} this document?`)) {
+            currentActionUrl = url;
+            currentDocumentId = documentId;
+            console.log("Opening modal for action:", actionType, "URL:", url, "Document ID:", documentId);
+            document.getElementById("passwordModalLabel").textContent = `Enter Password to ${actionType}`;
+            document.getElementById("passwordInput").value = "";
+            const collectedByInputDiv = document.getElementById("collectedByInputDiv");
+            const userSelectInputDiv = document.getElementById("userSelectInputDiv");
+            const recipientInputDiv = document.getElementById("recipientInputDiv");
+            const commentInputDiv = document.getElementById("commentInputDiv");
+
+            // Reset visibility and required attributes
+            if (collectedByInputDiv) {
+                collectedByInputDiv.style.display = actionType === "Release" ? "block" : "none";
+                document.getElementById("collectedByInput").value = "";
+                document.getElementById("collectedByInput").required = actionType === "Release";
+            }
+            if (userSelectInputDiv) {
+                userSelectInputDiv.style.display = actionType === "Deliver" ? "block" : "none";
+                document.getElementById("userSelectInput").value = "";
+                document.getElementById("userSelectInput").required = actionType === "Deliver";
+            }
+            if (recipientInputDiv) {
+                recipientInputDiv.style.display = actionType === "Return" ? "block" : "none";
+                document.getElementById("recipientInput").value = "";
+                document.getElementById("recipientInput").required = actionType === "Return";
+
+                // Dynamically populate recipient options based on documentId
+                const row = document.querySelector(`tr[data-document-id="${documentId}"]`);
+                const customerName = row ? row.dataset.customerName : "";
+                const nextOfKinName = row ? row.dataset.nextOfKinName : "";
+                const recipientSelect = document.getElementById("recipientInput");
+                recipientSelect.innerHTML = '<option value="" disabled selected>Select recipient</option>';
+                if (customerName) {
+                    recipientSelect.innerHTML += `<option value="customer">Customer (${customerName})</option>`;
+                }
+                if (nextOfKinName) {
+                    recipientSelect.innerHTML += `<option value="next_of_kin">Next of Kin (${nextOfKinName})</option>`;
+                }
+            }
+            if (commentInputDiv) {
+                commentInputDiv.style.display = "block"; // Show comment field for all actions
+                document.getElementById("commentInput").value = "";
+                document.getElementById("commentInput").required = false; // Comment is optional
+            }
+
+            const passwordModal = new bootstrap.Modal(document.getElementById("passwordModal"));
+            passwordModal.show();
+        }
+    }
+
+    document.getElementById("passwordForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        console.log("Submitting form to:", currentActionUrl);
+        const formData = new FormData(this);
+        console.log("Form data:", Object.fromEntries(formData));
+        fetch(currentActionUrl, {
+            method: "POST",
+            body: formData,
+            credentials: "include" // Ensure cookies (session) are sent
+        })
+        .then(response => {
+            console.log("Response status:", response.status, "Redirected:", response.redirected, "URL:", response.url);
+            if (response.redirected) {
+                window.location.href = response.url; // Follow redirect
+            } else {
+                return response.json().then(data => {
+                    console.error("Non-redirect response:", data);
+                    alert(data.message || "Action failed. Check console for details.");
+                }).catch(() => {
+                    return response.text().then(text => {
+                        console.error("Non-JSON response:", text);
+                        alert("Action failed: " + text);
+                    });
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+            alert("Error submitting form. Check console for details.");
+        });
+    });
+</script>
+{% endblock %}

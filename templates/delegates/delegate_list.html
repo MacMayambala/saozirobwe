@@ -1,0 +1,509 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Delegates - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="header-section d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users me-2"></i>Delegates</h2>
+        <div class="action-buttons d-flex gap-2 flex-wrap">
+            <a href="{% url 'register_delegate' %}" class="btn btn-primary btn-sm" aria-label="Register Delegate"><i class="fas fa-user-plus me-2"></i>Register Delegate</a>
+            <a href="{% url 'register_target' %}" class="btn btn-primary btn-sm" aria-label="Register Target"><i class="fas fa-tasks me-2"></i>Register Target</a>
+            <a href="{% url 'add_target_type' %}" class="btn btn-primary btn-sm" aria-label="Add Target Type"><i class="fas fa-plus-circle me-2"></i>Add Target Type</a>
+        </div>
+    </div>
+
+    <!-- Filter Form -->
+    <form method="GET" action="" class="card shadow-sm p-3 mb-4">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-3 col-sm-12">
+                <label for="q" class="form-label fw-bold">Search by Name or Customer ID:</label>
+                <input type="text" name="q" id="q" class="form-control" placeholder="Search..." value="{{ query }}" aria-label="Search by name or customer ID">
+            </div>
+            <div class="col-md-3 col-sm-12">
+                <label for="date_range" class="form-label fw-bold">Date Range:</label>
+                <input type="text" name="date_range" id="date_range" class="form-control" placeholder="Select date range" value="{{ date_range }}" aria-label="Select date range">
+            </div>
+            <div class="col-md-2 col-sm-12">
+                <button type="submit" class="btn btn-primary w-100" aria-label="Run Report">Run Report</button>
+            </div>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0">
+                <thead class="nav-tabs">
+                    <tr>
+                        <th style="width: 15%;">Customer ID</th>
+                        <th style="width: 25%;">Name</th>
+                        <th style="width: 20%;">Branch</th>
+                        <th style="width: 15%;">Zone</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 25%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="document-list">
+                    {% for delegate in page_obj %}
+                    <tr>
+                        <td style="text-align: center;">{{ delegate.customer.cus_id }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                {% if delegate.customer.profile_picture %}
+                                    <img src="{{ delegate.customer.profile_picture.url }}" alt="{{ delegate.customer.first_name }} {{ delegate.customer.surname }}" class="rounded-circle profile-placeholder" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid var(--primary-color);">
+                                {% else %}
+                                    <div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border: 2px solid var(--primary-color); background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: #ffffff; font-size: 0.8rem; font-weight: 600; font-family: 'Poppins', sans-serif;" aria-label="Placeholder for {{ delegate.customer.first_name }} {{ delegate.customer.surname }}">
+                                        {{ delegate.customer.first_name|first }}{{ delegate.customer.surname|first }}
+                                    </div>
+                                {% endif %}
+                                <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ delegate.customer.first_name }} {{ delegate.customer.surname }}</span>
+                            </div>
+                        </td>
+                        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ delegate.customer.branch|default:"N/A" }}</td>
+                        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ delegate.customer.sao_zone|default:"N/A" }}</td>
+                        <td style="text-align: center;">
+                            {% if delegate.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-danger">Expired</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center; white-space: nowrap;">
+                            <div class="d-flex justify-content-center align-items-center gap-2">
+                                <a href="{% url 'delegate_detail' delegate.id %}" class="btn btn-info btn-sm" aria-label="View Delegate {{ delegate.customer.first_name }} Details">View</a>
+                                {% if delegate.is_active %}
+                                    <a href="{% url 'expire_delegate' delegate.id %}" class="btn btn-danger btn-sm" aria-label="Expire Delegate {{ delegate.customer.first_name }}">Expire</a>
+                                {% else %}
+                                    <a href="{% url 'renew_delegate' delegate.id %}" class="btn btn-success btn-sm" aria-label="Renew Delegate {{ delegate.customer.first_name }}">Renew</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">No delegates found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <div class="pagination d-flex justify-content-center align-items-center gap-2 mt-3">
+        {% if page_obj.has_previous %}
+        <a href="?q={{ query }}&date_range={{ date_range }}&page={{ page_obj.previous_page_number }}" class="btn btn-outline-primary btn-sm" aria-label="Previous Page"><i class="fas fa-chevron-left"></i></a>
+        {% else %}
+        <a href="#" class="btn btn-outline-primary btn-sm disabled" aria-label="Previous Page"><i class="fas fa-chevron-left"></i></a>
+        {% endif %}
+        <span style="min-width: 120px; text-align: center;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?q={{ query }}&date_range={{ date_range }}&page={{ page_obj.next_page_number }}" class="btn btn-outline-primary btn-sm" aria-label="Next Page"><i class="fas fa-chevron-right"></i></a>
+        {% else %}
+        <a href="#" class="btn btn-outline-primary btn-sm disabled" aria-label="Next Page"><i class="fas fa-chevron-right"></i></a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Custom CSS -->
+<style>
+    :root {
+        --primary-color: #16508e;
+        --primary-dark: #123e6b;
+        --secondary-color: #6c757d;
+        --text-dark: #2c3e50;
+        --text-light: #e9ecef;
+        --background-light: #f4f6f9;
+        --error-color: #dc3545;
+        --success-color: #28a745;
+        --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.3);
+        --dark-card-bg: #2a3435;
+        --border-dark: #3a4445;
+        --transition: all 0.3s ease;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+        width: 100%;
+    }
+
+    .main.active .container {
+        max-width: 1400px;
+    }
+
+    h2 {
+        color: var(--text-dark);
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .dark-mode h2 {
+        color: var(--text-light);
+    }
+
+    .card {
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: var(--shadow-light);
+        border: none;
+        backdrop-filter: blur(6px);
+        transition: var(--transition);
+    }
+
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+        box-shadow: var(--shadow-dark);
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .form-control {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        background: #f8f9fa;
+        transition: var(--transition);
+    }
+
+    .dark-mode .form-control {
+        background: var(--border-dark);
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 8px rgba(22, 80, 142, 0.2);
+        outline: none;
+    }
+
+    .dark-mode .form-control:focus {
+        background: #ffffff;
+        color: var(--text-dark);
+    }
+
+    .form-label {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+    }
+
+    .dark-mode .form-label {
+        color: var(--text-light);
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        color: #ffffff;
+        transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: scale(1.05);
+        box-shadow: var(--shadow-light);
+    }
+
+    .btn-outline-primary {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        transition: var(--transition);
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+        transform: scale(1.05);
+    }
+
+    .btn-outline-primary.disabled {
+        border-color: #adb5bd;
+        color: #adb5bd;
+        pointer-events: none;
+    }
+
+    .btn-info {
+        background: #17a2b8;
+        border: none;
+        border-radius: 8px;
+        padding: 3px 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-info:hover {
+        background: #138496;
+        transform: scale(1.05);
+    }
+
+    .btn-success {
+        background: var(--success-color);
+        border: none;
+        border-radius: 8px;
+        padding: 3px 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-success:hover {
+        background: #218838;
+        transform: scale(1.05);
+    }
+
+    .btn-danger {
+        background: var(--error-color);
+        border: none;
+        border-radius: 8px;
+        padding: 3px 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+
+    .btn-danger:hover {
+        background: #c82333;
+        transform: scale(1.05);
+    }
+
+    .nav-tabs {
+        background: transparent;
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .nav-tabs th {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        padding: 12px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    .dark-mode .nav-tabs th {
+        color: var(--text-light);
+    }
+
+    .document-list td {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        padding: 12px;
+        vertical-align: middle;
+    }
+
+    .dark-mode .document-list td {
+        color: var(--text-light);
+    }
+
+    .table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    .dark-mode .table-striped tbody tr:nth-of-type(odd) {
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .table-responsive {
+        border-radius: 0 0 12px 12px;
+        overflow: hidden;
+    }
+
+    .document-list tr:hover {
+        background: #f8f9fa;
+        transition: var(--transition);
+    }
+
+    .dark-mode .document-list tr:hover {
+        background: var(--dark-accent, #2c3a3c);
+    }
+
+    .badge {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .pagination {
+        gap: 8px !important;
+    }
+
+    .pagination span {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+        padding: 6px 10px;
+        background: #ffffff;
+        border-radius: 6px;
+        box-shadow: var(--shadow-light);
+    }
+
+    .dark-mode .pagination span {
+        color: var(--text-light);
+        background: var(--dark-card-bg);
+    }
+
+    .profile-placeholder {
+        transition: var(--transition);
+    }
+
+    .dark-mode .profile-placeholder {
+        background: linear-gradient(135deg, #3a4445, #2a3435);
+        color: var(--text-light);
+        border-color: var(--text-light);
+    }
+
+    @media (max-width: 991px) {
+        .container {
+            padding: 15px 10px;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .row .col-md-3,
+        .row .col-md-2 {
+            width: 100%;
+        }
+
+        .action-buttons {
+            justify-content: flex-start;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 10px 8px;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+        }
+
+        .btn-primary {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        .btn-info,
+        .btn-success,
+        .btn-danger {
+            padding: 2px 5px;
+            font-size: 0.75rem;
+        }
+
+        .form-control,
+        .form-label,
+        .nav-tabs th,
+        .document-list td {
+            font-size: 0.85rem;
+        }
+
+        .profile-placeholder {
+            width: 28px;
+            height: 28px;
+            font-size: 0.7rem;
+        }
+    }
+
+    /* Accessibility */
+    a:focus,
+    button:focus,
+    .form-control:focus,
+    .profile-placeholder:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+
+    /* Flatpickr Customization */
+    .flatpickr-calendar {
+        font-family: 'Poppins', sans-serif;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: var(--shadow-light);
+    }
+
+    .dark-mode .flatpickr-calendar {
+        background: var(--dark-card-bg);
+        color: var(--text-light);
+    }
+
+    .flatpickr-day.selected,
+    .flatpickr-day.startRange,
+    .flatpickr-day.endRange {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: #ffffff;
+    }
+
+    .flatpickr-day.selected:hover,
+    .flatpickr-day.startRange:hover,
+    .flatpickr-day.endRange:hover {
+        background: var(--primary-dark);
+    }
+</style>
+
+<!-- Add JavaScript for Date Range Picker (Flatpickr) -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr("#date_range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            defaultDate: ["{{ date_range|default:'2025-05-01' }}", "{{ date_range|default:'2025-05-14' }}"],
+            theme: "material_blue",
+            onChange: function(selectedDates, dateStr, instance) {
+                instance.element.value = dateStr;
+            }
+        });
+    });
+</script>
+{% endblock %}

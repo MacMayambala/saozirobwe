@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Sao Zirobwe SACCO - Login</title>
+    <meta content="Login to your Sao Zirobwe SACCO account" name="description">
+    <meta content="SACCO, login, Sao Zirobwe" name="keywords">
+
+    {% load static %}
+
+    <!-- Favicons -->
+    <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
+    <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary: #16508e;
+            --primary-dark: #123e6b;
+            --success: #28a745;
+            --danger: #dc3545;
+            --light-bg: #f4f6f9;
+            --text-dark: #2c3e50;
+            --text-muted: #6c757d;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: var(--light-bg);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("{% static 'assets/img/logo.png' %}");
+            background-size: 50%;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.05;
+            z-index: 0;
+        }
+
+        main, .logo, .login-card, .credits {
+            position: relative;
+            z-index: 2;
+        }
+
+        .section {
+            padding: 60px 0;
+        }
+
+        .login-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: var(--shadow-dark);
+            background: #ffffff;
+            max-width: 350px;
+            margin: 0 auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .login-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: transform 0.3s ease;
+        }
+        .logo:hover {
+            transform: scale(1.02);
+        }
+
+        .logo img {
+            max-height: 60px;
+            margin-right: 10px;
+            transition: transform 0.3s ease;
+        }
+        .logo:hover img {
+            transform: scale(1.05);
+        }
+
+        .logo span {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-dark);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .card-title {
+            color: var(--text-dark);
+            font-size: 1.25rem; /* Reduced from 1.5rem */
+            font-weight: 700;
+            margin-bottom: 8px; /* Reduced from 10px */
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+            font-size: 0.85rem; /* Reduced from 0.95rem */
+            font-weight: 500;
+        }
+
+        .form-label {
+            font-size: 0.9rem; /* Reduced from 0.95rem */
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 0.25rem; /* Reduced space below labels */
+        }
+
+        .input-group {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+        }
+
+        .input-group-text {
+            background: #f1f3f5;
+            border: none;
+            color: var(--primary);
+            font-size: 1rem; /* Reduced from 1.1rem */
+            padding: 8px; /* Reduced from 12px */
+        }
+
+        .form-control {
+            border: none;
+            padding: 8px; /* Reduced from 12px */
+            font-size: 0.9rem; /* Reduced from 0.95rem */
+            color: var(--text-dark);
+            background: #f8f9fa;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .form-control:focus {
+            background: #ffffff;
+            box-shadow: 0 0 5px rgba(22, 80, 142, 0.5);
+            outline: none;
+        }
+
+        .toggle-password {
+            border: none;
+            background: #f1f3f5;
+            color: var(--primary);
+            padding: 8px; /* Reduced from 12px */
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .toggle-password:hover {
+            background: #e9ecef;
+            color: var(--primary-dark);
+        }
+
+        .form-check-label {
+            font-size: 0.85rem; /* Reduced from 0.9rem */
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a5ca5 100%);
+            border: none;
+            padding: 8px; /* Reduced from 12px */
+            font-size: 0.95rem; /* Reduced from 1rem */
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow-light);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #164f8e 100%);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-dark);
+        }
+
+        .text-center a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        .text-center a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        .credits {
+            font-size: 0.85rem; /* Reduced from 0.9rem */
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .credits a {
+            color: var(--primary);
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+        .credits a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+
+        /* Message Box */
+        .alert {
+            box-shadow: var(--shadow-dark);
+            border-radius: 12px;
+            padding: 15px 25px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #ffffff;
+            border: none;
+        }
+        .alert-success {
+            background: var(--success);
+        }
+        .alert-danger {
+            background: var(--danger);
+        }
+        .alert .btn-close {
+            filter: invert(1);
+            opacity: 0.8;
+        }
+        .alert .btn-close:hover {
+            opacity: 1;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .section {
+                padding: 40px 0;
+            }
+            .logo span {
+                font-size: 1.35rem;
+            }
+            .card-title {
+                font-size: 1.2rem; /* Adjusted for mobile */
+            }
+            .text-muted {
+                font-size: 0.8rem;
+            }
+            .form-control, .btn-primary, .input-group-text, .toggle-password {
+                padding: 6px; /* Further reduced for mobile */
+                font-size: 0.85rem;
+            }
+            .credits {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Message Box -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050; max-width: 400px;">
+        {% if messages %}
+            {% for message in messages %}
+                {% if forloop.first %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success bg-success{% else %}alert-danger bg-danger{% endif %} text-light border-0 alert-dismissible fade show" role="alert" id="message-box">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <script>
+                        setTimeout(function() {
+                            document.getElementById('message-box').style.display = 'none';
+                        }, 5000); // 5 seconds
+                    </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <main>
+        <div class="container">
+            <section class="section register min-vh-100 d-flex flex-column align-items-center justify-content-center py-4">
+                <div class="container">
+                    <div class="row justify-content-center">
+                        <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
+                            <div class="d-flex justify-content-center py-4">
+                                <a href="{% url 'dashboard' %}" class="logo d-flex align-items-center w-auto">
+                                    <img src="{% static 'assets/img/logo.png' %}" alt="Sao Zirobwe SACCO Logo">
+                                    <span class="d-none d-lg-block">SAO ZIROBWE SACCO</span>
+                                </a>
+                            </div><!-- End Logo -->
+
+                            <div class="card mb-3 login-card">
+                                <div class="card-body p-2"> <!-- Reduced from p-4 to p-2 -->
+                                    <div class="pt-2 pb-3 text-center">
+                                        <h5 class="card-title">Login to Your Account</h5>
+                                        <p class="text-muted small">Enter your credentials to access your account</p>
+                                    </div>
+
+                                    <form method="post" class="row g-2 needs-validation" novalidate> <!-- Reduced from g-3 to g-2 -->
+                                        {% csrf_token %}
+                                        <div class="col-12">
+                                            <label for="yourUsername" class="form-label">Username</label>
+                                            <div class="input-group has-validation">
+                                                <span class="input-group-text" id="inputGroupPrepend"><i class="bi bi-person"></i></span>
+                                                <input type="text" name="username" class="form-control" id="yourUsername" required>
+                                                <div class="invalid-feedback">Please enter your username.</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <label for="yourPassword" class="form-label">Password</label>
+                                            <div class="input-group has-validation">
+                                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                                <input type="password" name="password" class="form-control" id="yourPassword" required>
+                                                <button type="button" class="btn toggle-password" id="togglePassword">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <div class="invalid-feedback">Please enter your password.</div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" name="remember" value="true" id="rememberMe">
+                                                <label class="form-check-label" for="rememberMe">Remember me</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-12">
+                                            <button class="btn btn-primary w-100" type="submit">Login</button>
+                                        </div>
+
+                                        <div class="col-12 text-center">
+                                            <p class="small mb-0">Don't have an account? <a href="#">Contact Admin</a></p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <div class="credits text-center">
+                                © {% now "Y" %} <a href="https://saozirobwe.co.ug/">Sao Zirobwe SACCO</a>. All rights reserved.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+    <!-- Vendor JS Files -->
+    <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- Template Main JS File -->
+    <script src="{% static 'assets/js/main.js' %}" defer></script>
+
+    <!-- Password Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('yourPassword');
+
+            togglePassword.addEventListener('click', function () {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                const icon = this.querySelector('i');
+                icon.classList.toggle('bi-eye');
+                icon.classList.toggle('bi-eye-slash');
+            });
+        });
+    </script>
+</body>
+</html>

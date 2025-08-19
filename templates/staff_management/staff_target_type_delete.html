@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ title }}</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'staff_management:staff_target_type_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h4 class="alert-heading">Warning!</h4>
+                <p>Are you sure you want to delete the target type "{{ target_type.stname }}"?</p>
+                <p>This action cannot be undone. All data associated with this target type may also be affected.</p>
+            </div>
+            
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Code:</div>
+                <div class="col-md-9">{{ target_type.code }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Name:</div>
+                <div class="col-md-9">{{ target_type.stname }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Description:</div>
+                <div class="col-md-9">{{ target_type.description|default:"No description provided" }}</div>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Confirm Delete
+                    </button>
+                    <a href="{% url 'staff_management:staff_target_type_detail' target_type.pk %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

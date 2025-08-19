@@ -1,0 +1,754 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Members Report - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm mb-4" role="region" aria-label="Members Report">
+        <div class="card-body">
+            <!-- Header Section -->
+            <div class="header-section d-flex align-items-center justify-content-between mb-4">
+                <h1 class="h2 mb-0"><i class="bi bi-people-fill me-2"></i>Members Report</h1>
+                <img src="{% static 'assets/img/favicon.png' %}" alt="Sao Zirobwe SACCO Logo" style="width: 50px; height: auto;">
+            </div>
+
+            <!-- Summary Card -->
+            <div class="summary-card bg-light p-3 mb-4 rounded" role="region" aria-label="Summary Statistics">
+                <div class="row text-center g-4">
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Total Members</h6>
+                        <h4 class="mb-0 text-primary" id="total-records">{{ page_obj.paginator.count|default:0 }}</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted mb-1">Date Range</h6>
+                        <h4 class="mb-0 text-primary" id="date-range">All Time</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="filters mb-4" role="region" aria-label="Report Filters">
+                <form id="filter-form" method="get">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                <input type="text" id="name" name="name" class="form-control" placeholder="Search by name..." aria-label="Search by Name" value="{{ request.GET.name }}">
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <input type="text" id="member_number" name="member_number" class="form-control" placeholder="Member Number" aria-label="Search by Member Number" value="{{ request.GET.member_number }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" id="start_date" name="start_date" class="form-control" aria-label="Start Date" value="{{ request.GET.start_date }}">
+                        </div>
+                        <div class="col-md-2">
+                            <input type="date" id="end_date" name="end_date" class="form-control" aria-label="End Date" value="{{ request.GET.end_date }}">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" id="reset-filters" class="btn btn-outline-secondary w-100" title="Reset Filters" aria-label="Reset Filters"><i class="bi bi-x-circle"></i></button>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3 gap-2">
+                        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search me-2"></i>Search</button>
+                        <button type="button" id="export-csv" class="btn btn-outline-primary"><i class="bi bi-filetype-csv me-2"></i>Export CSV</button>
+                        <button type="button" id="export-pdf" class="btn btn-outline-primary"><i class="bi bi-filetype-pdf me-2"></i>Export PDF</button>
+                        <button type="button" id="print-report" class="btn btn-outline-primary"><i class="bi bi-printer me-2"></i>Print</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Spinner -->
+            <div id="loading-spinner" class="text-center mt-3" style="display: none;" role="status" aria-live="polite">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="table-responsive" role="grid" aria-label="Members Data Table">
+                <table class="table table-borderless mb-0">
+                    <thead class="table-header">
+                        <tr>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="name" aria-label="Sort by Name">
+                                    Name <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="member_number" aria-label="Sort by Member Number">
+                                    Member Number <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="phone1" aria-label="Sort by Phone">
+                                    Phone <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="dob" aria-label="Sort by Date of Birth">
+                                    Date of Birth <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="subscription_start" aria-label="Sort by Subscription Start">
+                                    Subscription Start <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="subscription_end" aria-label="Sort by Subscription End">
+                                    Subscription End <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="branch" aria-label="Sort by Branch">
+                                    Branch <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                            <th scope="col">
+                                <button class="sort-btn btn btn-link text-white text-decoration-none" data-sort="status" aria-label="Sort by Status">
+                                    Status <i class="bi bi-chevron-expand"></i>
+                                </button>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="member-list" id="member-list">
+                        {% for member in members %}
+                        <tr>
+                            <td>{{ member.customer.first_name }} {{ member.customer.surname }}</td>
+                            <td>{{ member.customer.member_number|default:"N/A" }}</td>
+                            <td>{{ member.customer.phone1|default:"N/A" }}</td>
+                            <td>{{ member.customer.dob|date:"Y-m-d"|default:"N/A" }}</td>
+                            <td>{{ member.subscription_start|date:"Y-m-d"|default:"N/A" }}</td>
+                            <td>{{ member.subscription_end|date:"Y-m-d"|default:"N/A" }}</td>
+                            <td>{{ member.customer.branch|default:"N/A" }}</td>
+                            <td>
+                                {% if member.status == "active" %}
+                                <span class="badge bg-success">Active</span>
+                                {% elif member.status == "expired" %}
+                                <span class="badge bg-danger">Expired</span>
+                                {% else %}
+                                <span class="badge bg-secondary">N/A</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center text-muted py-4">No members found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination d-flex justify-content-center align-items-center gap-3 mt-4" id="pagination" role="navigation" aria-label="Pagination">
+                <span id="page-info" class="text-muted" aria-live="polite"></span>
+                <a href="#" id="prev-page" class="btn btn-outline-primary btn-sm" aria-label="Previous Page"><i class="bi bi-chevron-left"></i></a>
+                <div id="page-numbers" class="d-flex gap-2"></div>
+                <a href="#" id="next-page" class="btn btn-outline-primary btn-sm" aria-label="Next Page"><i class="bi bi-chevron-right"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    :root {
+        --primary-color: #1e4d92;
+        --secondary-color: #6c757d;
+        --text-dark: #1a2b40;
+        --text-light: #f8f9fa;
+        --background-light: #f9fafc;
+        --error-color: #dc3545;
+        --success-color: #28a745;
+        --shadow-light: 0 4px 16px rgba(0, 0, 0, 0.08);
+        --shadow-dark: 0 6px 24px rgba(0, 0, 0, 0.12);
+        --dark-card-bg: #2c3a4a;
+        --border-dark: #3e4b5b;
+    }
+
+    .container {
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+
+    h1.h2 {
+        color: var(--text-dark);
+        font-weight: 700;
+        font-family: 'Inter', 'Ubuntu', sans-serif;
+        font-size: 2rem;
+        letter-spacing: -0.02em;
+    }
+
+    .dark-mode h1.h2 {
+        color: var(--text-light);
+    }
+
+    .card {
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: var(--shadow-light);
+        border: none;
+        transition: box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    .card:hover {
+        box-shadow: var(--shadow-dark);
+        transform: translateY(-2px);
+    }
+
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+    }
+
+    .card-body {
+        padding: 2.5rem;
+    }
+
+    .summary-card {
+        background: var(--background-light);
+        border-radius: 12px;
+        border: 1px solid #e9ecef;
+        transition: background 0.3s ease;
+    }
+
+    .dark-mode .summary-card {
+        background: #3a4656;
+        border-color: var(--border-dark);
+    }
+
+    .summary-card h6 {
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .summary-card h4 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+    }
+
+    .form-control, .input-group-text {
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-family: 'Inter', sans-serif;
+        transition: all 0.2s ease;
+        background: #ffffff;
+        border: 1px solid #d1d9e6;
+    }
+
+    .dark-mode .form-control, .dark-mode .input-group-text {
+        background: #3e4b5b;
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(30, 77, 146, 0.15);
+        background: #ffffff;
+    }
+
+    .dark-mode .form-control:focus {
+        background: #ffffff;
+        color: var(--text-dark);
+    }
+
+    .btn-primary, .btn-outline-primary, .btn-outline-secondary {
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        border: none;
+        color: #ffffff;
+        padding: 10px 20px;
+    }
+
+    .btn-primary:hover {
+        background: #143a73;
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-light);
+    }
+
+    .btn-outline-primary, .btn-outline-secondary {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        padding: 8px 16px;
+    }
+
+    .btn-outline-primary:hover, .btn-outline-secondary:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-secondary {
+        border-color: var(--secondary-color);
+        color: var(--secondary-color);
+    }
+
+    .btn-outline-secondary:hover {
+        background: var(--secondary-color);
+        color: #ffffff;
+    }
+
+    .btn-outline-primary.disabled {
+        border-color: #ced4da;
+        color: #ced4da;
+        background: #f8f9fa;
+    }
+
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .table {
+        margin-bottom: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .table-header {
+        background: var(--primary-color);
+        color: #ffffff;
+    }
+
+    .table-header th {
+        font-weight: 600;
+        padding: 14px 20px;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        border: none;
+    }
+
+    .sort-btn {
+        color: #ffffff !important;
+        padding: 0;
+        font-size: inherit;
+        font-weight: inherit;
+    }
+
+    .sort-btn:hover, .sort-btn:focus {
+        color: #e0e7ff !important;
+        outline: none;
+    }
+
+    .sort-btn.asc i::before { content: "\f077"; }
+    .sort-btn.desc i::before { content: "\f078"; }
+
+    .member-list tr {
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .member-list tr:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        background: #f9fafc;
+    }
+
+    .dark-mode .member-list tr {
+        background: var(--dark-card-bg);
+        border-bottom: 1px solid var(--border-dark);
+    }
+
+    .dark-mode .member-list tr:hover {
+        background: #3e4b5b;
+    }
+
+    .member-list td {
+        font-size: 0.95rem;
+        color: var(--text-dark);
+        padding: 16px 20px;
+        vertical-align: middle;
+        border: none;
+    }
+
+    .dark-mode .member-list td {
+        color: var(--text-light);
+    }
+
+    .badge {
+        font-size: 0.85rem;
+        padding: 0.5em 1em;
+        border-radius: 6px;
+    }
+
+    .pagination {
+        gap: 0.75rem;
+    }
+
+    .pagination a.page-number {
+        padding: 8px 14px;
+        border: 1px solid var(--primary-color);
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 0.9rem;
+        background: #ffffff;
+        transition: all 0.2s ease;
+    }
+
+    .pagination a.page-number:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .pagination a.page-number.active {
+        background: var(--primary-color);
+        color: #ffffff;
+        border-color: var(--primary-color);
+        box-shadow: 0 2px 6px rgba(30, 77, 146, 0.2);
+    }
+
+    #loading-spinner {
+        display: none;
+        padding: 24px;
+    }
+
+    .spinner-border {
+        width: 2.5rem;
+        height: 2.5rem;
+        color: var(--primary-color);
+    }
+
+    @media print {
+        .container, .card, .card-body {
+            padding: 0;
+            box-shadow: none;
+            border: none;
+            background: #ffffff;
+        }
+
+        .header-section img, .filters, .pagination, #loading-spinner, .summary-card {
+            display: none;
+        }
+
+        .table-responsive {
+            box-shadow: none;
+            border: none;
+        }
+
+        .table-header {
+            background: #f8f9fa;
+            color: #000000;
+        }
+
+        .table-header th, .sort-btn, .sort-btn i {
+            color: #000000 !important;
+        }
+
+        .member-list tr {
+            border-bottom: 1px solid #dee2e6;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .container {
+            padding: 30px 15px;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .summary-card .row > div {
+            margin-bottom: 1.5rem;
+        }
+
+        .filters .row {
+            flex-direction: column;
+        }
+
+        .filters .col-md-5, .filters .col-md-2, .filters .col-md-1 {
+            width: 100%;
+        }
+
+        .table-header th, .member-list td {
+            font-size: 0.9rem;
+            padding: 12px 16px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        h1.h2 {
+            font-size: 1.75rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .summary-card h4 {
+            font-size: 1.5rem;
+        }
+
+        .table-header th, .member-list td {
+            font-size: 0.85rem;
+            padding: 10px 12px;
+        }
+
+        .pagination a {
+            padding: 6px 10px;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<!-- JavaScript for Dynamic Features -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const filterForm = document.getElementById("filter-form");
+    const searchInput = document.getElementById("name");
+    const memberNumberInput = document.getElementById("member_number");
+    const startDateInput = document.getElementById("start_date");
+    const endDateInput = document.getElementById("end_date");
+    const resetFiltersBtn = document.getElementById("reset-filters");
+    const exportCsvBtn = document.getElementById("export-csv");
+    const exportPdfBtn = document.getElementById("export-pdf");
+    const printReportBtn = document.getElementById("print-report");
+    const memberList = document.getElementById("member-list");
+    const pagination = document.getElementById("pagination");
+    const spinner = document.getElementById("loading-spinner");
+    const prevPage = document.getElementById("prev-page");
+    const nextPage = document.getElementById("next-page");
+    const pageInfo = document.getElementById("page-info");
+    const pageNumbersContainer = document.getElementById("page-numbers");
+    const totalRecords = document.getElementById("total-records");
+    const dateRange = document.getElementById("date-range");
+
+    let currentPage = {{ page_obj.number|default:1 }};
+    let totalPages = {{ page_obj.paginator.num_pages|default:1 }};
+    let totalItems = {{ page_obj.paginator.count|default:0 }};
+    let sortField = 'subscription_start';
+    let sortOrder = 'desc';
+    const itemsPerPage = 10;
+
+    function fetchMembers(query = '', memberNumber = '', startDate = '', endDate = '', page = 1) {
+        spinner.style.display = "block";
+        memberList.style.opacity = "0.5";
+
+        const params = new URLSearchParams({
+            name: query,
+            member_number: memberNumber,
+            start_date: startDate,
+            end_date: endDate,
+            sort_field: sortField,
+            sort_order: sortOrder,
+            page: page
+        });
+
+        fetch(`/filter-members/?${params.toString()}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            spinner.style.display = "none";
+            memberList.style.opacity = "1";
+            memberList.innerHTML = "";
+
+            if (data.members.length === 0) {
+                memberList.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">No members found.</td></tr>';
+            } else {
+                data.members.forEach(member => {
+                    const row = `
+                        <tr>
+                            <td>${member.customer.first_name} ${member.customer.surname}</td>
+                            <td>${member.customer.member_number || 'N/A'}</td>
+                            <td>${member.customer.phone || 'N/A'}</td> <!-- Updated field -->
+                            <td>${member.customer.dob || 'N/A'}</td>
+                            <td>${member.subscription_start || 'N/A'}</td>
+                            <td>${member.subscription_end || 'N/A'}</td>
+                            <td>${member.customer.branch || 'N/A'}</td>
+                            <td>
+                                ${member.status === "active" ? '<span class="badge bg-success">Active</span>' : 
+                                  member.status === "expired" ? '<span class="badge bg-danger">Expired</span>' : 
+                                  '<span class="badge bg-secondary">N/A</span>'}
+                            </td>
+                        </tr>
+                    `;
+                    memberList.innerHTML += row;
+                });
+            }
+
+            // Update pagination data
+            currentPage = data.current_page;
+            totalPages = data.total_pages;
+            totalItems = data.total_items;
+
+            // Update summary
+            totalRecords.textContent = data.total_items.toLocaleString();
+            dateRange.textContent = data.date_range || 'All Time';
+
+            // Update page info
+            const startItem = (currentPage - 1) * itemsPerPage + 1;
+            const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+            pageInfo.textContent = `${startItem.toLocaleString()} - ${endItem.toLocaleString()} of ${totalItems.toLocaleString()} Members`;
+
+            // Update Previous/Next buttons
+            prevPage.classList.toggle("disabled", !data.has_previous);
+            nextPage.classList.toggle("disabled", !data.has_next);
+
+            // Update sort indicators
+            document.querySelectorAll('.sort-btn').forEach(btn => {
+                const field = btn.getAttribute('data-sort');
+                const icon = btn.querySelector('i');
+                btn.classList.remove('asc', 'desc');
+                icon.className = 'bi bi-chevron-expand';
+                if (field === sortField) {
+                    btn.classList.add(sortOrder);
+                }
+            });
+
+            // Generate page numbers
+            generatePageNumbers();
+
+            // Update URL
+            history.pushState({}, '', `/filter-members/?${params.toString()}`);
+        })
+        .catch(error => {
+            spinner.style.display = "none";
+            memberList.style.opacity = "1";
+            memberList.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-4">Error loading data.</td></tr>';
+            console.error("Error:", error);
+        });
+    }
+
+    function generatePageNumbers() {
+        pageNumbersContainer.innerHTML = "";
+        const maxPagesToShow = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+
+        if (startPage > 1) {
+            pageNumbersContainer.appendChild(createPageLink(1));
+            if (startPage > 2) {
+                const ellipsis = document.createElement("span");
+                ellipsis.textContent = "...";
+                ellipsis.style.margin = "0 8px";
+                ellipsis.style.color = 'var(--secondary-color)';
+                pageNumbersContainer.appendChild(ellipsis);
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbersContainer.appendChild(createPageLink(i));
+        }
+
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement("span");
+                ellipsis.textContent = "...";
+                ellipsis.style.margin = "0 8px";
+                ellipsis.style.color = 'var(--secondary-color)';
+                pageNumbersContainer.appendChild(ellipsis);
+            }
+            pageNumbersContainer.appendChild(createPageLink(totalPages));
+        }
+    }
+
+    function createPageLink(page) {
+        const link = document.createElement("a");
+        link.href = "#";
+        link.className = `page-number${page === currentPage ? " active" : ""}`;
+        link.textContent = page;
+        link.setAttribute('aria-label', `Page ${page}`);
+        link.addEventListener("click", e => {
+            e.preventDefault();
+            fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, page);
+        });
+        return link;
+    }
+
+    function exportFile(type) {
+        const query = searchInput.value;
+        const memberNumber = memberNumberInput.value;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        const url = `/export-members-to-${type}/?name=${encodeURIComponent(query)}&member_number=${encodeURIComponent(memberNumber)}&start_date=${startDate}&end_date=${endDate}&sort_field=${sortField}&sort_order=${sortOrder}`;
+        window.location.href = url;
+    }
+
+    function resetFilters() {
+        searchInput.value = "";
+        memberNumberInput.value = "";
+        startDateInput.value = "";
+        endDateInput.value = "";
+        sortField = 'subscription_start';
+        sortOrder = 'desc';
+        fetchMembers("", "", "", "", 1);
+    }
+
+    function printReport() {
+        window.print();
+    }
+
+    // Event Listeners
+    filterForm.addEventListener("submit", e => {
+        e.preventDefault();
+        fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, 1);
+    });
+
+    searchInput.addEventListener("input", () => fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, 1));
+    memberNumberInput.addEventListener("input", () => fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, 1));
+    startDateInput.addEventListener("change", () => fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, 1));
+    endDateInput.addEventListener("change", () => fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, 1));
+    resetFiltersBtn.addEventListener("click", resetFilters);
+    exportCsvBtn.addEventListener("click", () => exportFile('excel'));
+    exportPdfBtn.addEventListener("click", () => exportFile('pdf'));
+    printReportBtn.addEventListener("click", printReport);
+
+    prevPage.addEventListener("click", e => {
+        e.preventDefault();
+        if (currentPage > 1) fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, currentPage - 1);
+    });
+
+    nextPage.addEventListener("click", e => {
+        e.preventDefault();
+        if (currentPage < totalPages) fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, currentPage + 1);
+    });
+
+    document.querySelectorAll('.sort-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const field = btn.getAttribute('data-sort');
+            if (sortField === field) {
+                sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortField = field;
+                sortOrder = 'asc';
+            }
+            fetchMembers(searchInput.value, memberNumberInput.value, startDateInput.value, endDateInput.value, 1);
+        });
+    });
+
+    // Initial fetch
+    fetchMembers("{{ request.GET.name|default:'' }}", "{{ request.GET.member_number|default:'' }}", "{{ request.GET.start_date|default:'' }}", "{{ request.GET.end_date|default:'' }}");
+});
+</script>
+{% endblock %}

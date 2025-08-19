@@ -1,0 +1,984 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sao Zirobwe SACCO{% endblock %}</title>
+    <meta name="description" content="Sao Zirobwe SACCO Management System">
+    <meta name="keywords" content="SACCO, management, dashboard">
+
+    <!-- Favicons -->
+    <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
+    <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+
+    <!-- Google Fonts: Poppins for a professional look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+    <!-- Vendor CSS Files -->
+    <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+    <!-- Font Awesome with CDN and local fallback -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="{% static 'assets/vendor/fontawesome/css/all.min.css' %}" rel="stylesheet">
+
+    <!-- Template Main CSS File -->
+    <link href="{% static 'assets/css/style.css' %}" rel="stylesheet">
+
+    <!-- Custom Styles -->
+    <style>
+        :root {
+            --primary: #ff6b6b; /* Vibrant coral */
+            --primary-dark: #e63946; /* Darker coral for sidebar */
+            --success: #4ecdc4; /* Teal for success */
+            --danger: #ff4757; /* Bright red for errors */
+            --light-bg: #f9f9fb; /* Soft background */
+            --dark-bg: #1a1a2e; /* Deep navy for dark mode */
+            --dark-accent: #2b2b3f; /* Dark accent */
+            --text-dark: #2d3436; /* Neutral dark text */
+            --text-light: #dfe6e9; /* Light text for dark mode */
+            --text-muted: #636e72; /* Muted text */
+            --shadow-light: 0 4px 12px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            --shadow-dark: 0 6px 18px rgba(0, 0, 0, 0.2); /* Professional shadow */
+            --card-bg: #ffffff; /* White card background */
+            --dark-card-bg: #2b2b3f; /* Dark mode card background */
+            --border-dark: #3b3b4f; /* Dark mode borders */
+            --gradient: linear-gradient(135deg, #ff6b6b, #feca57); /* Subtle gradient */
+            --transition: all 0.2s ease-in-out; /* Faster, professional transitions */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            font-weight: 400;
+            background: var(--light-bg);
+            color: var(--text-dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 12px 24px;
+            box-shadow: var(--shadow-light);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: nowrap;
+            transition: var(--transition);
+        }
+
+        .header .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .header .logo img {
+            max-height: 36px;
+            margin-right: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .header .logo img:hover {
+            transform: scale(1.05);
+            filter: brightness(1.1);
+        }
+
+        .header .logo span {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .toggle-sidebar-btn {
+            font-size: 1.2rem;
+            color: #fff;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 50%;
+            background: var(--primary-dark);
+            transition: var(--transition);
+            margin-left: 12px;
+        }
+
+        .header .toggle-sidebar-btn:hover,
+        .header .toggle-sidebar-btn:focus {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            outline: none;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .header-nav .nav-icon {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            position: relative;
+            transition: var(--transition);
+            padding: 6px;
+            border-radius: 50%;
+        }
+
+        .header-nav .nav-icon:hover,
+        .header-nav .nav-icon:focus {
+            color: #fff;
+            background: var(--primary-dark);
+            transform: scale(1.1);
+            outline: none;
+        }
+
+        .header-nav .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 3px 6px;
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+        }
+
+        .nav-profile:hover,
+        .nav-profile:focus {
+            background: var(--primary-dark);
+            color: #fff;
+        }
+
+        .nav-profile img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .nav-profile:hover img,
+        .nav-profile:focus img {
+            border-color: #fff;
+            transform: scale(1.05);
+        }
+
+        .nav-profile span {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .dropdown-menu {
+            border-radius: 10px;
+            box-shadow: var(--shadow-dark);
+            border: none;
+            margin-top: 10px;
+            padding: 10px 0;
+            background: var(--card-bg);
+            backdrop-filter: blur(8px);
+            min-width: 200px;
+        }
+
+        .dropdown-item {
+            font-size: 0.9rem;
+            padding: 8px 16px;
+            color: var(--text-dark);
+            border-radius: 6px;
+            margin: 0 6px;
+            transition: var(--transition);
+        }
+
+        .dropdown-item:hover,
+        .dropdown-item:focus {
+            background: var(--primary-dark);
+            color: #fff;
+            transform: translateX(3px);
+            outline: none;
+        }
+
+        .dropdown-header {
+            padding: 10px 16px;
+        }
+
+        .dropdown-header h6 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .dropdown-header span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .dropdown-divider {
+            margin: 6px 0;
+            border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            width: 260px;
+            height: 100%;
+            background: var(--primary-dark);
+            transition: width 0.3s ease, transform 0.3s ease;
+            overflow-y: auto;
+            top: 0;
+            left: 0;
+            z-index: 900;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar.active {
+            width: 80px;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 15px 0; /* Adjusted for clean top/bottom spacing */
+            margin: 0;
+        }
+
+        .sidebar-nav li {
+            margin: 5px 10px;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav li:hover,
+        .sidebar-nav li.hovered {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .sidebar-nav li.active {
+            background: #fff;
+            box-shadow: var(--shadow-light);
+            border-radius: 40px;
+        }
+
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            color: #fff;
+            text-decoration: none;
+            padding: 8px 10px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+        .sidebar-nav li:hover a,
+        .sidebar-nav li.hovered a,
+        .sidebar-nav li.active a {
+            color: var(--primary-dark);
+        }
+
+        .sidebar-nav li a .icon {
+            min-width: 40px;
+            height: 40px;
+            line-height: 40px;
+            text-align: center;
+        }
+
+        .sidebar-nav li a .icon ion-icon,
+        .sidebar-nav li a .icon i {
+            font-size: 1.4rem;
+            transition: transform 0.2s ease;
+        }
+
+        .sidebar-nav li:hover a .icon ion-icon,
+        .sidebar-nav li:hover a .icon i {
+            transform: scale(1.1);
+        }
+
+        .sidebar-nav li a .title {
+            padding: 0 10px;
+            height: 40px;
+            line-height: 40px;
+            font-size: 0.95rem;
+            font-weight: 400;
+            white-space: nowrap;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.active .sidebar-nav li a .title {
+            opacity: 0;
+        }
+
+        /* Tooltip for collapsed sidebar */
+        .sidebar.active .sidebar-nav li a {
+            position: relative;
+        }
+
+        .sidebar.active .sidebar-nav li a .title {
+            position: absolute;
+            left: 60px;
+            background: var(--dark-bg);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s ease;
+            z-index: 1000;
+            box-shadow: var(--shadow-dark);
+        }
+
+        .sidebar.active .sidebar-nav li:hover a .title {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            min-height: 100vh;
+            background: var(--light-bg);
+            padding: 70px 20px 20px;
+            transition: var(--transition);
+        }
+
+        .main.active {
+            margin-left: 80px;
+            width: calc(100% - 80px);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--card-bg);
+            padding: 12px 20px;
+            text-align: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .footer a:hover {
+            color: var(--primary-dark);
+            text-decoration: none;
+        }
+
+        /* Message Box */
+        .alert {
+            box-shadow: var(--shadow-dark);
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: #fff;
+            border: none;
+            backdrop-filter: blur(6px);
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .alert-success {
+            background: var(--success);
+        }
+
+        .alert-danger {
+            background: var(--danger);
+        }
+
+        .alert .btn-close {
+            filter: invert(1);
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+
+        .alert .btn-close:hover,
+        .alert .btn-close:focus {
+            opacity: 1;
+            transform: scale(1.1);
+            outline: none;
+        }
+
+        /* Dark Mode */
+        .dark-mode {
+            background: var(--dark-bg);
+            color: var(--text-light);
+        }
+
+        .dark-mode .header,
+        .dark-mode . header
+        .dark-mode .footer {
+            background: var(--dark-card-bg);
+            border-color: var(--border-dark);
+            box-shadow: var(--shadow-dark);
+        }
+
+        .dark-mode .main {
+            background: var(--dark-bg);
+        }
+
+        .dark-mode .sidebar {
+            background: var(--dark-accent);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .dark-mode .sidebar-nav li:hover,
+        .dark-mode .sidebar-nav li.hovered,
+        .dark-mode .sidebar-nav li.active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .dark-mode .sidebar-nav li a {
+            color: var(--text-light);
+        }
+
+        .dark-mode .sidebar-nav li:hover a,
+        .dark-mode .sidebar-nav li.hovered a,
+        .dark-mode .sidebar-nav li.active a {
+            color: #fff;
+        }
+
+        .dark-mode .header .logo span,
+        .dark-mode .nav-profile span,
+        .dark-mode .dropdown-header h6 {
+            color: var(--text-light);
+            -webkit-text-fill-color: var(--text-light);
+        }
+
+        .dark-mode .dropdown-menu {
+            background: var(--dark-card-bg);
+            border: 1px solid var(--border-dark);
+            backdrop-filter: blur(8px);
+        }
+
+        .dark-mode .dropdown-item {
+            color: var(--text-light);
+        }
+
+        .dark-mode .dropdown-item:hover,
+        .dark-mode .dropdown-item:focus {
+            background: var(--primary-dark);
+            color: #fff;
+        }
+
+        .dark-mode .dropdown-divider {
+            border-color: var(--border-dark);
+        }
+
+        .dark-mode .header .toggle-sidebar-btn,
+        .dark-mode .header-nav .nav-icon {
+            color: var(--text-light);
+        }
+
+        .dark-mode .header .toggle-sidebar-btn:hover,
+        .dark-mode .header-nav .nav-icon:hover,
+        .dark-mode .header .toggle-sidebar-btn:focus,
+        .dark-mode .header-nav .nav-icon:focus {
+            color: #fff;
+            background: var(--primary-dark);
+        }
+
+        .dark-mode .footer {
+            color: var(--text-light);
+        }
+
+        .dark-mode .footer a {
+            color: var(--text-light);
+        }
+
+        .dark-mode .footer a:hover {
+            color: var(--primary);
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle .nav-icon {
+            font-size: 1.2rem;
+            transition: var(--transition);
+        }
+
+        .theme-toggle .nav-icon:hover,
+        .theme-toggle .nav-icon:focus {
+            color: #fff;
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+
+        .dark-mode .theme-toggle .nav-icon {
+            color: var(--text-light);
+        }
+
+        .dark-mode .theme-toggle .nav-icon:hover,
+        .dark-mode .theme-toggle .nav-icon:focus {
+            color: #fff;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 991px) {
+            .sidebar {
+                width: 260px;
+                transform: translateX(-260px);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main {
+                width: 100%;
+                margin-left: 0;
+            }
+
+            .main.active {
+                margin-left: 260px;
+            }
+
+            .header .logo span {
+                font-size: 1.1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                width: 100%;
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main.active {
+                margin-left: 100%;
+            }
+
+            .header .logo span {
+                font-size: 1rem;
+            }
+
+            .header .logo img {
+                max-height: 32px;
+            }
+
+            .nav-profile span {
+                display: none;
+            }
+
+            .header-nav {
+                gap: 8px;
+            }
+
+            .footer {
+                padding: 10px 16px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* Accessibility Enhancements */
+        a:focus,
+        button:focus,
+        .dropdown-item:focus {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Loading Animation */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-spinner {
+            border: 4px solid #fff;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Message Box -->
+    <div style="position: fixed; bottom: 20px; right: 20px; z-index: 1050; max-width: 400px;">
+        {% if messages %}
+            {% for message in messages %}
+                {% if forloop.first %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} alert-dismissible fade show" role="alert" id="message-box">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    <script>
+                        setTimeout(() => {
+                            const messageBox = document.getElementById('message-box');
+                            if (messageBox) {
+                                messageBox.classList.remove('show');
+                                setTimeout(() => messageBox.remove(), 500);
+                            }
+                        }, 5000);
+                    </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Header -->
+    <header id="header" class="header" aria-label="Header">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'dashboard' %}" class="logo" aria-label="Sao Zirobwe SACCO Home">
+                <img src="{% static 'assets/img/logo.png' %}" alt="Sao Zirobwe SACCO Logo">
+                <span>Sao Zirobwe SACCO</span>
+            </a>
+            <button class="toggle-sidebar-btn" aria-label="Toggle Sidebar">
+                <i class="bi bi-list"></i>
+            </button>
+        </div>
+
+        <nav class="header-nav" aria-label="Header Navigation">
+            <div class="theme-toggle">
+                <button id="theme-toggler" class="btn btn-link nav-icon p-0" aria-label="Toggle Theme">
+                    <i class="bi bi-moon" id="theme-icon"></i>
+                </button>
+            </div>
+            <ul class="d-flex align-items-center m-0 list-unstyled">
+                <li class="nav-item dropdown">
+                    <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown" aria-label="Notifications">
+                        <i class="bi bi-bell"></i>
+                        <span class="badge">{{ notification_count|default:4 }}</span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown" aria-label="Messages">
+                        <i class="bi bi-chat-left-text"></i>
+                        <span class="badge bg-success">{{ message_count|default:3 }}</span>
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link nav-profile" href="#" data-bs-toggle="dropdown" aria-label="User Profile">
+                        <img src="{% static 'assets/img/profile-img.jpg' %}" alt="Profile Picture" class="rounded-circle">
+                        <span class="d-none d-md-block ps-2">{{ request.user.username }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+                        <li class="dropdown-header">
+                            <h6>{{ request.user.username }}</h6>
+                            <span>User</span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item d-flex align-items-center" href="#" aria-label="View Profile"><i class="bi bi-person me-2"></i> My Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item d-flex align-items-center" href="{% url 'two_factor_setup' %}" aria-label="Setup Two-Factor Authentication"><i class="bi bi-shield-lock me-2"></i> 2FA Setup</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item d-flex align-items-center" href="#" aria-label="Get Help"><i class="bi bi-question-circle me-2"></i> Need Help?</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item d-flex align-items-center" aria-label="Logout">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar" aria-label="Main Navigation">
+        <ul class="sidebar-nav">
+            {% if 'Dashboard' in allowed_modules %}
+            <li>
+                <a href="{% url 'dashboard' %}" aria-label="Dashboard">
+                    <span class="icon"><ion-icon name="home-outline"></ion-icon></span>
+                    <span class="title">Dashboard</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'Members' in allowed_modules %}
+            <li>
+                <a href="{% url 'members' %}" aria-label="Members">
+                    <span class="icon"><ion-icon name="people-outline"></ion-icon></span>
+                    <span class="title">Members</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'MunoMukabi' in allowed_modules %}
+            <li>
+                <a href="{% url 'mono_list' %}" aria-label="MunoMukabi">
+                    <span class="icon"><ion-icon name="umbrella-outline"></ion-icon></span>
+                    <span class="title">MunoMukabi</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'Musingo' in allowed_modules %}
+            <li>
+                <a href="{% url 'admin_document_list' %}" aria-label="Musingo">
+                    <span class="icon"><ion-icon name="documents-outline"></ion-icon></span>
+                    <span class="title">Musingo</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'HR Management' in allowed_modules %}
+            <li>
+                <a href="{% url 'staff_management:staff_dashboard' %}" aria-label="HR Management">
+                    <span class="icon"><ion-icon name="briefcase-outline"></ion-icon></span>
+                    <span class="title">HR Management</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'Delegates' in allowed_modules %}
+            <li>
+                <a href="{% url 'delegate_list' %}" aria-label="Delegates">
+                    <span class="icon"><i class="fas fa-user-check"></i></span>
+                    <span class="title">Delegates</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'Reports' in allowed_modules %}
+            <li>
+                <a href="{% url 'reports' %}" aria-label="Reports">
+                    <span class="icon"><ion-icon name="bar-chart-outline"></ion-icon></span>
+                    <span class="title">Reports</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'Settings' in allowed_modules %}
+            <li>
+                <a href="{% url 'setting' %}" aria-label="Settings">
+                    <span class="icon"><ion-icon name="settings-outline"></ion-icon></span>
+                    <span class="title">Settings</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if 'Import' in allowed_modules %}
+            <li>
+                <a href="{% url 'excel_import' %}" aria-label="Import">
+                    <span class="icon"><ion-icon name="cloud-upload-outline"></ion-icon></span>
+                    <span class="title">Import</span>
+                </a>
+            </li>
+            {% endif %}
+            <li>
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <a href="#" onclick="this.closest('form').submit(); return false;" aria-label="Sign Out">
+                        <span class="icon"><ion-icon name="log-out-outline"></ion-icon></span>
+                        <span class="title">Sign Out</span>
+                    </a>
+                </form>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main" class="main" role="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer">
+        <div class="copyright">
+            © {% now "Y" %} <strong><span>Sao Zirobwe SACCO</span></strong>. All Rights Reserved
+        </div>
+        <div class="credits">
+            Designed by <a href="https://saozirobwe.co.ug" aria-label="Sao Zirobwe SACCO Website">Sao Zirobwe SACCO</a>
+        </div>
+    </footer>
+
+    <!-- Vendor JS Files -->
+    <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+    <!-- Enhanced Sidebar and Theme Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const sidebar = document.getElementById("sidebar");
+            const toggleButton = document.querySelector(".toggle-sidebar-btn");
+            const main = document.querySelector(".main");
+            const navItems = document.querySelectorAll(".sidebar-nav li");
+            const themeToggler = document.getElementById("theme-toggler");
+            const themeIcon = document.getElementById("theme-icon");
+            const body = document.body;
+            const loadingOverlay = document.getElementById("loading-overlay");
+
+            // Show loading overlay on page load
+            window.addEventListener("load", () => {
+                loadingOverlay.style.display = "none";
+            });
+
+            // Sidebar toggle with smooth animation
+            toggleButton.addEventListener("click", () => {
+                sidebar.classList.toggle("active");
+                main.classList.toggle("active");
+                localStorage.setItem("sidebarActive", sidebar.classList.contains("active"));
+                window.dispatchEvent(new Event("resize"));
+            });
+
+            // Restore sidebar state
+            const savedSidebarState = localStorage.getItem("sidebarActive");
+            if (savedSidebarState === "true" && window.innerWidth > 991) {
+                sidebar.classList.add("active");
+                main.classList.add("active");
+            } else if (window.innerWidth <= 991) {
+                sidebar.classList.remove("active");
+                main.classList.remove("active");
+            }
+
+            // Highlight active link
+            navItems.forEach(item => {
+                const link = item.querySelector("a");
+                if (!link.closest("form")) {
+                    const href = link.getAttribute("href");
+                    const currentPath = window.location.pathname;
+                    const normalizedHref = href && href.startsWith("/") ? href : "/" + href;
+                    const normalizedPath = currentPath.endsWith("/") ? currentPath : currentPath + "/";
+                    if (normalizedHref === normalizedPath || normalizedPath.startsWith(normalizedHref + "/")) {
+                        navItems.forEach(i => i.classList.remove("active", "hovered"));
+                        item.classList.add("active");
+                    }
+                }
+            });
+
+            // Hover and click effects with animations
+            navItems.forEach(item => {
+                const link = item.querySelector("a");
+                if (!link.closest("form")) {
+                    item.addEventListener("mouseover", () => {
+                        navItems.forEach(i => i.classList.remove("hovered"));
+                        if (!item.classList.contains("active")) {
+                            item.classList.add("hovered");
+                        }
+                    });
+                    item.addEventListener("mouseout", () => {
+                        item.classList.remove("hovered");
+                    });
+                    link.addEventListener("click", (e) => {
+                        e.preventDefault();
+                        navItems.forEach(i => i.classList.remove("active", "hovered"));
+                        item.classList.add("active");
+                        loadingOverlay.style.display = "flex";
+                        setTimeout(() => {
+                            window.location.href = link.getAttribute("href");
+                        }, 300);
+                    });
+                }
+            });
+
+            // Theme toggle with animation
+            const savedTheme = localStorage.getItem("theme");
+            if (savedTheme === "dark") {
+                body.classList.add("dark-mode");
+                themeIcon.classList.replace("bi-moon", "bi-sun");
+            }
+
+            themeToggler.addEventListener("click", () => {
+                body.classList.toggle("dark-mode");
+                if (body.classList.contains("dark-mode")) {
+                    themeIcon.classList.replace("bi-moon", "bi-sun");
+                    localStorage.setItem("theme", "dark");
+                } else {
+                    themeIcon.classList.replace("bi-sun", "bi-moon");
+                    localStorage.setItem("theme", "light");
+                }
+            });
+
+            // Prevent form resubmission
+            if (window.history.replaceState) {
+                window.history.replaceState(null, null, window.location.href);
+            }
+
+            // Handle window resize
+            window.addEventListener("resize", () => {
+                if (window.innerWidth <= 991) {
+                    sidebar.classList.remove("active");
+                    main.classList.remove("active");
+                } else if (localStorage.getItem("sidebarActive") === "true") {
+                    sidebar.classList.add("active");
+                    main.classList.add("active");
+                }
+            });
+
+            // Accessibility: Keyboard navigation for sidebar
+            navItems.forEach(item => {
+                const link = item.querySelector("a");
+                link.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        link.click();
+                    }
+                });
+            });
+
+            // Fallback for Font Awesome CDN
+            const fontAwesomeCDN = document.querySelector('link[href*="font-awesome"]');
+            fontAwesomeCDN.addEventListener('error', () => {
+                console.warn('Font Awesome CDN failed to load, using local fallback');
+                const localFontAwesome = document.querySelector('link[href*="fontawesome/css/all.min.css"]');
+                if (localFontAwesome) {
+                    localFontAwesome.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

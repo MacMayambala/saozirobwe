@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <h2>Member Details</h2>
+        
+        <!-- Member Details Display -->
+        <div class="mb-4">
+            <p><strong>Full Name:</strong> {{ member.customer.first_name }} {{ member.customer.last_name }}</p>
+            <p><strong>Member Number:</strong> {{ member.customer.member_id }}</p>
+            <p><strong>Branch:</strong> {{ member.customer.branch }}</p>
+            <p><strong>Gender:</strong> {{ member.customer.gender }}</p>
+            <p><strong>Village:</strong> {{ member.customer.village }}</p>
+        </div>
+
+        <!-- Edit Form -->
+        <h3>Edit Member Details</h3>
+        <form method="POST">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save me-2"></i> Save Changes
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

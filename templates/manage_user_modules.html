@@ -1,0 +1,176 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <!-- Header -->
+        <h2 class="mb-4 fw-bold">
+            <i class="bi bi-person-gear me-2"></i> Manage Modules for {{ user.username }}
+        </h2>
+
+        <!-- Form -->
+        <form method="POST" action="{% url 'update_user_modules' user.id %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <div class="card-body p-0">
+                    <h5 class="card-title">Modules</h5>
+                    <div class="row mb-4">
+                        <label class="col-sm-2 col-form-label fw-semibold">Rights</label>
+                        <div class="col-sm-10">
+                            {% for module in modules %}
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" 
+                                       name="modules" value="{{ module.id }}"
+                                       id="module_{{ module.id }}"
+                                       {% if module.id in user_modules %}checked{% endif %}>
+                                <label class="form-check-label" for="module_{{ module.id }}">
+                                    {{ module.name }}
+                                </label>
+                            </div>
+                            {% empty %}
+                            <p class="text-muted">No modules available.</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center">
+                        <button type="submit" class="btn btn-success px-4 py-2">
+                            <i class="bi bi-check-circle me-2"></i> Update Access
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    .container {
+        max-width: 900px; /* Consistent with other pages */
+        margin: 0 auto;
+        font-family: 'Nunito', Arial, sans-serif;
+    }
+    #main {
+        padding: 60px;
+        max-width: 1100px;
+        margin: auto;
+    }
+
+    .card {
+        border: none;
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15); /* Consistent shadow */
+        transition: transform 0.2s ease-in-out;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+    }
+
+    h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50; /* Dark text color from previous pages */
+    }
+
+    .card-body {
+        padding: 0; /* Adjusted to fit within the outer card padding */
+    }
+
+    .card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 20px;
+    }
+
+    .col-form-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .form-check-input {
+        width: 1.5rem;
+        height: 1.5rem;
+        margin-top: 0;
+        border: 1px solid #ced4da;
+        transition: all 0.3s ease;
+    }
+    .form-check-input:checked {
+        background-color: #16508e; /* Primary color */
+        border-color: #16508e;
+    }
+    .form-check-input:focus {
+        box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25);
+        outline: none;
+    }
+
+    .form-check-label {
+        font-size: 0.9rem;
+        color: #2c3e50;
+        cursor: pointer;
+    }
+
+    .text-muted {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .btn-success {
+        background-color: #0aba33; /* Success color from previous pages */
+        border-color: #0aba33;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .btn-success:hover {
+        background-color: #089529; /* Darker shade for hover */
+        border-color: #089529;
+        transform: translateY(-2px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 15px;
+        }
+
+        .card {
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+        }
+
+        .col-form-label {
+            font-size: 0.85rem;
+        }
+
+        .form-check-label {
+            font-size: 0.85rem;
+        }
+
+        .form-check-input {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .btn-success {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+    }
+</style>
+{% endblock %}

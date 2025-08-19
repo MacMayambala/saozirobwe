@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+        <style>
+            /* General Styling */
+            body {
+                font-family: 'Nunito', Arial, sans-serif;
+                background: #f4f6f9;
+                color: #2c3e50;
+            }
+            .container {
+                max-width: 1100px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+            .card {
+                border-radius: 16px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                border: none;
+                background: #ffffff;
+                width: 100%;
+                margin-bottom: 40px;
+                overflow: hidden;
+                transition: box-shadow 0.3s ease;
+            }
+            .card:hover {
+                box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+            }
+            .header-section {
+                padding: 20px 30px;
+                background: linear-gradient(90deg, #16508e 0%, #1a5ca5 100%);
+                border-radius: 16px 16px 0 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .header-section h2 {
+                font-size: 1.85rem;
+                font-weight: 700;
+                color: #ffffff;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                letter-spacing: 0.5px;
+            }
+            .header-section h2 i {
+                margin-right: 12px;
+                font-size: 1.6rem;
+            }
+            .search-container {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                padding: 25px 30px;
+                background: #f8f9fa;
+                border-bottom: 1px solid #e9ecef;
+            }
+            .search-container input {
+                flex: 1;
+                min-width: 220px;
+                border-radius: 10px;
+                border: 1px solid #ced4da;
+                padding: 12px 18px;
+                font-size: 0.95rem;
+                background: #ffffff;
+                transition: border-color 0.3s ease, box-shadow 0.3s ease;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            }
+            .search-container input:focus {
+                border-color: #16508e;
+                box-shadow: 0 0 0 0.25rem rgba(22, 80, 142, 0.2);
+                outline: none;
+            }
+            .audit-table {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+                margin: 0 30px 30px;
+            }
+            .audit-table th,
+            .audit-table td {
+                padding: 16px 20px;
+                text-align: left;
+                font-size: 0.9rem;
+                color: #6c757d;
+                border-bottom: 1px solid #e9ecef;
+            }
+            .audit-table th {
+                background: #16508e;
+                color: #ffffff;
+                font-weight: 600;
+                text-transform: uppercase;
+                font-size: 0.85rem;
+                letter-spacing: 0.8px;
+                position: sticky;
+                top: 0;
+                z-index: 1;
+            }
+            .audit-table tr:nth-child(even) {
+                background-color: #f9fafb;
+            }
+            .audit-table tr:hover {
+                background-color: #eef1f5;
+                transition: background-color 0.2s ease;
+            }
+            .audit-table td {
+                color: #2c3e50;
+            }
+            .pagination {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 15px;
+                padding: 20px 30px;
+                background: #f8f9fa;
+                border-top: 1px solid #e9ecef;
+            }
+            .pagination a {
+                padding: 10px 18px;
+                border: 1px solid #16508e;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #16508e;
+                font-weight: 600;
+                font-size: 0.9rem;
+                background: #ffffff;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            }
+            .pagination a:hover {
+                background-color: #16508e;
+                color: #ffffff;
+                border-color: #123e6b;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            }
+            .pagination a.disabled {
+                color: #adb5bd;
+                border-color: #dee2e6;
+                background: #f8f9fa;
+                box-shadow: none;
+                pointer-events: none;
+            }
+            .pagination span {
+                font-size: 0.95rem;
+                color: #6c757d;
+                font-weight: 500;
+            }
+            .spinner-border {
+                width: 2.5rem;
+                height: 2.5rem;
+                margin: 25px auto;
+                display: block;
+                color: #16508e;
+            }
+            #loading-spinner {
+                padding: 20px;
+            }
+        </style>
+
+        <div class="header-section">
+            <h2><i class="fas fa-history me-2"></i> Audit Trails</h2>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="search_audit" class="form-control" placeholder="Search by User, Object, or Message" style="flex: 1;">
+            <input type="date" id="start_date" class="form-control" placeholder="Start Date">
+            <input type="date" id="end_date" class="form-control" placeholder="End Date">
+        </div>
+
+        <div id="loading-spinner" class="text-center mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <table class="audit-table" id="audit-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Object</th>
+                    <th>Message</th>
+                    <th>Timestamp</th>
+                    <th>Content Type</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>{{ activity.user.username }}</td>
+                    <td>{{ activity.action }}</td>
+                    <td>{{ activity.object_repr }}</td>
+                    <td>{{ activity.change_message }}</td>
+                    <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ activity.content_type }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center">No audit trails recorded.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            <a href="#" id="prev-page" {% if page_obj.has_previous %}data-page="{{ page_obj.previous_page_number }}"{% endif %} class="{% if not page_obj.has_previous %}disabled{% endif %}">Previous</a>
+            <span id="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            <a href="#" id="next-page" {% if page_obj.has_next %}data-page="{{ page_obj.next_page_number }}"{% endif %} class="{% if not page_obj.has_next %}disabled{% endif %}">Next</a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.getElementById("search_audit");
+    const startDateInput = document.getElementById("start_date");
+    const endDateInput = document.getElementById("end_date");
+    const auditTable = document.getElementById("audit-table").getElementsByTagName('tbody')[0];
+    const spinner = document.getElementById("loading-spinner");
+    const prevPage = document.getElementById("prev-page");
+    const nextPage = document.getElementById("next-page");
+    const pageInfo = document.getElementById("page-info");
+
+    let currentPage = {{ page_obj.number|default:1 }};
+
+    function fetchAuditTrails(query, startDate, endDate, page) {
+        spinner.style.display = "block";
+        console.log(`Fetching page ${page} with query: ${query}, start: ${startDate}, end: ${endDate}`);
+
+        fetch(`/audit-trails/?search=${encodeURIComponent(query)}&start_date=${encodeURIComponent(startDate)}&end_date=${encodeURIComponent(endDate)}&page=${page}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            spinner.style.display = "none";
+            auditTable.innerHTML = "";
+
+            if (!data.activities || data.activities.length === 0) {
+                auditTable.innerHTML = '<tr><td colspan="6" class="text-center">No audit trails recorded.</td></tr>';
+            } else {
+                data.activities.forEach(activity => {
+                    const row = `
+                        <tr>
+                            <td>${activity.user.username}</td>
+                            <td>${activity.action}</td>
+                            <td>${activity.object_repr}</td>
+                            <td>${activity.change_message}</td>
+                            <td>${new Date(activity.timestamp).toLocaleString()}</td>
+                            <td>${activity.content_type}</td>
+                        </tr>
+                    `;
+                    auditTable.innerHTML += row;
+                });
+
+                currentPage = data.current_page;
+                pageInfo.textContent = `Page ${data.current_page} of ${data.total_pages}`;
+                prevPage.classList.toggle("disabled", !data.has_previous);
+                nextPage.classList.toggle("disabled", !data.has_next);
+                if (data.has_previous) {
+                    prevPage.dataset.page = data.previous_page;
+                    prevPage.removeAttribute("disabled");
+                } else {
+                    prevPage.removeAttribute("data-page");
+                }
+                if (data.has_next) {
+                    nextPage.dataset.page = data.next_page;
+                    nextPage.removeAttribute("disabled");
+                } else {
+                    nextPage.removeAttribute("data-page");
+                }
+            }
+        })
+        .catch(error => {
+            spinner.style.display = "none";
+            auditTable.innerHTML = '<tr><td colspan="6" class="text-center">Error fetching data.</td></tr>';
+            console.error("Fetch error:", error);
+        });
+    }
+
+    function updateAuditTrails() {
+        const query = searchInput.value;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        fetchAuditTrails(query, startDate, endDate, 1);
+    }
+
+    searchInput.addEventListener("input", updateAuditTrails);
+    startDateInput.addEventListener("change", updateAuditTrails);
+    endDateInput.addEventListener("change", updateAuditTrails);
+
+    prevPage.addEventListener("click", function(e) {
+        e.preventDefault();
+        const page = this.dataset.page;
+        if (page && !this.classList.contains("disabled")) {
+            console.log(`Previous clicked, fetching page: ${page}`);
+            fetchAuditTrails(searchInput.value, startDateInput.value, endDateInput.value, page);
+        }
+    });
+
+    nextPage.addEventListener("click", function(e) {
+        e.preventDefault();
+        const page = this.dataset.page;
+        if (page && !this.classList.contains("disabled")) {
+            console.log(`Next clicked, fetching page: ${page}`);
+            fetchAuditTrails(searchInput.value, startDateInput.value, endDateInput.value, page);
+        }
+    });
+
+    fetchAuditTrails("", "", "", currentPage);
+});
+</script>
+{% endblock %}

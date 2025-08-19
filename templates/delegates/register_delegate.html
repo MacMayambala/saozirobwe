@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register Delegate - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="header-section mb-4">
+        <h2>Register a Delegate</h2>
+    </div>
+
+    <!-- Search Form for Customers -->
+    <div class="card shadow-lg p-4 mb-4">
+        <h5 class="mb-3">Search for a Customer</h5>
+        <form method="GET" action="" class="mb-3">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6 col-sm-12">
+                    <label for="search_query" class="fw-bold mb-1">Search by Name or Customer ID:</label>
+                    <input type="text" name="search_query" id="search_query" class="form-control" placeholder="Enter name or customer ID" value="{{ search_query }}">
+                </div>
+                <div class="col-md-2 col-sm-12">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Display Search Results -->
+        {% if search_results %}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0">
+                <thead class="nav-tabs">
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Branch</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody class="document-list">
+                    {% for customer in search_results %}
+                    <tr>
+                        <td>{{ customer.cus_id }}</td>
+                        <td>{{ customer.first_name }} {{ customer.surname }}</td>
+                        <td>{{ customer.branch }}</td>
+                        <td>
+                            {% if customer.is_delegate %}
+                                {% if customer.delegate_is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                    <small>(Expires: {{ customer.delegate.expiry_date|default:"N/A" }})</small>
+                                {% else %}
+                                    <span class="badge bg-danger">Expired</span>
+                                    <small>(Expired on: {{ customer.delegate.expiry_date|default:"N/A" }})</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-secondary">Not a Delegate</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <button class="btn btn-success btn-sm register-delegate" 
+                                    data-customer-id="{{ customer.cus_id }}" 
+                                    data-customer-name="{{ customer.first_name }} {{ customer.surname }}"
+                                    {% if customer.is_delegate and customer.delegate_is_active %}disabled{% endif %}>
+                                {% if customer.is_delegate %}
+                                    {% if customer.delegate_is_active %}
+                                        Already a Delegate
+                                    {% else %}
+                                        Renew Delegate
+                                    {% endif %}
+                                {% else %}
+                                    Register Delegate
+                                {% endif %}
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">No customers found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f8f9fa; color: #333; }
+    .container { max-width: 1400px; }
+    .card { border-radius: 15px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1); border: none; background: #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); }
+    .header-section { text-align: center; }
+    .header-section h2 { font-size: 1.75rem; font-weight: 700; color: #2c3e50; margin: 0; }
+    h5 { font-size: 1.1rem; font-weight: 600; color: #2c3e50; }
+    .btn { background-color: #16508e; border: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; color: #ffffff; transition: background-color 0.3s ease, transform 0.2s ease; }
+    .btn:hover { background-color: #0056b3; transform: translateY(-1px); }
+    .btn-success { background-color: #28a745; }
+    .btn-success:hover { background-color: #218838; }
+    .btn-success:disabled { background-color: #6c757d; cursor: not-allowed; }
+    .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 10px 15px; font-size: 0.9rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .form-control:focus { border-color: #16508e; box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); outline: none; }
+    .text-danger { font-size: 0.85rem; }
+    .nav-tabs { background-color: #16508e; color: #ffffff; border-bottom: none; }
+    .nav-tabs th { font-weight: 600; padding: 10px 15px; text-align: center; text-transform: uppercase; font-size: 0.85rem; }
+    .document-list td { font-size: 0.85rem; color: #6c757d; padding: 12px; text-align: center; vertical-align: middle; }
+    .document-list small { display: block; font-size: 0.75rem; color: #999; }
+    .table-responsive { border-radius: 0 0 10px 10px; overflow: hidden; }
+    .table { margin-bottom: 0; }
+    .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0, 0, 0, 0.02); }
+    .badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; }
+</style>
+
+<!-- JavaScript to Handle Delegate Registration -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const registerButtons = document.querySelectorAll('.register-delegate');
+
+        registerButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const customerId = this.getAttribute('data-customer-id');
+                const customerName = this.getAttribute('data-customer-name');
+
+                console.log('Registering delegate for customer ID:', customerId); // Debug log
+
+                // Create a form dynamically to submit a POST request
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = window.location.href;
+
+                // Add CSRF token
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (!csrfToken) {
+                    console.error('CSRF token not found!');
+                    alert('CSRF token missing. Please refresh the page and try again.');
+                    return;
+                }
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrfmiddlewaretoken';
+                csrfInput.value = csrfToken.value;
+                form.appendChild(csrfInput);
+
+                // Add customer ID and is_active fields
+                const customerInput = document.createElement('input');
+                customerInput.type = 'hidden';
+                customerInput.name = 'customer';
+                customerInput.value = customerId;
+                form.appendChild(customerInput);
+
+                const isActiveInput = document.createElement('input');
+                isActiveInput.type = 'hidden';
+                isActiveInput.name = 'is_active';
+                isActiveInput.value = 'on';
+                form.appendChild(isActiveInput);
+
+                // Add action type to differentiate between register and renew
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = this.textContent.trim() === 'Register Delegate' ? 'register' : 'renew';
+                form.appendChild(actionInput);
+
+                console.log('Submitting form:', form); // Debug log
+                document.body.appendChild(form);
+                form.submit();
+            });
+        });
+    });
+</script>
+{% endblock %}

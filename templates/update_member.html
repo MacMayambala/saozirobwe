@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 800px;
+    }
+    h2, h3 {
+        color: hsl(250, 91%, 32%);
+    }
+    .form-group {
+        margin-bottom: 20px;
+    }
+    label {
+        display: inline-block;
+        width: 150px;
+        margin-right: 10px;
+        text-align: right;
+    }
+    #main {
+        padding: 60px;
+        max-width: 1100px;
+        margin: auto;
+     }
+    input[type="text"], input[type="date"], input[type="number"], select {
+        width: 200px;
+        padding: 5px;
+        margin-bottom: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+    input[type="checkbox"] {
+        margin-left: 160px;
+    }
+    .alert {
+        margin-bottom: 20px;
+    }
+    input[type="submit"] {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    input[type="submit"]:hover {
+        background-color: #45a049;
+    }
+    /* New style for highlighting missing required fields */
+    .missing {
+        border: 2px solid rgb(247, 0, 0) !important;
+    }
+    @media (max-width: 768px) {
+        label {
+            width: 100%;
+            text-align: left;
+        }
+        input[type="text"], input[type="date"], input[type="number"], select {
+            width: 100%;
+        }
+        input[type="checkbox"] {
+            margin-left: 0;
+        }
+    }
+</style>
+
+<div class="container mt-5">
+    <h2 class="text-center mb-4"><b>EDIT REGISTERED MEMBER</b></h2>
+
+    <!-- Display Success/Error Messages -->
+    {% if messages %}
+    <div class="alert alert-dismissible fade show">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h2>Ristricted to ONLY Your Branch</h2> <br><br>
+    <form action="/submit" method="post" id="memberForm">
+        {% csrf_token %}
+        <div class="form-group">
+            <div class="form-group">
+                <label>Branch:</label>
+                <input type="text" name="branch" required aria-readonly="true">
+                
+                <label>Mem Reg Date:</label>
+                <input type="date" name="mem_reg_date" required aria-readonly="true">
+                
+                <label>Member Number:</label>
+                <input type="text" name="member_number" required aria-readonly="true">
+        </div>
+        <br><br>
+        
+        <h3>Bio Data and Contact Information</h3>
+        <label>Salutation:</label>
+        <select name="Salutation" required>
+            <option value="">Select</option>
+            <option value="Mr">Mr</option>
+            <option value="Miss">Mis</option>
+            <option value="Mrs">Mrs</option>
+         </select>
+        <label>First Name:</label>
+        <input type="text" name="first_name" required>
+        <label>Middle Name 1:</label>
+        <input type="text" name="middle_name1"><br><br>
+        
+        <label>Middle Name 2:</label>
+        <input type="text" name="middle_name2">
+        <label>Surname:</label>
+        <input type="text" name="surname" required>     
+        <label>Gender:</label>
+        <select name="gender" required>
+            <option value="">Select</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+         </select>
+        <br><br>
+        
+        <label>Marital Status:</label>
+        <select name="marital_status" required>
+            <option value="">Select</option>
+            <option value="Single">Single</option>
+            <option value="Married">Married</option>
+            <option value="Divorced">Divorced</option>
+         </select>
+        <label>Is PWD?</label>
+        <input type="checkbox" name="is_pwd">
+        <label>Date of Birth:</label>
+        <input type="date" name="dob" required>
+        <label>Home Ownership:</label>
+        <select name="home_ownership" required>
+            <option value="">Select</option>
+            <option value="Owned">Owned</option>
+            <option value="Rented">Rented</option>
+        </select><br><br><br>
+        
+        <h3>National Identification Details</h3>
+        <label>Identification Number:</label>
+        <input type="text" name="id_number" required>
+        <label>Card Number:</label>
+        <input type="number" name="card_number" required>
+        <label>NIN Village:</label>
+        <input type="text" name="nin_village"><br><br>
+        
+        <label>NIN Parish:</label>
+        <input type="text" name="nin_parish">
+        <label>NIN S_County:</label>
+        <input type="text" name="nin_s_county">
+        <label>NIN County:</label>
+        <input type="text" name="nin_county"><br><br>
+        
+        <label>NIN District:</label>
+        <input type="text" name="nin_district"><br>
+        
+        <h3>Phone Numbers</h3>
+        <label>Phone Number 1:</label>
+        <input type="number" name="phone_number1" required>
+        
+        <label>Phone Number 2:</label>
+        <input type="number" name="phone_number2"><br><br><br>
+        
+        <h3>Current Physical Address</h3>
+        <label>Village:</label>
+        <input type="text" name="village">
+        <label>Parish:</label>
+        <input type="text" name="parish">
+        <label>S_County:</label>
+        <input type="text" name="s_county"><br><br>
+
+        <label>County:</label>
+        <input type="text" name="county">
+        <label>District:</label>
+        <input type="text" name="district">
+        <label>SAO Zirobwe Zone:</label>
+        <select name="SAO_Zone" required>
+            <option value="">Select</option>
+            <option value="Bamunanika">Bamunanika</option>
+            <option value="Bukimu">Bukimu</option>
+            <option value="Busiika_Main">Busiika_Main</option>
+            <option value="Collective_A">Collective_A</option>
+            <option value="Collective_B">Collective_B</option>
+            <option value="Kabulanaka_Ngalonkalu">Kabulanaka_Ngalonkalu</option>
+            <option value="Kakakala">Kakakala</option>
+            <option value="Kikyusa">Kikyusa</option>
+            <option value="Kyetume_Bubbuubi">Kyetume_Bubbuubi</option>
+            <option value="Namawojja">Namawojja</option>
+            <option value="Sekamuli">Sekamuli</option>
+         </select>
+        
+        <h3>Next of Kin Details</h3>
+        <label>Next of Kin:</label>
+        <input type="text" name="next_of_kin" required>
+        <label>First Name:</label>
+        <input type="text" name="kin_first_name" required>
+        <label>Second Name:</label>
+        <input type="text" name="kin_second_name"><br><br>
+        
+        <label>Phone Number:</label>
+        <input type="number" name="kin_phone" required>
+        <label>Physical Address:</label>
+        <input type="text" name="kin_address">
+        <label>Relationship:</label>
+        <input type="text" name="kin_relationship"><br><br>
+        
+        <h3>Current Employment Details</h3>
+        <label>Employment:</label>
+        <input type="text" name="employment">
+        <label>Occupation:</label>
+        <input type="text" name="occupation">
+        <label>Employer/Business Name:</label>
+        <input type="text" name="employer_name"><br><br>
+        
+        <label>Emp/Business Address:</label>
+        <input type="text" name="employer_address">
+        <label>Employer/Business Phone Number 1:</label>
+        <input type="number" name="employer_phone1"><br><br>
+
+        <label>Emp/Business Phone Number 2:</label>
+        <input type="number" name="employer_phone2">
+        <label>Income Frequency:</label>
+        <input type="text" name="income_frequency">
+        <label>Income Per Month:</label>
+        <input type="text" name="income_per_month"><br><br>
+        
+        <input type="submit" value="Update_Member">
+    </form>
+</div>
+
+<script>
+    document.getElementById('memberForm').onsubmit = function(event) {
+        // Remove any existing red borders
+        let allInputs = document.querySelectorAll('input, select');
+        allInputs.forEach(input => input.classList.remove('missing'));
+
+        // Check all required fields
+        let requiredFields = document.querySelectorAll('[required]');
+        let missingFields = [];
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) { // Check if field is empty
+                missingFields.push(field);
+                field.classList.add('missing'); // Add red border
+            }
+        });
+
+        if (missingFields.length > 0) {
+            event.preventDefault(); // Stop form submission
+            alert('Required Data is Missing');
+            return false;
+        }
+
+        // If all required fields are filled, show confirmation
+        let confirmed = confirm('Confirm to Submit?');
+        if (!confirmed) {
+            event.preventDefault(); // Stop submission if 'Cancel' is clicked
+        }
+        return confirmed; // Submit if 'OK' is clicked
+    };
+</script>
+{% endblock %}

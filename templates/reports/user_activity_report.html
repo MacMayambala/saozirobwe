@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+        <style>
+            body {
+                font-family: 'Nunito', Arial, sans-serif;
+                background: #f8f9fa;
+            }
+            .container {
+                max-width: 900px;
+            }
+            .card {
+                border-radius: 15px;
+                box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+                border: none;
+                padding: 20px;
+            }
+            .header-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .header-section h2 {
+                font-size: 1.75rem;
+                font-weight: 700;
+                color: #2c3e50;
+                margin: 0;
+            }
+            .btn-primary {
+                background-color: #16508e;
+                border: none;
+                font-weight: 600;
+                padding: 10px 20px;
+                border-radius: 8px;
+                transition: background-color 0.3s ease;
+            }
+            .btn-primary:hover {
+                background-color: #0056b3;
+            }
+            .search-container {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                margin-bottom: 20px;
+            }
+            .search-container input {
+                border-radius: 8px;
+                border: 1px solid #ced4da;
+                padding: 8px 15px;
+                font-size: 0.9rem;
+                transition: border-color 0.3s ease;
+            }
+            .search-container input:focus {
+                border-color: #16508e;
+                box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25);
+                outline: none;
+            }
+            .nav-tabs {
+                border-bottom: 1px solid #dee2e6;
+                margin-bottom: 20px;
+            }
+            .nav-tabs .nav-link {
+                font-weight: 600;
+                color: #6c757d;
+                border: none;
+                padding: 10px 20px;
+                transition: all 0.3s ease;
+            }
+            .nav-tabs .nav-link:hover {
+                color: #16508e;
+            }
+            .nav-tabs .nav-link.active {
+                background-color: #16508e;
+                color: #ffffff;
+                border-radius: 8px 8px 0 0;
+            }
+            .activity-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .activity-table th,
+            .activity-table td {
+                padding: 15px;
+                text-align: left;
+                font-size: 0.9rem;
+                color: #6c757d;
+            }
+            .activity-table th {
+                background-color: #16508e;
+                color: #ffffff;
+                font-weight: 600;
+            }
+            .activity-table tr:nth-child(even) {
+                background-color: #f8f9fa;
+            }
+            .activity-table tr:hover {
+                background-color: #e9ecef;
+            }
+            .pagination {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            .pagination a {
+                padding: 8px 12px;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #16508e;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            }
+            .pagination a:hover {
+                background-color: #f8f9fa;
+                border-color: #16508e;
+            }
+            .pagination a.disabled {
+                color: #adb5bd;
+                pointer-events: none;
+                border-color: #dee2e6;
+            }
+            .pagination span {
+                font-size: 0.9rem;
+                color: #6c757d;
+            }
+            .spinner-border {
+                width: 2rem;
+                height: 2rem;
+            }
+        </style>
+
+        <div class="header-section">
+            <h2><i class="fas fa-chart-line me-2"></i> User Activity Report</h2>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="search_activity" class="form-control" placeholder="Search by Username or Action" style="flex: 1;">
+            <input type="date" id="start_date" class="form-control" placeholder="Start Date">
+            <input type="date" id="end_date" class="form-control" placeholder="End Date">
+        </div>
+
+        <div id="loading-spinner" class="text-center mt-3" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <table class="activity-table" id="activity-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Action</th>
+                    <th>Timestamp</th>
+                    <th>IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>{{ activity.user.username }}</td>
+                    <td>{{ activity.action }}</td>
+                    <td>{{ activity.timestamp|date:"Y-m-d H:i:s" }}</td>
+                    <td>{{ activity.ip_address }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No activity recorded.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+            <a href="#" id="prev-page" data-page="{{ page_obj.previous_page_number }}">Previous</a>
+            {% else %}
+            <a href="#" class="disabled">Previous</a>
+            {% endif %}
+            <span id="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a href="#" id="next-page" data-page="{{ page_obj.next_page_number }}">Next</a>
+            {% else %}
+            <a href="#" class="disabled">Next</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.getElementById("search_activity");
+    const startDateInput = document.getElementById("start_date");
+    const endDateInput = document.getElementById("end_date");
+    const activityTable = document.getElementById("activity-table").getElementsByTagName('tbody')[0];
+    const spinner = document.getElementById("loading-spinner");
+    const prevPage = document.getElementById("prev-page");
+    const nextPage = document.getElementById("next-page");
+    const pageInfo = document.getElementById("page-info");
+
+    let currentPage = {{ page_obj.number|default:1 }};
+
+    function fetchActivities(query, startDate, endDate, page = 1) {
+        spinner.style.display = "block";
+
+        fetch(`/search-activities/?search=${query}&start_date=${startDate}&end_date=${endDate}&page=${page}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => response.json())
+        .then(data => {
+            spinner.style.display = "none";
+            activityTable.innerHTML = "";
+
+            if (data.activities.length === 0) {
+                activityTable.innerHTML = '<tr><td colspan="4" class="text-center">No activity recorded.</td></tr>';
+            } else {
+                data.activities.forEach(activity => {
+                    const row = `
+                        <tr>
+                            <td>${activity.user.username}</td>
+                            <td>${activity.action}</td>
+                            <td>${new Date(activity.timestamp).toLocaleString()}</td>
+                            <td>${activity.ip_address}</td>
+                        </tr>
+                    `;
+                    activityTable.innerHTML += row;
+                });
+
+                currentPage = data.current_page;
+                pageInfo.textContent = `Page ${currentPage} of ${data.total_pages}`;
+
+                prevPage.classList.toggle("disabled", !data.has_previous);
+                nextPage.classList.toggle("disabled", !data.has_next);
+                if (data.has_previous) prevPage.setAttribute("data-page", data.previous_page);
+                if (data.has_next) nextPage.setAttribute("data-page", data.next_page);
+            }
+        })
+        .catch(error => {
+            spinner.style.display = "none";
+            activityTable.innerHTML = '<tr><td colspan="4" class="text-center">Error fetching data.</td></tr>';
+            console.error("Error:", error);
+        });
+    }
+
+    function updateActivities() {
+        const query = searchInput.value;
+        const startDate = startDateInput.value;
+        const endDate = endDateInput.value;
+        fetchActivities(query, startDate, endDate, 1);
+    }
+
+    searchInput.addEventListener("input", updateActivities);
+    startDateInput.addEventListener("change", updateActivities);
+    endDateInput.addEventListener("change", updateActivities);
+
+    prevPage.addEventListener("click", function(e) {
+        e.preventDefault();
+        if (!this.classList.contains("disabled")) {
+            fetchActivities(searchInput.value, startDateInput.value, endDateInput.value, this.getAttribute("data-page"));
+        }
+    });
+
+    nextPage.addEventListener("click", function(e) {
+        e.preventDefault();
+        if (!this.classList.contains("disabled")) {
+            fetchActivities(searchInput.value, startDateInput.value, endDateInput.value, this.getAttribute("data-page"));
+        }
+    });
+
+    fetchActivities("", "", "");
+});
+</script>
+{% endblock %}

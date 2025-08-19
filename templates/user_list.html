@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <!-- Header -->
+        <h2 class="mb-4 fw-bold text-center">
+            <i class="bi bi-shield-lock me-2"></i> Manage User Access
+        </h2>
+
+        <!-- Navigation Link to Groups -->
+        <div class="d-flex justify-content-end mb-4">
+            <a href="{% url 'group_list' %}" class="btn btn-secondary">
+                <i class="bi bi-people-fill me-1"></i> Manage Groups
+            </a>
+        </div>
+
+        <!-- Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Manage Access</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in user_data %}
+                    <tr>
+                        <td>{{ entry.user.username }}</td>
+                        <td>{{ entry.role }}</td>
+                        <td>
+                            <a href="{% url 'manage_user_modules' entry.user.id %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-gear me-1"></i> Manage Modules
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">No users found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    /* Container */
+    .container {
+        max-width: 900px;
+        margin: 0 auto 40px;
+        font-family: 'Nunito', Arial, sans-serif;
+        padding: 0 20px;
+        background: #f4f6f9;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    /* Card */
+    .card {
+        border: none;
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 2rem; /* Retained from original */
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Header */
+    h2 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2c3e50;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #16508e;
+        letter-spacing: 0.5px;
+    }
+
+    /* Navigation Button */
+    .btn-secondary {
+        background: linear-gradient(135deg, #6c757d 0%, #7e868c 100%);
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .btn-secondary:hover {
+        background: linear-gradient(135deg, #5a6268 0%, #6c757d 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Table */
+    .table-responsive {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .table {
+        margin-bottom: 0;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: #ffffff;
+    }
+
+    .table thead th {
+        background: #16508e;
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 16px;
+        border: none;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .table tbody tr {
+        transition: background-color 0.3s ease;
+    }
+    .table tbody tr:hover {
+        background: #f1f3f5;
+    }
+
+    .table tbody td {
+        padding: 16px;
+        font-size: 0.95rem;
+        color: #2c3e50;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+
+    .table tbody td.text-muted {
+        font-size: 0.9rem;
+        color: #6c757d;
+        font-style: italic;
+    }
+
+    /* Buttons */
+    .btn-primary {
+        background: linear-gradient(135deg, #16508e 0%, #1a5ca5 100%);
+        border: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 8px 16px;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, #123e6b 0%, #164f8e 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 15px;
+            margin-top: 20px;
+        }
+        .card {
+            padding: 1.5rem;
+        }
+        h2 {
+            font-size: 1.75rem;
+        }
+        .table thead th {
+            font-size: 0.9rem;
+            padding: 12px;
+        }
+        .table tbody td {
+            font-size: 0.9rem;
+            padding: 12px;
+        }
+        .btn-primary, .btn-secondary {
+            font-size: 0.85rem;
+            padding: 6px 12px;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ title }}</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'staff_management:staff_target_type_list' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="mb-3">
+                    <label for="{{ form.stname.id_for_label }}" class="form-label">{{ form.stname.label }}</label>
+                    {{ form.stname }}
+                    {% if form.stname.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.stname.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if form.stname.help_text %}
+                        <small class="form-text text-muted">{{ form.stname.help_text }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="mb-3">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">{{ form.description.label }}</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="invalid-feedback d-block">
+                            {% for error in form.description.errors %}
+                                {{ error }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if form.description.help_text %}
+                        <small class="form-text text-muted">{{ form.description.help_text }}</small>
+                    {% endif %}
+                </div>
+                
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        {% if is_create %}
+                            <i class="fas fa-save"></i> Create Target Type
+                        {% else %}
+                            <i class="fas fa-save"></i> Update Target Type
+                        {% endif %}
+                    </button>
+                    <a href="{% url 'staff_management:staff_target_type_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

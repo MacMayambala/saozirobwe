@@ -1,0 +1,21 @@
+{% extends "admin/base_site.html" %}
+{% block branding %}
+    <h1 id="site-name"><a href="{% url 'admin:index' %}">Sao Zirobwe SACCO Admin</a></h1>
+{% endblock %}
+{% block extrastyle %}
+    <style>
+        :root {
+            --primary: #16508e;
+        }
+        #header {
+            background: var(--primary);
+            border-bottom: 3px solid #123e6b;
+        }
+        .module h2, .module caption, .inline-group h2 {
+            background: var(--primary);
+        }
+        a:link, a:visited {
+            color: var(--primary);
+        }
+    </style>
+{% endblock %}

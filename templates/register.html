@@ -1,0 +1,528 @@
+{% extends 'base.html' %}
+{% load static widget_tweaks %}
+
+{% block content %}
+<div class="container">
+    <style>
+        :root {
+            --primary-color: hsl(250, 91%, 32%);
+            --secondary-color: hsl(0, 0%, 40%);
+            --accent-color: #4CAF50;
+            --accent-hover: #45a049;
+            --clear-color: #dc3545;
+            --clear-hover: #c82333;
+            --error-color: #dc3545;
+            --background-light: #f8f9fa;
+            --border-color: #d1d5db;
+            --text-dark: #1f2937;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        h2, h3 {
+            font-family: 'Ubuntu', sans-serif;
+            color: var(--primary-color);
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            text-align: center;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 0.95rem;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 6px rgba(37, 99, 235, 0.2);
+            outline: none;
+            transform: translateY(-1px);
+        }
+
+        .form-control[disabled] {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .form-control-file {
+            padding: 0.5rem;
+            border: none;
+        }
+
+        .form-check-input {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-top: 0.25rem;
+            accent-color: var(--primary-color);
+        }
+
+        .missing {
+            border: 2px solid var(--error-color) !important;
+            box-shadow: 0 0 6px rgba(220, 53, 69, 0.3);
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+        }
+
+        .btn-submit {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-clear {
+            background-color: var(--clear-color);
+            color: #fff;
+        }
+
+        .btn-clear:hover {
+            background-color: var(--clear-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+        }
+
+        .col-md-4 {
+            flex: 1 1 30%;
+            min-width: 250px;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1.5rem;
+            }
+
+            h2 {
+                font-size: 1.75rem;
+            }
+
+            h3 {
+                font-size: 1.1rem;
+            }
+
+            .col-md-4 {
+                flex: 1 1 100%;
+            }
+
+            .row {
+                gap: 1rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .form-control {
+                font-size: 0.9rem;
+                padding: 0.6rem;
+            }
+
+            .btn-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <h2>MEMBER REGISTRATION FORM</h2>
+
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-dismissible fade show alert-{% if message.tags == 'success' %}success{% else %}danger{% endif %}" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" id="memberForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!-- Branch and Registration Details -->
+        <div class="form-section">
+            <h3>Branch and Registration Details</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'branch,mem_reg_date,member_number' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% if field.name == 'mem_reg_date' %}
+                        {% render_field field class="form-control" placeholder=field.label required="required" %}
+                    {% elif field.name == 'branch' %}
+                        {% render_field field class="form-control" required="required" %}
+                    {% else %}
+                        {% render_field field class="form-control" placeholder=field.label required="required" %}
+                    {% endif %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Bio Data and Contact Information -->
+        <div class="form-section">
+            <h3>Bio Data and Contact Information</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'salutation,first_name,middle_name1,middle_name2,surname,gender,marital_status,is_pwd,dob,home_ownership' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% if field.name == 'is_pwd' %}
+                        {% render_field field class="form-check-input" %}
+                    {% elif field.name in 'dob' %}
+                        {% render_field field class="form-control" required="required" %}
+                    {% elif field.name in 'salutation,gender,marital_status,home_ownership' %}
+                        {% render_field field class="form-control" required="required" %}
+                    {% else %}
+                        {% render_field field class="form-control" placeholder=field.label required="required" %}
+                    {% endif %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- National Identification Details -->
+        <div class="form-section">
+            <h3>National Identification Details</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'id_number,card_number,nin_village,nin_parish,nin_s_county,nin_county,nin_district' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% if field.name in 'id_number,card_number' %}
+                        {% render_field field class="form-control" placeholder=field.label required="required" %}
+                    {% else %}
+                        {% render_field field class="form-control" placeholder=field.label %}
+                    {% endif %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Phone Numbers -->
+        <div class="form-section">
+            <h3>Phone Numbers</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'phone,phone_number2' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% if field.name == 'phone' %}
+                        {% render_field field class="form-control" placeholder="e.g., 256700123456" required="required" %}
+                    {% else %}
+                        {% render_field field class="form-control" placeholder=field.label %}
+                    {% endif %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Current Physical Address -->
+        <div class="form-section">
+            <h3>Current Physical Address</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'village,parish,s_county,county,district,sao_zone' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% if field.name == 'sao_zone' %}
+                        {% render_field field class="form-control" required="required" %}
+                    {% else %}
+                        {% render_field field class="form-control" placeholder=field.label %}
+                    {% endif %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Next of Kin Details -->
+        <div class="form-section">
+            <h3>Next of Kin Details</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'kin_sname,kin_fname,kin_sname2,kin_phone,kin_address,kin_relationship' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% if field.name in 'kin_sname,kin_fname,kin_phone' %}
+                        {% render_field field class="form-control" placeholder=field.label required="required" %}
+                    {% else %}
+                        {% render_field field class="form-control" placeholder=field.label %}
+                    {% endif %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Current Employment Details -->
+        <div class="form-section">
+            <h3>Current Employment Details</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'employment,occupation,employer_name,employer_address,employer_phone1,employer_phone2,income_frequency,income_per_month' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% render_field field class="form-control" placeholder=field.label %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- File Uploads -->
+        <div class="form-section">
+            <h3>Attachments</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'profile_picture,signature_photo,id_scan' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% render_field field class="form-control-file" accept="image/*" %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Member-Specific Fields -->
+        <div class="form-section">
+            <h3>Membership Details</h3>
+            <div class="row">
+                {% for field in form %}
+                {% if field.name in 'subscription_start,status,next_of_kin_name,next_of_kin_relationship,next_of_kin_village,sao_officer' %}
+                <div class="col-md-4 form-group">
+                    {{ field.label_tag }}
+                    {% if field.name == 'subscription_start' %}
+                        {% render_field field class="form-control" %}
+                    {% elif field.name == 'status' %}
+                        {% render_field field class="form-control" required="required" %}
+                    {% else %}
+                        {% render_field field class="form-control" placeholder=field.label %}
+                    {% endif %}
+                    {% if field.errors %}
+                    <small class="error-message">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="btn-container">
+            <button type="submit" class="btn btn-submit">Save Member</button>
+            <button type="reset" class="btn btn-clear" onclick="clearForm()">Clear</button>
+            <a href="{% url 'member_list' %}" class="btn btn-clear">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('memberForm').onsubmit = function(event) {
+        // Remove existing missing styles
+        let allInputs = document.querySelectorAll('input:not([disabled]), select, textarea');
+        allInputs.forEach(input => input.classList.remove('missing'));
+
+        // Check required fields
+        let requiredFields = document.querySelectorAll('[required]:not([disabled])');
+        let hasErrors = false;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('missing');
+                hasErrors = true;
+            }
+        });
+
+        if (hasErrors) {
+            event.preventDefault();
+            alert('Please fill all required fields.');
+            return false;
+        }
+
+        // Confirm submission
+        let confirmed = confirm('Confirm to Submit?');
+        if (!confirmed) {
+            event.preventDefault();
+        }
+        return confirmed;
+    };
+
+    function clearForm() {
+        let form = document.getElementById('memberForm');
+        form.reset();
+        let allInputs = document.querySelectorAll('input:not([disabled]), select, textarea');
+        allInputs.forEach(input => input.classList.remove('missing'));
+    }
+</script>
+{% endblock %}

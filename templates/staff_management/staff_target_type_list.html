@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>{{ title }}</h2>
+        </div>
+        <div class="col-auto">
+            <a href="{% url 'staff_management:staff_target_type_create' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Target Type
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            {% if target_types %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Created</th>
+                                <th>Last Modified</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for target_type in target_types %}
+                                <tr>
+                                    <td>{{ target_type.code }}</td>
+                                    <td>{{ target_type.stname }}</td>
+                                    <td>{{ target_type.description|truncatechars:50|default:"-" }}</td>
+                                    <td>{{ target_type.created_at|date:"M d, Y" }}</td>
+                                    <td>{{ target_type.modified_on|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'staff_management:staff_target_type_detail' target_type.pk %}" class="btn btn-sm btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'staff_management:staff_target_type_update' target_type.pk %}" class="btn btn-sm btn-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'staff_management:staff_target_type_delete' target_type.pk %}" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    No target types found. Click "Add New Target Type" to create one.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

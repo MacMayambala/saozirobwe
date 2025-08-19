@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Logo and Title Section -->
+    <div class="header-section mb-5">
+        <div class="row align-items-center justify-content-center">
+            <div class="col-auto">
+                <img src="{% static 'assets/img/favicon.png' %}" alt="Munomukabi Logo" style="width: 80px; height: auto;">
+            </div>
+            <div class="col-auto">
+                <h2><i class="fas fa-users me-2"></i> Expired Members in Munomukabi</h2>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Form -->
+    <form method="get" class="card shadow-lg p-4 mb-5" id="filter-form">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-2 col-sm-6">
+                <label for="start_date" class="fw-bold mb-1">Start Date:</label>
+                <input type="date" id="start_date" name="start_date" class="form-control">
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label for="end_date" class="fw-bold mb-1">End Date:</label>
+                <input type="date" id="end_date" name="end_date" class="form-control">
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label for="name" class="fw-bold mb-1">Name:</label>
+                <input type="text" id="name" name="name" class="form-control" value="{{ request.GET.name }}" placeholder="Search by name">
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label for="member_number" class="fw-bold mb-1">Member Number:</label>
+                <input type="text" id="member_number" name="member_number" class="form-control" value="{{ request.GET.member_number }}" placeholder="Search by member number">
+            </div>
+            <div class="col-md-4 col-sm-12 d-flex gap-3 align-items-end">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-search me-2"></i> Search</button>
+                <a href="{% url 'export_members_to_excel' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&name={{ request.GET.name }}&member_number={{ request.GET.member_number }}" 
+                   class="btn btn-primary"><i class="fas fa-file-excel me-2"></i> Download Excel</a>
+                <a href="{% url 'export_members_to_pdf' %}?start_date={{ request.GET.start_date }}&end_date={{ request.GET.end_date }}&name={{ request.GET.name }}&member_number={{ request.GET.member_number }}" 
+                   class="btn btn-primary"><i class="fas fa-file-pdf me-2"></i> Download PDF</a>
+            </div>
+        </div>
+    </form>
+
+    <!-- Members Table -->
+    <div class="card shadow-lg">
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0">
+                <thead class="nav-tabs">
+                    <tr>
+                        <th>Name</th>
+                        <th>Account Number</th>
+                        <th>Phone</th>
+                        <th>Date of Birth</th>
+                        <th>Subscription Start</th>
+                        <th>Subscription End</th>
+                        <th>Branch</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody class="member-list" id="member-list">
+                    {% for member in members %}
+                    <tr>
+                        <td>{{ member.customer.first_name }} {{ member.customer.surname }}</td>
+                        <td>{{ member.customer.member_number }}</td>
+                        <td>{{ member.customer.phone_number1|default:"" }}</td>
+                        <td>{{ member.customer.dob|date:"Y-m-d"|default:"" }}</td>
+                        <td>{{ member.subscription_start|date:"Y-m-d"|default:"" }}</td>
+                        <td>{{ member.subscription_end|date:"Y-m-d"|default:"" }}</td>
+                        <td>{{ member.customer.branch }}</td>
+                        <td><span class="badge bg-danger">Expired</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-3">No expired members found for the selected filters.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination mt-4" id="pagination">
+        {% if page_obj.has_previous %}
+        <a href="#" data-page="{{ page_obj.previous_page_number }}" class="btn pagination-link">Previous</a>
+        {% else %}
+        <a href="#" class="btn disabled">Previous</a>
+        {% endif %}
+        <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="#" data-page="{{ page_obj.next_page_number }}" class="btn pagination-link">Next</a>
+        {% else %}
+        <a href="#" class="btn disabled">Next</a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f8f9fa; }
+    .container { max-width: 1400px; }
+    .card { border-radius: 15px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15); border: none; padding: 15px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+    .header-section { text-align: center; }
+    .header-section h2 { font-size: 1.5rem; font-weight: 700; color: #2c3e50; margin: 0; }
+    .btn { background-color: #16508e; border: none; font-weight: 600; padding: 10px 20px; border-radius: 8px; color: #ffffff; transition: background-color 0.3s ease; }
+    .btn:hover { background-color: #0056b3; color: #ffffff; }
+    .btn.disabled { color: #adb5bd; pointer-events: none; background-color: #dee2e6; }
+    .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 8px 15px; font-size: 0.9rem; transition: border-color 0.3s ease; max-width: 200px; }
+    .form-control:focus { border-color: #16508e; box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); outline: none; }
+    .nav-tabs { background-color: #16508e; color: #ffffff; border-bottom: none; }
+    .nav-tabs th { font-weight: 600; padding: 10px 20px; text-align: center; }
+    .member-list td { font-size: 0.9rem; color: #6c757d; padding: 15px; text-align: center; }
+    .member-list .badge { font-size: 0.8rem; padding: 0.5em 1em; }
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px; }
+    .pagination a { text-decoration: none; }
+    .pagination span { font-size: 0.9rem; color: #6c757d; }
+    .table-responsive { border-radius: 0 0 15px 15px; overflow: hidden; }
+    #loading-spinner { display: none; text-align: center; padding: 20px; }
+    .spinner-border { width: 2rem; height: 2rem; }
+</style>
+
+<!-- JavaScript for Dynamic Filtering and Pagination -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("filter-form");
+    const memberList = document.getElementById("member-list");
+    const pagination = document.getElementById("pagination");
+    const spinner = document.createElement("div");
+    spinner.id = "loading-spinner";
+    spinner.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+    memberList.before(spinner);
+
+    function fetchMembers(page = 1) {
+        const formData = new FormData(form);
+        formData.set("page", page);
+        const queryString = new URLSearchParams(formData).toString();
+        spinner.style.display = "block";
+        memberList.style.opacity = "0.5";
+
+        fetch(`/filter-members/?${queryString}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => response.json())
+        .then(data => {
+            spinner.style.display = "none";
+            memberList.style.opacity = "1";
+            memberList.innerHTML = "";
+
+            if (data.members.length === 0) {
+                memberList.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">No expired members found for the selected filters.</td></tr>';
+            } else {
+                data.members.forEach(member => {
+                    const row = `
+                        <tr>
+                            <td>${member.customer.first_name} ${member.customer.surname}</td>
+                            <td>${member.customer.member_number}</td>
+                            <td>${member.customer.phone_number1 || ''}</td>
+                            <td>${member.customer.dob || ''}</td>
+                            <td>${member.subscription_start || ''}</td>
+                            <td>${member.subscription_end || ''}</td>
+                            <td>${member.customer.branch}</td>
+                            <td><span class="badge bg-danger">Expired</span></td>
+                        </tr>
+                    `;
+                    memberList.innerHTML += row;
+                });
+            }
+
+            pagination.innerHTML = `
+                ${data.has_previous ? `<a href="#" data-page="${data.previous_page}" class="btn pagination-link">Previous</a>` : '<a href="#" class="btn disabled">Previous</a>'}
+                <span>Page ${data.current_page} of ${data.total_pages}</span>
+                ${data.has_next ? `<a href="#" data-page="${data.next_page}" class="btn pagination-link">Next</a>` : '<a href="#" class="btn disabled">Next</a>'}
+            `;
+
+            document.querySelectorAll(".pagination-link").forEach(link => {
+                link.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute("data-page");
+                    fetchMembers(page);
+                });
+            });
+        })
+        .catch(error => {
+            spinner.style.display = "none";
+            memberList.style.opacity = "1";
+            memberList.innerHTML = '<tr><td colspan="8" class="text-center text-muted py-3">Error loading data.</td></tr>';
+            console.error("Error:", error);
+        });
+    }
+
+    form.addEventListener("input", function(e) {
+        if (e.target.matches("input")) {
+            fetchMembers(1);
+        }
+    });
+
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        fetchMembers(1);
+    });
+
+    document.querySelectorAll(".pagination-link").forEach(link => {
+        link.addEventListener("click", function(e) {
+            e.preventDefault();
+            const page = this.getAttribute("data-page");
+            fetchMembers(page);
+        });
+    });
+
+    fetchMembers({{ page_obj.number|default:1 }});
+});
+</script>
+{% endblock %}

@@ -1,0 +1,207 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Display Success/Error Messages -->
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} text-light border-0 alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow-lg p-4">
+        <!-- Header -->
+        <h2 class="mb-4 fw-bold text-center">
+            <i class5="bi bi-file-earmark-plus me-2"></i> 
+            Register Document in Custody
+        </h2>
+
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            <!-- Customer Information (Read-Only) -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">Customer Information</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Customer ID</label>
+                            <input type="text" class="form-control" value="{{ customer.cus_id }}" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Full Name</label>
+                            <input type="text" class="form-control" value="{{ customer.salutation }} {{ customer.first_name }} {{ customer.surname }}" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Member Number</label>
+                            <input type="text" class="form-control" value="{{ customer.member_number }}" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Phone Number</label>
+                            <input type="text" class="form-control" value="{{ customer.phone }}" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">Branch</label>
+                            <input type="text" class="form-control" value="{{ customer.branch }}" readonly>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">National ID Number</label>
+                            <input type="text" class="form-control" value="{{ customer.id_number }}" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Document Information -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">Document Information</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.document_type.label }}</label>
+                            {{ form.document_type }}
+                            {% if form.document_type.errors %}
+                            <div class="text-danger mt-1 small">{{ form.document_type.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.storage_reason.label }}</label>
+                            {{ form.storage_reason }}
+                            {% if form.storage_reason.errors %}
+                            <div class="text-danger mt-1 small">{{ form.storage_reason.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">{{ form.document_description.label }}</label>
+                            {{ form.document_description }}
+                            {% if form.document_description.errors %}
+                            <div class="text-danger mt-1 small">{{ form.document_description.errors }}</div>
+                            {% endif %}
+                        </div>
+                       
+                        
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next of Kin Information (Optional, Editable) -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">Next of Kin Information (Optional)</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.next_of_kin_name.label }}</label>
+                            {{ form.next_of_kin_name }}
+                            {% if form.next_of_kin_name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.next_of_kin_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.next_of_kin_phone.label }}</label>
+                            {{ form.next_of_kin_phone }}
+                            {% if form.next_of_kin_phone.errors %}
+                            <div class="text-danger mt-1 small">{{ form.next_of_kin_phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.next_of_kin_relationship.label }}</label>
+                            {{ form.next_of_kin_relationship }}
+                            {% if form.next_of_kin_relationship.errors %}
+                            <div class="text-danger mt-1 small">{{ form.next_of_kin_relationship.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <small class="text-muted">Leave blank to use customer's default next of kin details.</small>
+                </div>
+            </div>
+
+           
+            
+
+            <!-- Submit Button -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary px-4 py-2">
+                    <i class="bi bi-save me-2"></i> Register Document
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        font-family: 'Nunito', Arial, sans-serif;
+    }
+    h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 30px;
+    }
+    .card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border: none;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+        background-color: #16508e;
+        color: white;
+        font-weight: 600;
+        padding: 10px 15px;
+        border-radius: 10px 10px 0 0;
+    }
+    .card-body {
+        padding: 20px;
+    }
+    .form-label {
+        color: #2c3e50;
+    }
+    .btn-primary {
+        background-color: #16508e;
+        border: none;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+    .text-danger {
+        font-size: 0.85rem;
+    }
+    .form-control[readonly] {
+        background-color: #e9ecef;
+        opacity: 1;
+    }
+</style>
+
+<!-- Bootstrap Validation Script -->
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

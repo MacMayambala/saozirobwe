@@ -1,0 +1,564 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if staff %}Update Staff - Sao Zirobwe SACCO{% else %}Add Staff - Sao Zirobwe SACCO{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">
+        {% if staff %}Update Staff: {{ staff.first_name }} {{ staff.last_name }}{% else %}Register New Staff{% endif %}
+    </h2>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Display form errors -->
+            {% if form.errors or form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <p>Please correct the following errors:</p>
+                    <ul>
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                                <li>{{ field.label }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" action="{% if staff %}{% url 'staff_management:update_staff' staff.id %}{% else %}{% url 'staff_management:add_staff' %}{% endif %}">
+                {% csrf_token %}
+
+                <!-- Bio Data -->
+                <h5 class="mt-3">Bio Data</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="staff_id" class="form-label">Staff ID</label>
+                        <input name="staff_id" id="staff_id" class="form-control" placeholder="Staff ID (e.g., SID001)" value="{{ form.staff_id.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="first_name" class="form-label">First Name <span class="text-danger">*</span></label>
+                        <input name="first_name" id="first_name" class="form-control" placeholder="First Name" required aria-required="true" value="{{ form.first_name.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="last_name" class="form-label">Last Name <span class="text-danger">*</span></label>
+                        <input name="last_name" id="last_name" class="form-control" placeholder="Last Name" required aria-required="true" value="{{ form.last_name.value|default_if_none:'' }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="other_name" class="form-label">Other Name</label>
+                        <input name="other_name" id="other_name" class="form-control" placeholder="Other Name" value="{{ form.other_name.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" name="email" id="email" class="form-control" placeholder="Email" value="{{ form.email.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                        {{ form.gender }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="marital_status" class="form-label">Marital Status <span class="text-danger">*</span></label>
+                        {{ form.marital_status }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="id_type" class="form-label">ID Type <span class="text-danger">*</span></label>
+                        {{ form.id_type }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="id_number" class="form-label">Identification Number <span class="text-danger">*</span></label>
+                        <input name="id_number" id="id_number" class="form-control" placeholder="Identification Number" required aria-required="true" value="{{ form.id_number.value|default_if_none:'' }}">
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <h5 class="mt-4">Contact Information</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label">Telephone Number <span class="text-danger">*</span></label>
+                        <input name="phone" id="phone" class="form-control" placeholder="Telephone Number (256XXXXXXXXX)" required aria-required="true" value="{{ form.phone.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="address" class="form-label">Physical Address <span class="text-danger">*</span></label>
+                        <input name="address" id="address" class="form-control" placeholder="Physical Address" required aria-required="true" rows="3">{{ form.address.value|default_if_none:'' }}</input>
+                    </div>
+                </div>
+
+                <!-- Next of Kin -->
+                <h5 class="mt-4">Next of Kin</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="next_of_kin_name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input name="next_of_kin_name" id="next_of_kin_name" class="form-control" placeholder="Name" required aria-required="true" value="{{ form.next_of_kin_name.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="next_of_kin_phone" class="form-label">Telephone Contact <span class="text-danger">*</span></label>
+                        <input name="next_of_kin_phone" id="next_of_kin_phone" class="form-control" placeholder="Telephone Contact (256XXXXXXXXX)" required aria-required="true" value="{{ form.next_of_kin_phone.value|default_if_none:'' }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="next_of_kin_address" class="form-label">Home Address <span class="text-danger">*</span></label>
+                        <input name="next_of_kin_address" id="next_of_kin_address" class="form-control" placeholder="Home Address" required aria-required="true" rows="3">{{ form.next_of_kin_address.value|default_if_none:'' }}</input>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="relationship" class="form-label">Relationship <span class="text-danger">*</span></label>
+                        {{ form.relationship }}
+                    </div>
+                </div>
+
+                <!-- Employment -->
+                <h5 class="mt-4">Employment</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="date_appointed" class="form-label">Date Appointed <span class="text-danger">*</span></label>
+                        <input type="date" name="date_appointed" id="date_appointed" class="form-control" required aria-required="true" value="{{ form.date_appointed.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="basic_salary" class="form-label">Basic Salary (UGX) <span class="text-danger">*</span></label>
+                        <input type="number" step="0.01" name="basic_salary" id="basic_salary" class="form-control" placeholder="Basic Salary (UGX)" required aria-required="true" value="{{ form.basic_salary.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="payment_method" class="form-label">Payment Method <span class="text-danger">*</span></label>
+                        {{ form.payment_method }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="tax_id" class="form-label">Tax Identification Number</label>
+                        <input name="tax_id" id="tax_id" class="form-control" placeholder="Tax Identification Number" value="{{ form.tax_id.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="ssn" class="form-label">Social Security Number</label>
+                        <input name="ssn" id="ssn" class="form-control" placeholder="Social Security Number" value="{{ form.ssn.value|default_if_none:'' }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="branch" class="form-label">Branch <span class="text-danger">*</span></label>
+                        {{ form.branch }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="position" class="form-label">Position <span class="text-danger">*</span></label>
+                        {{ form.position }}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        {{ form.department }}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="ssf" class="form-label">SSF Contribution</label>
+                        <input type="number" step="0.01" name="ssf" id="ssf" class="form-control" placeholder="SSF Contribution" value="{{ form.ssf.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="lst" class="form-label">LST Deduction</label>
+                        <input type="number" step="0.01" name="lst" id="lst" class="form-control" placeholder="LST Deduction" value="{{ form.lst.value|default_if_none:'' }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="paye" class="form-label">PAYE Deduction</label>
+                        <input type="number" step="0.01" name="paye" id="paye" class="form-control" placeholder="PAYE Deduction" value="{{ form.paye.value|default_if_none:'' }}">
+                    </div>
+                </div>
+
+                <!-- File Uploads -->
+                <h5 class="mt-4">Documents</h5>
+                {% if staff %}
+                    {% if staff.contract_file %}
+                        <div class="mb-3">
+                            <label for="contract_file" class="form-label">Employment Contract</label>
+                            <p>Current: <a href="{{ staff.contract_file.url }}" target="_blank">View</a></p>
+                            <div class="custom-file">
+                                <input type="file" name="contract_file" id="contract_file" class="custom-file-input">
+                                <label class="custom-file-label" for="contract_file">Choose file</label>
+                            </div>
+                            <small class="form-text text-muted">Upload a new file to replace the existing one.</small>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label for="contract_file" class="form-label">Employment Contract</label>
+                            <div class="custom-file">
+                                <input type="file" name="contract_file" id="contract_file" class="custom-file-input">
+                                <label class="custom-file-label" for="contract_file">Choose file</label>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if staff.signature_file %}
+                        <div class="mb-3">
+                            <label for="signature_file" class="form-label">Signature</label>
+                            <p>Current: <a href="{{ staff.signature_file.url }}" target="_blank">View</a></p>
+                            <div class="custom-file">
+                                <input type="file" name="signature_file" id="signature_file" class="custom-file-input" accept="image/*">
+                                <label class="custom-file-label" for="signature_file">Choose file</label>
+                            </div>
+                            <small class="form-text text-muted">Upload a new image to replace the existing one.</small>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label for="signature_file" class="form-label">Signature</label>
+                            <div class="custom-file">
+                                <input type="file" name="signature_file" id="signature_file" class="custom-file-input" accept="image/*">
+                                <label class="custom-file-label" for="signature_file">Choose file</label>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if staff.id_attachment %}
+                        <div class="mb-3">
+                            <label for="id_attachment" class="form-label">ID Attachment</label>
+                            <p>Current: <a href="{{ staff.id_attachment.url }}" target="_blank">View</a></p>
+                            <div class="custom-file">
+                                <input type="file" name="id_attachment" id="id_attachment" class="custom-file-input" accept="image/*,application/pdf">
+                                <label class="custom-file-label" for="id_attachment">Choose file</label>
+                            </div>
+                            <small class="form-text text-muted">Upload a new file to replace the existing one.</small>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label for="id_attachment" class="form-label">ID Attachment</label>
+                            <div class="custom-file">
+                                <input type="file" name="id_attachment" id="id_attachment" class="custom-file-input" accept="image/*,application/pdf">
+                                <label class="custom-file-label" for="id_attachment">Choose file</label>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if staff.profile_photo %}
+                        <div class="mb-3">
+                            <label for="profile_photo" class="form-label">Profile Photo</label>
+                            <p>Current: <a href="{{ staff.profile_photo.url }}" target="_blank">View</a></p>
+                            <div class="custom-file">
+                                <input type="file" name="profile_photo" id="profile_photo" class="custom-file-input" accept="image/*">
+                                <label class="custom-file-label" for="profile_photo">Choose file</label>
+                            </div>
+                            <small class="form-text text-muted">Upload a new image to replace the existing one.</small>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label for="profile_photo" class="form-label">Profile Photo</label>
+                            <div class="custom-file">
+                                <input type="file" name="profile_photo" id="profile_photo" class="custom-file-input" accept="image/*">
+                                <label class="custom-file-label" for="profile_photo">Choose file</label>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="mb-3">
+                        <label for="contract_file" class="form-label">Employment Contract</label>
+                        <div class="custom-file">
+                            <input type="file" name="contract_file" id="contract_file" class="custom-file-input">
+                            <label class="custom-file-label" for="contract_file">Choose file</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="signature_file" class="form-label">Signature</label>
+                        <div class="custom-file">
+                            <input type="file" name="signature_file" id="signature_file" class="custom-file-input" accept="image/*">
+                            <label class="custom-file-label" for="signature_file">Choose file</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="id_attachment" class="form-label">ID Attachment</label>
+                        <div class="custom-file">
+                            <input type="file" name="id_attachment" id="id_attachment" class="custom-file-input" accept="image/*,application/pdf">
+                            <label class="custom-file-label" for="id_attachment">Choose file</label>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profile_photo" class="form-label">Profile Photo</label>
+                        <div class="custom-file">
+                            <input type="file" name="profile_photo" id="profile_photo" class="custom-file-input" accept="image/*">
+                            <label class="custom-file-label" for="profile_photo">Choose file</label>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Submit -->
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary" onclick="return confirm('Are you sure you want to {% if staff %}update{% else %}create{% endif %} this staff?');">
+                        {% if staff %}Update{% else %}Create{% endif %}
+                    </button>
+                    <a href="{% url 'staff_management:staff_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: var(--primary, #16508e);
+        --secondary-color: var(--text-muted, #6c757d);
+        --text-dark: var(--text-dark, #2c3e50);
+        --background-light: var(--light-bg, #f4f6f9);
+        --error-color: var(--danger, #dc3545);
+        --shadow: var(--shadow-light, 0 4px 15px rgba(0, 0, 0, 0.1));
+        --dark-card-bg: var(--dark-card-bg, #2a3435);
+        --border-dark: var(--border-dark, #3a4445);
+    }
+
+    .container {
+        max-width: 1200px; /* Increased to better fill the main content area */
+        margin: 0 auto;
+        padding: 30px 20px; /* Aligned with main content padding */
+        width: 100%;
+    }
+
+    .main.active .container {
+        max-width: calc(1200px + 170px); /* Adjust for collapsed sidebar (80px vs 250px) */
+    }
+
+    h2, h5 {
+        color: var(--text-dark);
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .card {
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        width: 100%;
+        max-width: 100%; /* Ensure card fills container */
+        margin: 0 auto;
+    }
+
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+    }
+
+    .card-body {
+        padding: 2.5rem; /* Increased padding for a more spacious feel */
+    }
+
+    .form-label {
+        color: var(--text-dark);
+        font-weight: 500;
+        font-size: 0.95rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .dark-mode .form-label {
+        color: var(--text-light);
+    }
+
+    .form-control, select {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        font-size: 0.95rem;
+        background: var(--background-light);
+        transition: all 0.3s ease;
+        width: 100%;
+        box-sizing: border-box;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .dark-mode .form-control, .dark-mode select {
+        background: #3a4445;
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+
+    .form-control:focus, select:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 8px rgba(22, 80, 142, 0.2);
+        outline: none;
+    }
+
+    .dark-mode .form-control:focus, .dark-mode select:focus {
+        background: #ffffff;
+        color: var(--text-dark);
+    }
+
+    select {
+        appearance: none;
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 1rem center;
+        background-size: 1.2rem;
+        padding-right: 2.5rem;
+    }
+
+    .dark-mode select {
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e9ecef' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .custom-file {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .custom-file-input {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .custom-file-label {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 12px;
+        background: var(--background-light);
+        color: var(--secondary-color);
+        font-size: 0.95rem;
+        display: block;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .dark-mode .custom-file-label {
+        background: #3a4445;
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+
+    .custom-file-input:focus + .custom-file-label {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 8px rgba(22, 80, 142, 0.2);
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #ffffff;
+        transition: all 0.3s ease;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: var(--secondary-color);
+        border: none;
+        border-radius: 8px;
+        padding: 12px 24px;
+        font-size: 1rem;
+        font-weight: 500;
+        color: #ffffff;
+        transition: all 0.3s ease;
+        font-family: 'Ubuntu', sans-serif;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+
+    .alert-danger {
+        border-radius: 10px; /* Match base.html alert style */
+        background: var(--error-color);
+        color: #ffffff;
+        padding: 12px 20px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        box-shadow: var(--shadow);
+    }
+
+    .alert-danger ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .form-text {
+        font-size: 0.85rem;
+        color: var(--secondary-color);
+    }
+
+    .dark-mode .form-text {
+        color: var(--text-light);
+    }
+
+    .text-danger {
+        font-size: 0.85rem;
+    }
+
+    .row {
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 991px) {
+        .container {
+            padding: 20px 15px;
+        }
+
+        .main.active .container {
+            max-width: 100%;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-control, select, .custom-file-label {
+            font-size: 0.9rem;
+        }
+
+        .btn-primary, .btn-secondary {
+            padding: 10px 20px;
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 15px 10px;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        h5 {
+            font-size: 1.1rem;
+        }
+    }
+</style>
+
+<script>
+    // Update file input label with selected file name
+    document.querySelectorAll('.custom-file-input').forEach(input => {
+        input.addEventListener('change', function() {
+            const fileName = this.files[0]?.name || 'Choose file';
+            this.nextElementSibling.textContent = fileName;
+        });
+    });
+</script>
+{% endblock %}

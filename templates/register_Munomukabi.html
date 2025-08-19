@@ -1,0 +1,474 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <!-- Display Success/Error Messages -->
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %} text-light border-0 alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card shadow-lg p-4">
+        <!-- Header -->
+        <h2 class="mb-4 fw-bold text-center">
+            <i class="bi bi-person-plus me-2"></i> Munno Mukabi Membership Registration
+        </h2>
+
+        <!-- Form -->
+        <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            <!-- Personal Information -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">Personal Information</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.marital_status.label }}</label>
+                            {{ form.marital_status }}
+                            {% if form.marital_status.errors %}
+                            <div class="text-danger mt-1 small">{{ form.marital_status.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.account_number.label }}</label>
+                            {{ form.account_number }}
+                            {% if form.account_number.errors %}
+                            <div class="text-danger mt-1 small">{{ form.account_number.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.branch.label }}</label>
+                            {{ form.branch }}
+                            {% if form.branch.errors %}
+                            <div class="text-danger mt-1 small">{{ form.branch.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.phone.label }}</label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}
+                            <div class="text-danger mt-1 small">{{ form.phone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.date_of_birth.label }}</label>
+                            {{ form.date_of_birth }}
+                            {% if form.date_of_birth.errors %}
+                            <div class="text-danger mt-1 small">{{ form.date_of_birth.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.NIN.label }}</label>
+                            {{ form.NIN }}
+                            {% if form.NIN.errors %}
+                            <div class="text-danger mt-1 small">{{ form.NIN.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.subscription_start.label }}</label>
+                            {{ form.subscription_start }}
+                            {% if form.subscription_start.errors %}
+                            <div class="text-danger mt-1 small">{{ form.subscription_start.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.subscription_end.label }}</label>
+                            {{ form.subscription_end }}
+                            {% if form.subscription_end.errors %}
+                            <div class="text-danger mt-1 small">{{ form.subscription_end.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.gender.label }}</label>
+                            {{ form.gender }}
+                            {% if form.gender.errors %}
+                            <div class="text-danger mt-1 small">{{ form.gender.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.village.label }}</label>
+                            {{ form.village }}
+                            {% if form.village.errors %}
+                            <div class="text-danger mt-1 small">{{ form.village.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.parish.label }}</label>
+                            {{ form.parish }}
+                            {% if form.parish.errors %}
+                            <div class="text-danger mt-1 small">{{ form.parish.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.zone.label }}</label>
+                            {{ form.zone }}
+                            {% if form.zone.errors %}
+                            <div class="text-danger mt-1 small">{{ form.zone.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.status.label }}</label>
+                            {{ form.status }}
+                            {% if form.status.errors %}
+                            <div class="text-danger mt-1 small">{{ form.status.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Family Information -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">Family Information</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.spouse_name.label }}</label>
+                            {{ form.spouse_name }}
+                            {% if form.spouse_name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.spouse_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.spouse_status.label }}</label>
+                            {{ form.spouse_status }}
+                            {% if form.spouse_status.errors %}
+                            <div class="text-danger mt-1 small">{{ form.spouse_status.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.mother_name.label }}</label>
+                            {{ form.mother_name }}
+                            {% if form.mother_name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.mother_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.mother_village.label }}</label>
+                            {{ form.mother_village }}
+                            {% if form.mother_village.errors %}
+                            <div class="text-danger mt-1 small">{{ form.mother_village.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.mother_status.label }}</label>
+                            {{ form.mother_status }}
+                            {% if form.mother_status.errors %}
+                            <div class="text-danger mt-1 small">{{ form.mother_status.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.father_name.label }}</label>
+                            {{ form.father_name }}
+                            {% if form.father_name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.father_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.father_status.label }}</label>
+                            {{ form.father_status }}
+                            {% if form.father_status.errors %}
+                            <div class="text-danger mt-1 small">{{ form.father_status.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.father_village.label }}</label>
+                            {{ form.father_village }}
+                            {% if form.father_village.errors %}
+                            <div class="text-danger mt-1 small">{{ form.father_village.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.child1_name.label }}</label>
+                            {{ form.child1_name }}
+                            {% if form.child1_name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.child1_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.child2_name.label }}</label>
+                            {{ form.child2_name }}
+                            {% if form.child2_name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.child2_name.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next of Kin Information -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">Next of Kin Information</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.next_of_kin_Name.label }}</label>
+                            {{ form.next_of_kin_Name }}
+                            {% if form.next_of_kin_Name.errors %}
+                            <div class="text-danger mt-1 small">{{ form.next_of_kin_Name.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.next_of_kin_relationship.label }}</label>
+                            {{ form.next_of_kin_relationship }}
+                            {% if form.next_of_kin_relationship.errors %}
+                            <div class="text-danger mt-1 small">{{ form.next_of_kin_relationship.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.next_of_kin_village.label }}</label>
+                            {{ form.next_of_kin_village }}
+                            {% if form.next_of_kin_village.errors %}
+                            <div class="text-danger mt-1 small">{{ form.next_of_kin_village.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.sao_officer.label }}</label>
+                            {{ form.sao_officer }}
+                            {% if form.sao_officer.errors %}
+                            <div class="text-danger mt-1 small">{{ form.sao_officer.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Uploads -->
+            <div class="card mb-4 border-0 shadow-sm">
+                <div class="card-header">File Uploads</div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.profile_picture.label }}</label>
+                            {{ form.profile_picture }}
+                            {% if form.profile_picture.errors %}
+                            <div class="text-danger mt-1 small">{{ form.profile_picture.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">{{ form.id_scan.label }}</label>
+                            {{ form.id_scan }}
+                            {% if form.id_scan.errors %}
+                            <div class="text-danger mt-1 small">{{ form.id_scan.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary px-4 py-2">
+                    <i class="bi bi-save me-2"></i> Register
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    .container {
+        max-width: 900px; /* Consistent with other pages */
+        margin: 0 auto;
+        font-family: 'Nunito', Arial, sans-serif;
+    }
+
+    .alert-container {
+        position: fixed;
+        top: 80px; /* Adjusted for fixed header */
+        right: 20px;
+        z-index: 1050;
+        max-width: 400px;
+    }
+
+    .alert {
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        border-radius: 15px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+    }
+
+    .alert-success {
+        background-color: #0aba33; /* Success color */
+    }
+
+    .alert-danger {
+        background-color: #dc3545; /* Danger color */
+    }
+
+    .alert .btn-close {
+        filter: invert(1);
+    }
+
+    .card {
+        border: none;
+        background: #ffffff;
+        border-radius: 15px;
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15); /* Consistent shadow */
+        transition: transform 0.2s ease-in-out;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+    }
+
+    .card-header {
+        background: #f8f9fa; /* Light background */
+        color: #2c3e50;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-bottom: 1px solid #dee2e6;
+        border-radius: 15px 15px 0 0;
+        padding: 15px 20px;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .shadow-sm {
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2c3e50; /* Dark text color from previous pages */
+    }
+
+    .form-label {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        border: 1px solid #ced4da;
+        background-color: #ffffff;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        font-family: 'Nunito', Arial, sans-serif;
+        color: #2c3e50;
+    }
+    .form-control:hover, .form-select:hover {
+        border-color: #16508e; /* Primary color on hover */
+        background-color: #fefefe;
+        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #16508e; /* Primary color */
+        box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25);
+        background-color: #fff;
+        outline: none;
+    }
+    .form-control:invalid, .form-select:invalid {
+        border-color: #dc3545; /* Danger color */
+        background: #fff5f5; /* Light red background for invalid state */
+    }
+    .form-control:valid, .form-select:valid {
+        border-color: #0aba33; /* Success color */
+        background: #f5fff5; /* Light green background for valid state */
+    }
+    .form-control::placeholder, .form-select::placeholder {
+        color: #adb5bd;
+        font-style: italic;
+    }
+
+    .text-danger {
+        color: #dc3545; /* Danger color */
+        font-size: 0.8rem;
+    }
+
+    .btn-primary {
+        background-color: #16508e; /* Primary color from previous pages */
+        border-color: #16508e;
+        font-weight: 600;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3; /* Hover color */
+        border-color: #0056b3;
+        transform: translateY(-2px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0 15px;
+        }
+
+        .card {
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+        }
+
+        .card-header {
+            font-size: 1rem;
+            padding: 12px 15px;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .col-md-3 {
+            flex: 1 1 100%;
+        }
+
+        .form-control, .form-select {
+            padding: 0.65rem 0.9rem;
+            font-size: 0.85rem;
+        }
+
+        .form-label {
+            font-size: 0.85rem;
+        }
+
+        .btn-primary {
+            font-size: 0.85rem;
+            padding: 8px 16px;
+        }
+    }
+</style>
+
+<!-- Bootstrap Validation Script -->
+<script>
+    (function () {
+        'use strict';
+        window.addEventListener('load', function () {
+            var forms = document.getElementsByClassName('needs-validation');
+            Array.prototype.filter.call(forms, function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (form.checkValidity() === false) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        }, false);
+    })();
+</script>
+{% endblock %}

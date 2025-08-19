@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register Target - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="header-section mb-4">
+        <h2>Register a New Target</h2>
+    </div>
+
+    <!-- Display Form Errors -->
+    {% if form_errors %}
+    <div class="alert alert-danger">
+        <strong>Form Errors:</strong>
+        <ul>
+            {% for field, errors in form_errors.items %}
+                {% for error in errors %}
+                    <li>{{ field }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <!-- Search Form for Delegates -->
+    <div class="card shadow-lg p-4 mb-4">
+        <h5 class="mb-3">Search for a Delegate</h5>
+        <form method="GET" action="" class="mb-3">
+            {% csrf_token %}
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6 col-sm-12">
+                    <label for="search_query" class="fw-bold mb-1">Search by Name or Customer ID:</label>
+                    <input type="text" name="search_query" id="search_query" class="form-control" placeholder="Enter name or customer ID" value="{{ search_query }}">
+                </div>
+                <div class="col-md-2 col-sm-12">
+                    <button type="submit" class="btn btn-primary w-100">Search</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- Display Search Results -->
+        {% if search_results %}
+        <div class="table-responsive">
+            <table class="table table-striped table-bordered mb-0">
+                <thead class="nav-tabs">
+                    <tr>
+                        <th>Customer ID</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                        <th>ID (Debug)</th>
+                    </tr>
+                </thead>
+                <tbody class="document-list">
+                    {% for delegate in search_results %}
+                    <tr>
+                        <td>{{ delegate.customer.cus_id|default:"N/A" }}</td>
+                        <td>{{ delegate.customer.first_name|default:"" }} {{ delegate.customer.surname|default:"" }}</td>
+                        <td>
+                            {% if delegate.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                <small>(Expires: {{ delegate.expiry_date|default:"N/A" }})</small>
+                            {% else %}
+                                <span class="badge bg-danger">Expired</span>
+                                <small>(Expired on: {{ delegate.expiry_date|default:"N/A" }})</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if delegate.is_active %}
+                            <button class="btn btn-success btn-sm select-delegate-btn" 
+                                    data-delegate-id="{{ delegate.id }}"
+                                    data-description="{{ form.description.value|default:'Shares' }}"
+                                    data-target-type="{{ form.target_type.value|default:'1' }}"
+                                    data-target-value="{{ form.target_value.value|default:'9.99' }}"
+                                    data-start-date="{{ form.start_date.value|default:'2025-07-10' }}"
+                                    data-end-date="{{ form.end_date.value|default:'2025-12-31' }}">Select Delegate</button>
+                            {% else %}
+                            <button class="btn btn-success btn-sm" disabled>Expired Delegate</button>
+                            {% endif %}
+                        </td>
+                        <td>{{ delegate.id|default:"N/A" }} (Debug)</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-3">No delegates found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Target Registration Form -->
+    <div class="card shadow-lg p-4">
+        <h5 class="mb-3">Target Details</h5>
+        <form method="POST" class="needs-validation" novalidate id="targetForm">
+            {% csrf_token %}
+            {{ form.delegate }} <!-- Hidden input for delegate -->
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="fw-bold mb-1">Description</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.target_type.id_for_label }}" class="fw-bold mb-1">Target Type</label>
+                {{ form.target_type }}
+                {% if form.target_type.errors %}
+                    <div class="text-danger">{{ form.target_type.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.target_value.id_for_label }}" class="fw-bold mb-1">Target Value</label>
+                {{ form.target_value }}
+                {% if form.target_value.errors %}
+                    <div class="text-danger">{{ form.target_value.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.start_date.id_for_label }}" class="fw-bold mb-1">Start Date</label>
+                {{ form.start_date }}
+                {% if form.start_date.errors %}
+                    <div class="text-danger">{{ form.start_date.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.end_date.id_for_label }}" class="fw-bold mb-1">End Date</label>
+                {{ form.end_date }}
+                {% if form.end_date.errors %}
+                    <div class="text-danger">{{ form.end_date.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary" id="submitButton" disabled>Register Target</button>
+        </form>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f8f9fa; color: #333; }
+    .container { max-width: 1400px; }
+    .card { border-radius: 15px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1); border: none; background: #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); }
+    .header-section { text-align: center; }
+    .header-section h2 { font-size: 1.75rem; font-weight: 700; color: #2c3e50; margin: 0; }
+    h5 { font-size: 1.1rem; font-weight: 600; color: #2c3e50; }
+    .btn { background-color: #16508e; border: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; color: #ffffff; transition: background-color 0.3s ease, transform 0.2s ease; }
+    .btn:hover { background-color: #0056b3; transform: translateY(-1px); }
+    .btn-success { background-color: #28a745; }
+    .btn-success:hover { background-color: #218838; }
+    .btn:disabled { background-color: #6c757d; cursor: not-allowed; }
+    .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 10px 15px; font-size: 0.9rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .form-control:focus { border-color: #16508e; box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); outline: none; }
+    .text-danger { font-size: 0.85rem; }
+    .nav-tabs { background-color: #16508e; color: #ffffff; border-bottom: none; }
+    .nav-tabs th { font-weight: 600; padding: 10px 15px; text-align: center; text-transform: uppercase; font-size: 0.85rem; }
+    .document-list td { font-size: 0.85rem; color: #6c757d; padding: 12px; text-align: center; vertical-align: middle; }
+    .document-list small { display: block; font-size: 0.75rem; color: #999; }
+    .table-responsive { border-radius: 0 0 10px 10px; overflow: hidden; }
+    .table { margin-bottom: 0; }
+    .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0, 0, 0, 0.02); }
+    .badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; }
+</style>
+
+<!-- JavaScript for Delegate Selection -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const delegateInput = document.querySelector('input[name="delegate"]');
+    const submitButton = document.querySelector('#submitButton');
+    const selectButtons = document.querySelectorAll('.select-delegate-btn');
+
+    // Enable submit button when delegate is selected
+    selectButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            delegateInput.value = this.getAttribute('data-delegate-id');
+            document.querySelector('input[name="description"]').value = this.getAttribute('data-description');
+            document.querySelector('select[name="target_type"]').value = this.getAttribute('data-target-type');
+            document.querySelector('input[name="target_value"]').value = this.getAttribute('data-target-value');
+            document.querySelector('input[name="start_date"]').value = this.getAttribute('data-start-date');
+            document.querySelector('input[name="end_date"]').value = this.getAttribute('data-end-date');
+            submitButton.disabled = false;
+        });
+    });
+
+    // Disable submit button if delegate is empty
+    if (!delegateInput.value) {
+        submitButton.disabled = true;
+    }
+});
+</script>
+{% endblock %}

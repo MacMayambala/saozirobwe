@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Member Target & Account Management - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<div class="container mt-3">
+
+    <!-- MEMBER SUMMARY -->
+    <div class="card shadow-lg rounded mb-3 p-3">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h3 class="mb-1">{{ delegate.customer.first_name }} {{ delegate.customer.surname }}</h3>
+                <p class="text-muted mb-0">{{ delegate.customer.cus_id }} at {{ delegate.customer.branch }}</p>
+                {% if delegate.is_active %}
+                    <span class="badge bg-success mt-1">Active</span>
+                {% else %}
+                    <span class="badge bg-danger mt-1">Expired</span>
+                {% endif %}
+            </div>
+            <div>
+                <p class="mb-1"><strong>Available Balance:</strong> UGX {{ delegate.customer.available_balance|floatformat:2|default:"0.00" }}</p>
+                <p class="mb-1"><strong>Actual Balance:</strong> UGX {{ delegate.customer.actual_balance|floatformat:2|default:"0.00" }}</p>
+                <div class="mt-2">
+                    <button class="btn btn-primary btn-sm">+ Deposit</button>
+                    <button class="btn btn-danger btn-sm">- Withdraw</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGN TARGET & TRANSACTION FORMS -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <div class="card shadow-lg rounded p-3">
+                <h5>Assign New Target</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ target_form.errors }}
+                    {{ target_form.as_p }}
+                    <button type="submit" name="add_target" class="btn btn-primary btn-sm mt-2">Assign Target</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow-lg rounded p-3">
+                <h5>Record Transaction</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    {{ transaction_form.errors }}
+                    {{ transaction_form.as_p }}
+                    <button type="submit" name="add_transaction" class="btn btn-success btn-sm mt-2">Add Transaction</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- TARGET PERFORMANCE -->
+    <div class="card shadow-lg rounded mb-3">
+        <div class="card-body">
+            <h4 class="mb-3">Target Performance</h4>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm table-striped">
+                    <thead class="nav-tabs">
+                        <tr>
+                            <th>Description</th>
+                            <th>Target Value</th>
+                            <th>Actual Value</th>
+                            <th>Achievement (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="document-list">
+                        {% for perf in target_performance %}
+                        <tr>
+                            <td>{{ perf.target.description }}</td>
+                            <td>{{ perf.target.target_value|floatformat:2 }}</td>
+                            <td>{{ perf.total_actual|floatformat:2 }}</td>
+                            <td>{{ perf.percentage|floatformat:2 }}%</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">No targets assigned.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRANSACTIONS CARD -->
+    <div class="card shadow-lg rounded">
+        <div class="card-body">
+            <h4 class="mb-3">Recent Transactions</h4>
+            <!-- Date Filter Form -->
+            <form method="GET" action="" class="mb-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-3 col-sm-12">
+                        <label for="transaction_date_range" class="fw-bold mb-1">Date Range:</label>
+                        <input type="text" name="transaction_date_range" id="transaction_date_range" class="form-control" placeholder="Select date range" value="{{ transaction_date_range }}">
+                    </div>
+                    <div class="col-md-2 col-sm-12">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-sm table-borderless">
+                    <thead class="nav-tabs">
+                        <tr>
+                            <th>Date</th>
+                            <th>Type</th>
+                            <th>Value (UGX)</th>
+                            <th>Balance After</th>
+                        </tr>
+                    </thead>
+                    <tbody class="document-list">
+                        {% for tx in transactions %}
+                        <tr class="{% if tx.transaction_type == 'Withdrawal' %}table-danger{% else %}table-success{% endif %}">
+                            <td>{{ tx.transaction_date }}</td>
+                            <td>{{ tx.transaction_type }}</td>
+                            <td>{{ tx.actual_value|floatformat:2 }}</td>
+                            <td>{{ tx.balance_after|default:"0.00"|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">No transactions found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STYLING -->
+<style>
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f4f6f9; color: #2c3e50; }
+    .container { max-width: 1400px; padding: 0 20px; }
+    .card {
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: none;
+        background: #fff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .card-body { padding: 20px; }
+    h3 { font-size: 1.5rem; font-weight: 700; color: #2c3e50; margin: 0; }
+    h4 { font-size: 1.25rem; font-weight: 700; color: #2c3e50; }
+    h5 { font-size: 1.1rem; font-weight: 600; color: #2c3e50; }
+    .btn {
+        background-color: #16508e;
+        border: none;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 6px;
+        color: #ffffff;
+        transition: background-color 0.3s ease;
+    }
+    .btn:hover { background-color: #123e6b; }
+    .btn-sm { padding: 4px 8px; font-size: 0.8rem; }
+    .btn-success { background-color: #28a745; }
+    .btn-success:hover { background-color: #218838; }
+    .btn-danger { background-color: #dc3545; }
+    .btn-danger:hover { background-color: #c82333; }
+    .form-control {
+        border-radius: 6px;
+        border: 1px solid #ced4da;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .form-control:focus {
+        border-color: #16508e;
+        box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25);
+        outline: none;
+    }
+    .badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; }
+    .nav-tabs { background-color: #16508e; color: #ffffff; border-bottom: none; }
+    .nav-tabs th {
+        font-weight: 600;
+        padding: 10px 15px;
+        text-align: left;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+    }
+    .document-list td {
+        font-size: 0.85rem;
+        color: #6c757d;
+        padding: 12px;
+        text-align: left;
+        vertical-align: middle;
+    }
+    .table-responsive { border-radius: 0 0 8px 8px; overflow: hidden; }
+    .table { margin-bottom: 0; border-collapse: collapse; }
+    .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(0, 0, 0, 0.02); }
+    .table-success { background-color: #e9f7ef; }
+    .table-danger { background-color: #fce4e4; }
+    p { font-size: 0.9rem; }
+    .text-muted { font-size: 0.85rem; color: #6c757d; }
+    .row { margin-right: 0; margin-left: 0; }
+    .row > * { padding-right: 10px; padding-left: 10px; }
+</style>
+
+<!-- Add JavaScript for Date Range Picker (Flatpickr) -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        flatpickr("#transaction_date_range", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            defaultDate: ["{{ transaction_date_range|default:'2025-05-01' }}", "{{ transaction_date_range|default:'2025-05-14' }}"]
+        });
+    });
+</script>
+{% endblock %}

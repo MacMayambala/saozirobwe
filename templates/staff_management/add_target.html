@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% load static widget_tweaks %}
+
+{% block title %}Add Target - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <style>
+        :root {
+            --primary-color: hsl(250, 91%, 32%);
+            --secondary-color: hsl(0, 0%, 40%);
+            --accent-color: #4CAF50;
+            --accent-hover: #45a049;
+            --cancel-color: #6c757d;
+            --cancel-hover: #5a6268;
+            --error-color: #dc3545;
+            --background-light: #f8f9fa;
+            --border-color: #d1d5db;
+            --text-dark: #1f2937;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+        }
+
+        h2 {
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 0.95rem;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+            background: var(--background-light);
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 6px rgba(37, 99, 235, 0.2);
+            transform: translateY(-1px);
+            outline: none;
+            background: #fff;
+        }
+
+        .form-control:disabled {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .missing {
+            border: 2px solid var(--error-color) !important;
+            box-shadow: 0 0 6px rgba(220, 53, 69, 0.3);
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.85rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Ubuntu', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--cancel-color);
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--cancel-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .card-body {
+                padding: 1.5rem;
+            }
+
+            .form-control {
+                font-size: 0.9rem;
+                padding: 0.6rem;
+            }
+
+            .btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+                padding: 0.75rem;
+            }
+
+            .btn-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <h2>Add Target for {{ staff.full_name }}</h2>
+
+    {% if messages %}
+    <div class="alert-container">
+        {% for message in messages %}
+        <div class="alert alert-dismissible fade show alert-{% if message.tags == 'success' %}success{% else %}danger{% endif %}" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" id="targetForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="period" class="form-label">Period</label>
+                    <select name="period" id="period" class="form-control" required aria-required="true">
+                        <option value="" disabled selected>Select a period</option>
+                        {% for value, label in period_choices %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.period.errors %}
+                    <small class="error-message">{{ form.period.errors|striptags }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="target_type" class="form-label">Target Type</label>
+                    <select name="target_type" id="target_type" class="form-control" required aria-required="true">
+                        <option value="" disabled selected>Select a target type</option>
+                        {% for target_type in target_types %}
+                            <option value="{{ target_type.id }}">{{ target_type.stname }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if form.target_type.errors %}
+                    <small class="error-message">{{ form.target_type.errors|striptags }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="goal_value" class="form-label">Goal Value</label>
+                    <input type="number" name="goal_value" id="goal_value" class="form-control" placeholder="Enter goal value" step="0.01" required aria-required="true">
+                    {% if form.goal_value.errors %}
+                    <small class="error-message">{{ form.goal_value.errors|striptags }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" required aria-required="true">
+                    {% if form.start_date.errors %}
+                    <small class="error-message">{{ form.start_date.errors|striptags }}</small>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control" required aria-required="true">
+                    {% if form.end_date.errors %}
+                    <small class="error-message">{{ form.end_date.errors|striptags }}</small>
+                    {% endif %}
+                </div>
+                <div class="btn-container">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Target
+                    </button>
+                    <a href="{% url 'staff_management:staff_dashboard' %}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('targetForm').onsubmit = function(event) {
+        // Remove existing missing styles
+        let allInputs = document.querySelectorAll('input:not([disabled]), select');
+        allInputs.forEach(input => input.classList.remove('missing'));
+
+        // Check required fields
+        let requiredFields = document.querySelectorAll('[required]:not([disabled])');
+        let hasErrors = false;
+
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                field.classList.add('missing');
+                hasErrors = true;
+            }
+        });
+
+        if (hasErrors) {
+            event.preventDefault();
+            alert('Please fill all required fields.');
+            return false;
+        }
+
+        // Validate end_date > start_date
+        const startDate = document.getElementById('start_date').value;
+        const endDate = document.getElementById('end_date').value;
+        if (startDate && endDate && new Date(endDate) <= new Date(startDate)) {
+            event.preventDefault();
+            alert('End date must be after start date.');
+            document.getElementById('end_date').classList.add('missing');
+            return false;
+        }
+
+        // Validate goal_value is positive
+        const goalValue = document.getElementById('goal_value').value;
+        if (goalValue && parseFloat(goalValue) <= 0) {
+            event.preventDefault();
+            alert('Goal value must be positive.');
+            document.getElementById('goal_value').classList.add('missing');
+            return false;
+        }
+
+        return true;
+    };
+</script>
+{% endblock %}

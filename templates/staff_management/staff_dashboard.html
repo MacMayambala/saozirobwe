@@ -1,0 +1,638 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Staff Dashboard - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Messages Section -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Header Section -->
+            <div class="header-section d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-people-fill me-2"></i>Staff Dashboard</h2>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'staff_management:add_branch' %}" class="btn btn-primary" aria-label="Add Branch"><i class="bi bi-building-add me-2"></i>Add Branch</a>
+                    <a href="{% url 'staff_management:add_staff' %}" class="btn btn-primary" aria-label="Add Staff"><i class="bi bi-person-plus-fill me-2"></i>Add Staff</a>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-container mb-4">
+                <input type="text" id="search_staff" class="form-control" placeholder="Search staff by name, email, or phone" aria-label="Search staff">
+            </div>
+
+            <!-- Spinner -->
+            <div id="loading-spinner" class="text-center mt-3" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+
+            <!-- Staff List -->
+            <div class="staff-list" id="staff-list">
+                {% for staff in staff_list %}
+                <div class="card mb-3 shadow-sm staff-card">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div class="staff-info d-flex align-items-center gap-3">
+                            {% if staff.profile_photo %}
+                                <img src="{{ staff.profile_photo.url }}" alt="{{ staff.first_name }} {{ staff.last_name }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--primary);">
+                            {% else %}
+                                <i class="bi bi-person-circle" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-0">
+                                    <a href="{% url 'staff_management:view_performance' staff.id %}" class="text-decoration-none text-dark" aria-label="View {{ staff.first_name }} {{ staff.last_name }} Performance">
+                                        {{ staff.first_name }} {{ staff.last_name }}
+                                    </a>
+                                </h5>
+                                <p class="text-muted mb-0">{{ staff.email|default:"N/A" }}</p>
+                            </div>
+                        </div>
+                        <div class="staff-meta text-end">
+                            <p class="text-muted mb-0">+{{ staff.phone|default:"N/A" }}</p>
+                            <p class="text-muted mb-0">{{ staff.position.name|default:"N/A" }}</p>
+                        </div>
+                        <div class="staff-status text-end">
+                            <p class="text-muted mb-0">{{ staff.department.name|default:"N/A" }}</p>
+                        </div>
+                        <div class="staff-actions d-flex gap-3">
+                            <a href="{% url 'staff_management:add_target' staff.id %}" class="text-primary action-link" aria-label="Add Target for {{ staff.first_name }}"><i class="bi bi-plus-circle me-1"></i>Add Target</a>
+                            <a href="{% url 'staff_management:view_performance' staff.id %}" class="text-primary action-link" aria-label="View Performance for {{ staff.first_name }}"><i class="bi bi-eye me-1"></i>View Performance</a>
+                            <a href="{% url 'staff_management:update_staff' staff.id %}" class="text-primary action-link" aria-label="Update {{ staff.first_name }}"><i class="bi bi-pencil me-1"></i>Update</a>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <p class="text-center text-muted">No staff found.</p>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination d-flex justify-content-center align-items-center gap-2 mt-4">
+                <span id="page-info" class="text-muted"></span>
+                <a href="#" id="prev-page" class="btn btn-outline-primary btn-sm" aria-label="Previous Page"><i class="bi bi-chevron-left"></i></a>
+                <div id="page-numbers" class="d-flex gap-1"></div>
+                <a href="#" id="next-page" class="btn btn-outline-primary btn-sm" aria-label="Next Page"><i class="bi bi-chevron-right"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #16508e;
+        --primary-dark: #123e6b;
+        --secondary-color: #6c757d;
+        --text-dark: #2c3e50;
+        --text-light: #e9ecef;
+        --background-light: #f4f6f9;
+        --error-color: #dc3545;
+        --success-color: #28a745;
+        --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.3);
+        --dark-card-bg: #2a3435;
+        --border-dark: #3a4445;
+        --transition: all 0.3s ease;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+        width: 100%;
+    }
+
+    .main.active .container {
+        max-width: 1400px; /* Wider when sidebar is collapsed */
+    }
+
+    h2 {
+        color: var(--text-dark);
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .dark-mode h2 {
+        color: var(--text-light);
+    }
+
+    .card {
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: var(--shadow-light);
+        border: none;
+        backdrop-filter: blur(6px); /* Subtle glassmorphism */
+        transition: var(--transition);
+    }
+
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+        box-shadow: var(--shadow-dark);
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .form-control {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        background: #f8f9fa;
+        transition: var(--transition);
+    }
+
+    .dark-mode .form-control {
+        background: var(--border-dark);
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 8px rgba(22, 80, 142, 0.2);
+        outline: none;
+    }
+
+    .dark-mode .form-control:focus {
+        background: #ffffff;
+        color: var(--text-dark);
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        border: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        color: #ffffff;
+        transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: scale(1.05);
+        box-shadow: var(--shadow-light);
+    }
+
+    .btn-outline-primary {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        transition: var(--transition);
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+        transform: scale(1.05);
+    }
+
+    .btn-outline-primary.disabled {
+        border-color: #adb5bd;
+        color: #adb5bd;
+        pointer-events: none;
+    }
+
+    .alert {
+        border-radius: 10px;
+        padding: 12px 20px;
+        font-size: 0.9rem;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        color: #ffffff;
+        box-shadow: var(--shadow-dark);
+        margin-bottom: 1.5rem;
+        backdrop-filter: blur(6px);
+        animation: slideIn 0.4s ease;
+    }
+
+    @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+
+    .alert-success {
+        background: var(--success-color);
+    }
+
+    .alert-danger {
+        background: var(--error-color);
+    }
+
+    .alert-info {
+        background: rgba(22, 80, 142, 0.1);
+        color: var(--text-dark);
+        border: 1px solid var(--primary-color);
+        backdrop-filter: blur(6px);
+    }
+
+    .dark-mode .alert-info {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-light);
+        border-color: var(--text-light);
+    }
+
+    .staff-list .card {
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dark-mode .staff-list .card {
+        border-color: var(--border-dark);
+    }
+
+    .staff-list .card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-dark);
+        background: #f8f9fa;
+    }
+
+    .dark-mode .staff-list .card:hover {
+        background: var(--dark-accent);
+    }
+
+    .staff-info h5 a {
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        color: var(--text-dark);
+        transition: var(--transition);
+    }
+
+    .dark-mode .staff-info h5 a {
+        color: var(--text-light);
+    }
+
+    .staff-info h5 a:hover {
+        color: var(--primary-color);
+    }
+
+    .text-primary {
+        color: var(--primary-color) !important;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        transition: var(--transition);
+    }
+
+    .text-primary:hover {
+        color: var(--primary-dark) !important;
+        transform: scale(1.05);
+    }
+
+    .staff-meta p,
+    .staff-status p {
+        font-size: 0.9rem;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .pagination a.page-number {
+        padding: 6px 12px;
+        border: 1px solid var(--primary-color);
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 0.9rem;
+        font-family: 'Poppins', sans-serif;
+        background: #ffffff;
+        margin: 0 3px;
+        transition: var(--transition);
+    }
+
+    .pagination a.page-number:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+        transform: scale(1.05);
+    }
+
+    .pagination a.page-number.active {
+        background: var(--primary-color);
+        color: #ffffff;
+        border-color: var(--primary-color);
+    }
+
+    .dark-mode .pagination a.page-number {
+        background: var(--dark-card-bg);
+        color: var(--text-light);
+        border-color: var(--text-light);
+    }
+
+    .dark-mode .pagination a.page-number:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+    }
+
+    .dark-mode .pagination a.page-number.active {
+        background: var(--primary-color);
+        color: #ffffff;
+    }
+
+    .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        border-width: 0.3em;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @media (max-width: 991px) {
+        .container {
+            padding: 15px 10px;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        .staff-list .card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .staff-actions {
+            justify-content: flex-start;
+            width: 100%;
+            flex-wrap: wrap;
+        }
+
+        .staff-meta,
+        .staff-status {
+            text-align: left;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            padding: 10px 8px;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+        }
+
+        .btn-primary {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+        }
+
+        .staff-info h5 {
+            font-size: 1rem;
+        }
+
+        .staff-meta p,
+        .staff-status p {
+            font-size: 0.85rem;
+        }
+
+        .staff-actions a {
+            font-size: 0.85rem;
+        }
+    }
+
+    /* Accessibility */
+    a:focus,
+    button:focus,
+    .form-control:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById("search_staff");
+        const staffList = document.getElementById("staff-list");
+        const spinner = document.getElementById("loading-spinner");
+        const prevPage = document.getElementById("prev-page");
+        const nextPage = document.getElementById("next-page");
+        const pageInfo = document.getElementById("page-info");
+        const pageNumbersContainer = document.getElementById("page-numbers");
+
+        // Base URLs for dynamic construction
+        const searchUrl = "{% url 'staff_management:search_staff' %}";
+        const viewPerformanceUrlBase = "{% url 'staff_management:view_performance' 0 %}".replace('0/', '');
+        const addTargetUrlBase = "{% url 'staff_management:add_target' 0 %}".replace('0/', '');
+        const updateStaffUrlBase = "{% url 'staff_management:update_staff' 0 %}".replace('0/', '');
+
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalItems = 0;
+        const itemsPerPage = 5;
+
+        function fetchStaff(query, page = 1) {
+            spinner.style.display = "block";
+
+            fetch(`${searchUrl}?search=${encodeURIComponent(query)}&page=${page}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                spinner.style.display = "none";
+                staffList.innerHTML = "";
+
+                if (data.staff.length === 0) {
+                    staffList.innerHTML = "<p class='text-center text-muted'>No staff found.</p>";
+                } else {
+                    data.staff.forEach(staff => {
+                        const staffCard = `
+                            <div class="card mb-3 shadow-sm staff-card">
+                                <div class="card-body d-flex justify-content-between align-items-center">
+                                    <div class="staff-info d-flex align-items-center gap-3">
+                                        ${staff.profile_photo ? 
+                                            `<img src="${staff.profile_photo}" alt="${staff.first_name} ${staff.last_name}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--primary-color);">` : 
+                                            `<i class="bi bi-person-circle" style="font-size: 2.5rem; color: var(--secondary-color);"></i>`}
+                                        <div>
+                                            <h5 class="mb-0">
+                                                <a href="${viewPerformanceUrlBase}${staff.id}/" class="text-decoration-none text-dark" aria-label="View ${staff.first_name} ${staff.last_name} Performance">
+                                                    ${staff.first_name} ${staff.last_name}
+                                                </a>
+                                            </h5>
+                                            <p class="text-muted mb-0">${staff.email || "N/A"}</p>
+                                        </div>
+                                    </div>
+                                    <div class="staff-meta text-end">
+                                        <p class="text-muted mb-0">+${staff.phone || "N/A"}</p>
+                                        <p class="text-muted mb-0">${staff.position || "N/A"}</p>
+                                    </div>
+                                    <div class="staff-status text-end">
+                                        <p class="text-muted mb-0">${staff.department || "N/A"}</p>
+                                    </div>
+                                    <div class="staff-actions d-flex gap-3">
+                                        <a href="${addTargetUrlBase}${staff.id}/" class="text-primary action-link" aria-label="Add Target for ${staff.first_name}"><i class="bi bi-plus-circle me-1"></i>Add Target</a>
+                                        <a href="${viewPerformanceUrlBase}${staff.id}/" class="text-primary action-link" aria-label="View Performance for ${staff.first_name}"><i class="bi bi-eye me-1"></i>View Performance</a>
+                                        <a href="${updateStaffUrlBase}${staff.id}/" class="text-primary action-link" aria-label="Update ${staff.first_name}"><i class="bi bi-pencil me-1"></i>Update</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        staffList.innerHTML += staffCard;
+                    });
+
+                    // Update pagination data
+                    currentPage = data.current_page;
+                    totalPages = data.total_pages;
+                    totalItems = data.total_items || (data.total_pages * itemsPerPage);
+
+                    // Update page info
+                    const startItem = (currentPage - 1) * itemsPerPage + 1;
+                    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+                    pageInfo.textContent = `${startItem} - ${endItem} of ${totalItems} STAFF`;
+
+                    // Update Previous/Next buttons
+                    prevPage.classList.toggle("disabled", !data.has_previous);
+                    nextPage.classList.toggle("disabled", !data.has_next);
+
+                    // Generate dynamic page numbers
+                    generatePageNumbers();
+                }
+            })
+            .catch(error => {
+                spinner.style.display = "none";
+                staffList.innerHTML = "<p class='text-center text-muted'>Error fetching data.</p>";
+                console.error("Error fetching staff:", error);
+            });
+        }
+
+        function generatePageNumbers() {
+            pageNumbersContainer.innerHTML = "";
+            
+            const maxPagesToShow = 4;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            if (endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            if (startPage > 1) {
+                const firstPageLink = document.createElement("a");
+                firstPageLink.href = "#";
+                firstPageLink.className = "page-number";
+                firstPageLink.textContent = "1";
+                firstPageLink.setAttribute("aria-label", "Go to page 1");
+                firstPageLink.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fetchStaff(searchInput.value, 1);
+                });
+                pageNumbersContainer.appendChild(firstPageLink);
+
+                if (startPage > 2) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.textContent = "...";
+                    ellipsis.style.margin = "0 5px";
+                    pageNumbersContainer.appendChild(ellipsis);
+                }
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageLink = document.createElement("a");
+                pageLink.href = "#";
+                pageLink.className = `page-number${i === currentPage ? " active" : ""}`;
+                pageLink.textContent = i;
+                pageLink.setAttribute("aria-label", `Go to page ${i}`);
+                pageLink.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fetchStaff(searchInput.value, i);
+                });
+                pageNumbersContainer.appendChild(pageLink);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.textContent = "...";
+                    ellipsis.style.margin = "0 5px";
+                    pageNumbersContainer.appendChild(ellipsis);
+                }
+
+                const lastPageLink = document.createElement("a");
+                lastPageLink.href = "#";
+                lastPageLink.className = "page-number";
+                lastPageLink.textContent = totalPages;
+                lastPageLink.setAttribute("aria-label", `Go to page ${totalPages}`);
+                lastPageLink.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fetchStaff(searchInput.value, totalPages);
+                });
+                pageNumbersContainer.appendChild(lastPageLink);
+            }
+        }
+
+        searchInput.addEventListener("input", function() {
+            fetchStaff(searchInput.value, 1);
+        });
+
+        prevPage.addEventListener("click", function(e) {
+            e.preventDefault();
+            if (currentPage > 1) fetchStaff(searchInput.value, currentPage - 1);
+        });
+
+        nextPage.addEventListener("click", function(e) {
+            e.preventDefault();
+            if (currentPage < totalPages) fetchStaff(searchInput.value, currentPage + 1);
+        });
+
+        fetchStaff("");
+
+        // Accessibility: Keyboard navigation for pagination
+        document.querySelectorAll(".page-number, #prev-page, #next-page").forEach(link => {
+            link.addEventListener("keydown", function(e) {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    link.click();
+                }
+            });
+        });
+    });
+
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function () {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.style.display = 'none', 500);
+            }, 5000);
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Import Customer Data - Sao Zirobwe SACCO{% endblock %}
+
+{% block content %}
+<main id="main" class="main">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}" style="color: var(--primary);">Dashboard</a></li>
+                <li class="breadcrumb-item active" aria-current="page" style="color: var(--text-dark);">Import Customer Data</li>
+            </ol>
+        </nav>
+
+        <div class="form-container shadow-lg">
+            <!-- Header -->
+            <h2 class="mb-4 fw-bold text-center" style="color: var(--text-dark); border-bottom: 3px solid var(--primary);">
+                <i class="bi bi-file-earmark-excel me-2" style="color: var(--primary);"></i>
+                Import Customer Data from Excel
+            </h2>
+
+            <!-- Form -->
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <!-- File Upload Section -->
+                <section class="form-group mb-4">
+                    <label for="excel_file" class="form-label fw-semibold" style="color: var(--text-dark);">Upload Excel File</label>
+                    <div class="input-group">
+                        <input type="file" class="form-control" id="excel_file" name="excel_file" required accept=".xls,.xlsx" aria-describedby="excel_file_help" style="border-color: var(--text-muted);">
+                        <span class="input-group-text" style="background: var(--light-bg); color: var(--primary);"><i class="bi bi-file-earmark-excel"></i></span>
+                    </div>
+                    <div class="form-text mt-2" style="color: var(--text-muted);" id="excel_file_help">
+                        Upload an Excel file (.xls or .xlsx) with customer data.
+                    </div>
+                    <div class="invalid-feedback" style="color: var(--danger);">
+                        Please select a valid Excel file.
+                    </div>
+                </section>
+
+                <!-- Instructions Section -->
+                <section class="form-group mb-4">
+                    <div class="alert shadow-sm border-0" style="background: #e7f1ff; color: var(--text-dark); border-left: 4px solid var(--primary); border-radius: 12px; padding: 1.5rem;">
+                        <h5 class="alert-heading fw-bold mb-3" style="color: var(--text-dark);"><i class="bi bi-info-circle me-2" style="color: var(--primary);"></i>Excel Format Instructions</h5>
+                        <p class="mb-3">Ensure your Excel file includes columns with the following headers:</p>
+                        <ul class="list-unstyled mb-3">
+                            <li class="mb-2"><i class="bi bi-check-circle-fill me-2" style="color: var(--success);"></i><strong>Required fields:</strong> branch, mem_reg_date, member_number, first_name, surname, gender, dob, id_number, card_number, phone_number1, kin_sname, kin_fname, kin_phone</li>
+                            <li class="mb-2"><i class="bi bi-calendar3 me-2" style="color: var(--primary);"></i><strong>Date formats:</strong> Use YYYY-MM-DD for <code>mem_reg_date</code> and <code>dob</code></li>
+                            <li class="mb-2"><i class="bi bi-telephone me-2" style="color: var(--primary);"></i><strong>Phone numbers:</strong> 12 digits starting with <code>256</code> (e.g., 256123456789)</li>
+                            <li class="mb-2"><i class="bi bi-card-text me-2" style="color: var(--primary);"></i><strong>ID number:</strong> Pattern <code>CF</code> or <code>CM</code> + 11 characters + letter (e.g., CF12345678901A)</li>
+                        </ul>
+                        <a href="{% url 'download_template' %}" class="btn btn-sm btn-outline-primary" style="border-color: var(--primary); color: var(--primary);" onmouseover="this.style.background='var(--primary)'; this.style.color='#ffffff';" onmouseout="this.style.background='transparent'; this.style.color='var(--primary)';">Download Sample Template</a>
+                    </div>
+                </section>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary px-4 py-2" style="background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); border: none;" onmouseover="this.style.background='linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%)';" onmouseout="this.style.background='linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%)';" aria-label="Import customer data">
+                        <i class="bi bi-upload me-2"></i>Import Data
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary px-4 py-2" style="border-color: var(--text-muted); color: var(--text-dark);" onmouseover="this.style.background='var(--light-bg)';" onmouseout="this.style.background='transparent';" aria-label="Return to dashboard">Back to Dashboard</a>
+                </div>
+            </form>
+
+            <!-- Failed Records -->
+            {% if request.session.failed_records %}
+            <section class="mt-4">
+                <div class="alert alert-warning shadow-sm border-0" style="border-radius: 12px; border-left: 4px solid #ffc107; color: var(--text-dark);">
+                    <h5 class="alert-heading fw-bold mb-3" style="color: var(--text-dark);"><i class="bi bi-exclamation-triangle me-2" style="color: #ffc107;"></i>Import Errors</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-sm table-bordered" style="border-color: var(--text-muted);">
+                            <thead style="background: var(--light-bg);">
+                                <tr>
+                                    <th scope="col" class="text-center">Row</th>
+                                    <th scope="col">Error</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in request.session.failed_records %}
+                                <tr>
+                                    <td class="text-center">{{ record.row }}</td>
+                                    <td style="color: var(--danger);">{{ record.error }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            {% endif %}
+        </div>
+    </div>
+</main>
+
+<!-- Custom CSS -->
+<style>
+    /* Main Content */
+    #main {
+        padding: 40px 150px 40px 120px; /* Increased right padding from 120px to 150px */
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        background: var(--light-bg);
+        box-sizing: border-box;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .container {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    /* Form Container (Card) */
+    .form-container {
+        width: calc(100% - 240px); /* Adjust for 120px left + 150px right padding */
+        max-width: 1000px;
+        background: var(--sidebar-bg);
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        overflow-y: auto;
+        transition: box-shadow 0.3s ease;
+        margin: 20px 0;
+    }
+    .form-container:hover {
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Typography */
+    h2 {
+        font-family: 'Nunito', sans-serif;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        letter-spacing: 0.5px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid var(--primary);
+        display: inline-block;
+    }
+    .form-label {
+        font-family: 'Nunito', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-dark);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    /* Form Controls */
+    .form-control {
+        border-radius: 10px;
+        padding: 0.75rem 1rem;
+        font-size: 0.95rem;
+        border: 1px solid var(--text-muted);
+        background: #ffffff;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+        font-family: 'Nunito', sans-serif;
+        color: var(--text-dark);
+    }
+    .form-control:hover {
+        border-color: var(--primary);
+        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.25rem rgba(22, 80, 142, 0.2);
+        outline: none;
+    }
+
+    /* Buttons */
+    .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        font-family: 'Nunito', sans-serif;
+        padding: 0.75rem 1.5rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        border: none;
+        color: #ffffff;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    .btn-outline-secondary {
+        border-color: var(--text-muted);
+        color: var(--text-dark);
+        background: transparent;
+    }
+    .btn-outline-secondary:hover {
+        background: var(--light-bg);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    }
+    .btn-outline-primary {
+        border-color: var(--primary);
+        color: var(--primary);
+        background: transparent;
+    }
+    .btn-outline-primary:hover {
+        background: var(--primary);
+        color: #ffffff;
+        border-color: var(--primary);
+    }
+
+    /* Alerts */
+    .alert {
+        border-radius: 12px;
+        padding: 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--text-dark);
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+    .alert-warning {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+    }
+
+    /* Table */
+    .table {
+        font-family: 'Nunito', sans-serif;
+        font-size: 0.9rem;
+        color: var(--text-dark);
+    }
+    .table thead {
+        background: var(--light-bg);
+    }
+    .table th, .table td {
+        border-color: var(--text-muted);
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+    .table td {
+        color: var(--danger);
+    }
+    .table-hover tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    /* Dark Mode */
+    .dark-mode .form-container {
+        background: #222330;
+        color: #e9ecef;
+    }
+    .dark-mode .form-control {
+        background: #2c3a3c;
+        color: #e9ecef;
+        border-color: #3a4445;
+    }
+    .dark-mode .form-label, .dark-mode h2 {
+        color: #e9ecef;
+    }
+    .dark-mode .alert {
+        background: #2c3a3c;
+        color: #e9ecef;
+        border-left: 4px solid var(--primary);
+    }
+    .dark-mode .alert-warning {
+        background: #4a3a1a;
+        border-left: 4px solid #ffc107;
+    }
+    .dark-mode .table thead {
+        background: #2c3a3c;
+    }
+    .dark-mode .table th, .dark-mode .table td {
+        border-color: #3a4445;
+        color: #e9ecef;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1000px) {
+        #main {
+            padding: 40px 40px 40px 20px; /* Increased right padding to 40px */
+        }
+        .form-container {
+            width: calc(100% - 40px);
+            padding: 1.5rem;
+            max-height: 95vh;
+        }
+        h2 {
+            font-size: 1.8rem;
+        }
+        .btn {
+            padding: 0.6rem 1rem;
+            font-size: 0.9rem;
+        }
+        .form-label {
+            font-size: 0.9rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #main {
+            padding: 40px 15px; /* Balanced padding for mobile */
+        }
+        .form-container {
+            width: calc(100% - 30px);
+        }
+    }
+</style>
+
+<!-- Form Validation Script -->
+<script>
+    (function () {
+        'use strict';
+        const forms = document.querySelectorAll('.needs-validation');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+</script>
+{% endblock %}

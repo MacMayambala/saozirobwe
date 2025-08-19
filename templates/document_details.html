@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Messages Display -->
+    {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Header Section -->
+    <div class="header-section mb-4 text-center">
+        <h2 class="fw-bold">Document Details</h2>
+    </div>
+
+    <!-- Document Details Card -->
+    <div class="card shadow-sm">
+        <div class="card-body p-4">
+            <table class="table table-bordered table-details mb-0" aria-label="Document details">
+                <tbody>
+                    <tr>
+                        <th scope="row">Member Number</th>
+                        <td>{{ document.customer.member_number|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Name</th>
+                        <td>{{ document.customer.first_name }} {{ document.customer.surname }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Phone</th>
+                        <td>{{ document.customer.phone|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Document Type</th>
+                        <td>{{ document.get_document_type_display }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Storage Reason</th>
+                        <td>{{ document.get_storage_reason_display }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Description</th>
+                        <td>{{ document.document_description|default:"No description provided" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Received By</th>
+                        <td>{% if document.received_by %}{{ document.received_by.get_full_name|default:document.received_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date Received</th>
+                        <td>{{ document.date_received|date:"Y-m-d H:i:s"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Next of Kin</th>
+                        <td>{{ document.next_of_kin_name|default:"N/A" }} {% if document.next_of_kin_relationship %}({{ document.next_of_kin_relationship }}){% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Next of Kin Phone</th>
+                        <td>{{ document.next_of_kin_phone|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Status</th>
+                        <td>
+                            {% if document.status == "Pending" %}
+                                <span class="badge bg-primary">Pending</span>
+                            {% elif document.status == "available" %}
+                                <span class="badge bg-success">Available</span>
+                            {% elif document.status == "requested" %}
+                                <span class="badge bg-warning">Requested</span>
+                            {% elif document.status == "released" %}
+                                <span class="badge bg-danger">Released</span>
+                            {% elif document.status == "branch" %}
+                                <span class="badge bg-info">Branch</span>
+                            {% elif document.status == "authorised" %}
+                                <span class="badge bg-primary">Authorised</span>
+                            {% elif document.status == "delivered" %}
+                                <span class="badge bg-success">Delivered</span>
+                            {% elif document.status == "returned" %}
+                                <span class="badge bg-secondary">Returned</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Requested By</th>
+                        <td>{% if document.requested_by %}{{ document.requested_by.get_full_name|default:document.requested_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date Requested</th>
+                        <td>{{ document.date_requested|date:"Y-m-d H:i:s"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Acknowledged By</th>
+                        <td>{% if document.acknowledged_by %}{{ document.acknowledged_by.get_full_name|default:document.acknowledged_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date Acknowledged</th>
+                        <td>{{ document.date_acknowledged|date:"Y-m-d H:i:s"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Approved By</th>
+                        <td>{% if document.approved_by %}{{ document.approved_by.get_full_name|default:document.approved_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date Approved</th>
+                        <td>{{ document.date_approved|date:"Y-m-d H:i:s"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Authorised By</th>
+                        <td>{% if document.authorised_by %}{{ document.authorised_by.get_full_name|default:document.authorised_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date Authorised</th>
+                        <td>{{ document.date_authorised|date:"Y-m-d H:i:s"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Released By</th>
+                        <td>{% if document.released_by %}{{ document.released_by.get_full_name|default:document.released_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date Released</th>
+                        <td>{{ document.date_released|date:"Y-m-d H:i:s"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Collected By</th>
+                        <td>{% if document.collected_by %}{{ document.collected_by.get_full_name|default:document.collected_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Delivered To</th>
+                        <td>{% if document.delivered_by %}{{ document.delivered_by.get_full_name|default:document.delivered_by.username }}{% else %}N/A{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Date Delivered</th>
+                        <td>{{ document.date_delivered|date:"Y-m-d H:i:s"|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Returned To</th>
+                        <td>{{ document.returned_to_name|default:"N/A" }}</td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Returned To Phone</th>
+                        <td>{{ document.returned_to_phone|default:"N/A" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-end bg-transparent p-3">
+            {% if document.status == "available" and not request.user.is_staff and not request.user.is_superuser %}
+                <button onclick="confirmAndOpenModal('{% url 'request_document' document.pk %}', 'Request')"
+                        class="btn btn-primary btn-sm" aria-label="Request document">Request</button>
+            {% endif %}
+            {% if document.status == "Pending" and request.user.is_staff %}
+                <button onclick="confirmAndOpenModal('{% url 'acknowledge_document' document.pk %}', 'Acknowledge')"
+                        class="btn btn-success btn-sm" aria-label="Acknowledge document">Acknowledge</button>
+            {% endif %}
+            {% if document.status == "branch" and request.user.is_staff %}
+                <button onclick="confirmAndOpenModal('{% url 'approve_document' document.pk %}', 'Approve')"
+                        class="btn btn-success btn-sm" aria-label="Approve document">Approve</button>
+            {% endif %}
+            {% if document.status == "requested" and request.user.is_staff %}
+                <button onclick="confirmAndOpenModal('{% url 'authorise_document' document.pk %}', 'Authorise')"
+                        class="btn btn-primary btn-sm" aria-label="Authorise document">Authorise</button>
+            {% endif %}
+            {% if document.status == "authorised" and request.user.is_staff %}
+                <button onclick="confirmAndOpenModal('{% url 'release_document' document.pk %}', 'Release')"
+                        class="btn btn-danger btn-sm" aria-label="Release document">Release</button>
+            {% endif %}
+            {% if document.status == "released" and document.collected_by == request.user %}
+                <button onclick="confirmAndOpenModal('{% url 'deliver_document' document.pk %}', 'Deliver')"
+                        class="btn btn-primary btn-sm" aria-label="Deliver document">Deliver</button>
+            {% endif %}
+            {% if document.status == "delivered" and document.delivered_by == request.user %}
+                <button onclick="confirmAndOpenModal('{% url 'return_document' document.pk %}', 'Return')"
+                        class="btn btn-warning btn-sm" aria-label="Return document">Return</button>
+            {% endif %}
+            {% if request.user.is_superuser %}
+                <button onclick="confirmAndOpenModal('{% url 'reverse_action' document.pk %}', 'Reverse')"
+                        class="btn btn-secondary btn-sm" aria-label="Reverse document action">Reverse Action</button>
+            {% endif %}
+            <a href="{% url 'admin_document_list' %}" class="btn btn-secondary btn-sm" aria-label="Back to document list">
+                <i class="fas fa-arrow-left me-1"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Action Logs Section -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Action History</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-bordered mb-0" aria-label="Document action history">
+                    <thead>
+                        <tr>
+                            <th scope="col">Action</th>
+                            <th scope="col">Comment</th>
+                            <th scope="col">Performed By</th>
+                            <th scope="col">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in action_logs %}
+                        <tr>
+                            <td>{{ log.action_type }}</td>
+                            <td>{{ log.comment|default:"No comment provided" }}</td>
+                            <td>{{ log.performed_by.get_full_name|default:log.performed_by.username }}</td>
+                            <td>{{ log.performed_at|date:"Y-m-d H:i:s" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No actions recorded.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content card shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordModalLabel">Enter Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="passwordForm" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="passwordInput" class="form-label">Password</label>
+                        <input type="password" id="passwordInput" name="password" class="form-control" placeholder="Enter your password" required aria-required="true">
+                    </div>
+                    <div class="mb-3" id="commentInputDiv">
+                        <label for="commentInput" class="form-label">Comment (Optional)</label>
+                        <textarea id="commentInput" name="comment" class="form-control" placeholder="Enter your comment" rows="4" aria-describedby="commentHelp"></textarea>
+                        <small id="commentHelp" class="form-text text-muted">Add an optional comment for this action.</small>
+                    </div>
+                    <div class="mb-3" id="collectedByInputDiv" style="display: none;">
+                        <label for="collectedByInput" class="form-label">Collected By</label>
+                        <select name="collected_by" id="collectedByInput" class="form-select">
+                            <option value="" disabled selected>Select a user</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="userSelectInputDiv" style="display: none;">
+                        <label for="userSelectInput" class="form-label">Select User</label>
+                        <select name="user_select" id="userSelectInput" class="form-select">
+                            <option value="" disabled selected>Select a user</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3" id="recipientInputDiv" style="display: none;">
+                        <label for="recipientInput" class="form-label">Recipient</label>
+                        <select name="recipient" id="recipientInput" class="form-select">
+                            <option value="" disabled selected>Select recipient</option>
+                            <option value="customer">Customer ({{ document.customer.first_name }} {{ document.customer.surname }})</option>
+                            {% if document.next_of_kin_name %}
+                                <option value="next_of_kin">Next of Kin ({{ document.next_of_kin_name }})</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" id="confirmActionBtn">Confirm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f8f9fa; color: #333; }
+    .container { max-width: 1400px; }
+    .card { border-radius: 15px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1); border: none; padding: 15px; background: #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); }
+    .header-section h2 { font-size: 1.75rem; font-weight: 700; color: #2c3e50; margin: 0; }
+    .btn { background-color: #16508e; border: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; color: #ffffff; transition: background-color 0.3s ease, transform 0.2s ease; }
+    .btn:hover { background-color: #0056b3; transform: translateY(-1px); }
+    .btn-sm { padding: 5px 10px; font-size: 0.85rem; }
+    .btn-primary { background-color: #007bff; }
+    .btn-primary:hover { background-color: #0056b3; }
+    .btn-success { background-color: #28a745; }
+    .btn-success:hover { background-color: #218838; }
+    .btn-danger { background-color: #dc3545; }
+    .btn-danger:hover { background-color: #c82333; }
+    .btn-warning { background-color: #ffc107; }
+    .btn-warning:hover { background-color: #e0a800; }
+    .btn-secondary { background-color: #6c757d; }
+    .btn-secondary:hover { background-color: #5a6268; }
+    .form-control, .form-select { border-radius: 8px; border: 1px solid #ced4da; padding: 10px 15px; font-size: 0.9rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .form-control:focus, .form-select:focus { border-color: #16508e; box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); outline: none; }
+    .table-details th { width: 30%; background-color: #f1f3f5; font-weight: 600; color: #2c3e50; padding: 15px; }
+    .table-details td { padding: 15px; color: #6c757d; font-size: 0.9rem; }
+    .table-striped th, .table-striped td { padding: 12px; }
+    .badge { font-size: 0.8rem; padding: 0.5em 1em; font-weight: 500; }
+    .bg-primary { background-color: #007bff; color: #fff; }
+    .bg-success { background-color: #28a745; color: #fff; }
+    .bg-warning { background-color: #ffc107; color: #212529; }
+    .bg-danger { background-color: #dc3545; color: #fff; }
+    .bg-info { background-color: #17a2b8; color: #fff; }
+    .bg-secondary { background-color: #6c757d; color: #fff; }
+    .alert { border-radius: 8px; font-size: 0.9rem; }
+    .alert-dismissible .btn-close { padding: 1rem; }
+</style>
+
+<!-- JavaScript for Confirmation and Modal -->
+<script>
+    let currentActionUrl = "";
+    function confirmAndOpenModal(url, actionType) {
+        if (confirm(`Are you sure you want to ${actionType.toLowerCase()} this document?`)) {
+            currentActionUrl = url;
+            console.log("Opening modal for action:", actionType, "URL:", url);
+            document.getElementById("passwordModalLabel").textContent = `Enter Password to ${actionType}`;
+            document.getElementById("passwordInput").value = "";
+            const collectedByInputDiv = document.getElementById("collectedByInputDiv");
+            const userSelectInputDiv = document.getElementById("userSelectInputDiv");
+            const recipientInputDiv = document.getElementById("recipientInputDiv");
+            const commentInputDiv = document.getElementById("commentInputDiv");
+
+            // Reset visibility and required attributes
+            if (collectedByInputDiv) {
+                collectedByInputDiv.style.display = actionType === "Release" ? "block" : "none";
+                document.getElementById("collectedByInput").value = "";
+                document.getElementById("collectedByInput").required = actionType === "Release";
+            }
+            if (userSelectInputDiv) {
+                userSelectInputDiv.style.display = actionType === "Deliver" ? "block" : "none";
+                document.getElementById("userSelectInput").value = "";
+                document.getElementById("userSelectInput").required = actionType === "Deliver";
+            }
+            if (recipientInputDiv) {
+                recipientInputDiv.style.display = actionType === "Return" ? "block" : "none";
+                document.getElementById("recipientInput").value = "";
+                document.getElementById("recipientInput").required = actionType === "Return";
+            }
+            if (commentInputDiv) {
+                commentInputDiv.style.display = "block"; // Show comment field for all actions
+                document.getElementById("commentInput").value = "";
+                document.getElementById("commentInput").required = false; // Comment is optional
+            }
+
+            const passwordModal = new bootstrap.Modal(document.getElementById("passwordModal"));
+            passwordModal.show();
+        }
+    }
+    document.getElementById("passwordForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+        console.log("Submitting form to:", currentActionUrl);
+        const formData = new FormData(this);
+        console.log("Form data:", Object.fromEntries(formData));
+        fetch(currentActionUrl, {
+            method: "POST",
+            body: formData,
+            credentials: "include" // Ensure cookies (session) are sent
+        })
+        .then(response => {
+            console.log("Response status:", response.status, "Redirected:", response.redirected, "URL:", response.url);
+            if (response.redirected) {
+                window.location.href = response.url; // Follow redirect
+            } else {
+                return response.text().then(text => {
+                    console.error("Non-redirect response:", text);
+                    alert("Action failed. Check console for details.");
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Fetch error:", error);
+            alert("Error submitting form. Check console for details.");
+        });
+    });
+</script>
+{% endblock %}

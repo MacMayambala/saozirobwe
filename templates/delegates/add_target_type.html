@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Target Type - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <div class="header-section mb-4">
+        <h2>Add a New Target Type</h2>
+    </div>
+
+    <div class="card shadow-lg p-4">
+        <form method="POST" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="fw-bold mb-1">Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <div class="text-danger">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="fw-bold mb-1">Description (Optional)</label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div class="text-danger">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-primary">Add Target Type</button>
+        </form>
+    </div>
+</div>
+
+<!-- Custom CSS -->
+<style>
+    body { font-family: 'Nunito', Arial, sans-serif; background: #f8f9fa; color: #333; }
+    .container { max-width: 1400px; }
+    .card { border-radius: 15px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1); border: none; background: #fff; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15); }
+    .header-section { text-align: center; }
+    .header-section h2 { font-size: 1.75rem; font-weight: 700; color: #2c3e50; margin: 0; }
+    .btn { background-color: #16508e; border: none; font-weight: 600; padding: 8px 16px; border-radius: 8px; color: #ffffff; transition: background-color 0.3s ease, transform 0.2s ease; }
+    .btn:hover { background-color: #0056b3; transform: translateY(-1px); }
+    .form-control { border-radius: 8px; border: 1px solid #ced4da; padding: 10px 15px; font-size: 0.9rem; transition: border-color 0.3s ease, box-shadow 0.3s ease; }
+    .form-control:focus { border-color: #16508e; box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); outline: none; }
+    .text-danger { font-size: 0.85rem; }
+</style>
+{% endblock %}
