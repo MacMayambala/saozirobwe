@@ -108,16 +108,16 @@ class Command(BaseCommand):
                 self.stdout.write(f"⚠️ No email for {customer.cus_id} - Skipped email.")
 
             # === Send SMS ===
-            if customer.phone_number1:
+            if customer.phone:
                 sms_message = f"SAO ZIROBWE\nDear {customer.first_name},\nMunomukabi Wo Yagwako nga {member.subscription_end}.\nTukusaba Omuzebujja Okusobola okuganyurwa mumpereza Enno."
                 sms_message += "\nFor more information, please contact us at 0392984288.\n\nThank you."
                 sms_message += "\nSAO ZIROBWE SACCO\n\nThis is an automated message. Please do not reply."
                 
-                sms_result = send_sms_speedamobile(customer.phone_number1, sms_message)
+                sms_result = send_sms_speedamobile(customer.phone, sms_message)
                 
                 if sms_result.get("status") == "S":
-                    self.stdout.write(f"✅ SMS sent to {customer.phone_number1}")
+                    self.stdout.write(f"✅ SMS sent to {customer.phone}")
                 else:
-                    self.stdout.write(f"❌ Failed to send SMS to {customer.phone_number1}: {sms_result.get('remarks')}")
+                    self.stdout.write(f"❌ Failed to send SMS to {customer.phone}: {sms_result.get('remarks')}")
             else:
                 self.stdout.write(f"⚠️ No phone number for {customer.cus_id} - Skipped SMS.")
