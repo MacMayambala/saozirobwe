@@ -541,3 +541,228 @@ def two_factor_setup(request):
         "secret_key": user_2fa.secret_key,
         "is_setup": False
     })
+# users/views.py
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from .forms import CustomUserCreationForm, CustomUserEditForm
+
+@login_required
+def user_list(request):
+    if not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Only admins can manage users.")
+        return redirect("delegate_list")
+
+    users = User.objects.all().order_by("-date_joined")
+    return render(request, "users/user_list.html", {"users": users})
+
+@login_required
+def create_user(request):
+    if not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Only admins can create users.")
+        return redirect("user_list")
+
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "User created successfully!")
+            return redirect("user_list")
+    else:
+        form = CustomUserCreationForm()
+
+    return render(request, "users/create_user.html", {"form": form})
+
+@login_required
+def edit_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Only admins can edit users.")
+        return redirect("user_list")
+
+    if request.method == "POST":
+        form = CustomUserEditForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "User updated successfully!")
+            return redirect("user_list")
+    else:
+        form = CustomUserEditForm(instance=user)
+
+    return render(request, "users/edit_user.html", {"form": form, "user": user})
+
+@login_required
+def toggle_user_status(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Permission denied.")
+        return redirect("user_list")
+
+    user.is_active = not user.is_active
+    user.save()
+    status = "activated" if user.is_active else "deactivated"
+    messages.success(request, f"User {user.username} has been {status}.")
+    return redirect("user_list")
+
+@login_required
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if not request.user.is_staff and not request.user.is_superuser:
+        messages.error(request, "Permission denied.")
+        return redirect("user_list")
+
+    if request.method == "POST":
+        user.delete()
+        messages.success(request, f"User {user.username} has been deleted.")
+        return redirect("user_list")
+
+    return render(request, "users/confirm_delete.html", {"user": user})
+################################################################################################################
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils.timezone import now, timedelta
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.contrib.auth.models import User
+from .forms import PasswordResetRequestForm, SetNewPasswordForm
+import random
+
+# Temporary OTP storage (can be saved in DB or session)
+from django.contrib.sessions.backends.db import SessionStore
+
+# =========================
+# FORGOT PASSWORD VIEW
+# =========================
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.utils.timezone import now
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from datetime import timedelta
+import random
+
+from .forms import PasswordResetRequestForm, SetNewPasswordForm
+from .models import PasswordHistory
+
+
+# =========================
+# FORGOT PASSWORD
+# =========================
+def forgot_password(request):
+    if request.method == "POST":
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data["email"]
+            try:
+                user = User.objects.get(email=email)
+                
+                # Generate OTP
+                otp_code = f"{random.randint(100000, 999999)}"
+                request.session["password_reset_otp"] = otp_code
+                request.session["password_reset_user"] = user.id
+                request.session["otp_created_at"] = now().isoformat()
+
+                # Send OTP email
+                email_content = render_to_string("email/otp_email_template.html", {
+                    "user_name": user.username,
+                    "otp": otp_code
+                })
+                email_message = EmailMultiAlternatives(
+                    subject="Password Reset OTP",
+                    body="",
+                    from_email="Sao Zirobwe Sacco <noreply@saozirobwe.co.ug>",
+                    to=[user.email]
+                )
+                email_message.attach_alternative(email_content, "text/html")
+                email_message.send()
+
+                messages.success(request, "A password reset OTP has been sent to your email.")
+                return redirect("reset_password_verify")
+            except User.DoesNotExist:
+                messages.error(request, "No user found with this email.")
+    else:
+        form = PasswordResetRequestForm()
+    return render(request, "users/forgot_password.html", {"form": form})
+
+
+# =========================
+# VERIFY OTP BEFORE RESET
+# =========================
+def reset_password_verify(request):
+    if request.method == "POST":
+        otp_input = request.POST.get("otp")
+        otp_saved = request.session.get("password_reset_otp")
+        otp_time = request.session.get("otp_created_at")
+        user_id = request.session.get("password_reset_user")
+
+        if not otp_saved or not otp_time or not user_id:
+            messages.error(request, "OTP session expired. Please try again.")
+            return redirect("forgot_password")
+
+        from django.utils.dateparse import parse_datetime
+        try:
+            otp_created = parse_datetime(otp_time)
+        except:
+            otp_created = now() - timedelta(minutes=11)
+
+        if now() - otp_created > timedelta(minutes=10):
+            messages.error(request, "OTP expired. Please request a new one.")
+            return redirect("forgot_password")
+
+        if otp_input == otp_saved:
+            messages.success(request, "OTP verified. You can now reset your password.")
+            return redirect("reset_password_set")
+        else:
+            messages.error(request, "Invalid OTP. Try again.")
+
+    return render(request, "users/reset_password_verify.html")
+
+
+# =========================
+# SET NEW PASSWORD VIEW WITH PASSWORD REUSE CHECK
+# =========================
+def reset_password_set(request):
+    user_id = request.session.get("password_reset_user")
+    if not user_id:
+        messages.error(request, "Session expired. Please request password reset again.")
+        return redirect("forgot_password")
+
+    user = get_object_or_404(User, id=user_id)
+
+    if request.method == "POST":
+        form = SetNewPasswordForm(user, request.POST)
+        if form.is_valid():
+            new_password = form.cleaned_data.get("new_password1")
+
+            # Check password reuse
+            previous_passwords = PasswordHistory.objects.filter(user=user)
+            for old in previous_passwords:
+                if user.check_password(new_password):
+                    form.add_error("new_password1", "You cannot reuse a previous password.")
+                    return render(request, "users/reset_password_set.html", {"form": form})
+
+            # Save new password
+            form.save()
+
+            # Add to password history
+            PasswordHistory.objects.create(user=user, password=user.password)
+
+            # Optional: keep only last 5 passwords
+            history = PasswordHistory.objects.filter(user=user).order_by('-created_at')
+            if history.count() > 5:
+                for old_pw in history[5:]:
+                    old_pw.delete()
+
+            # Clear session
+            request.session.pop("password_reset_otp", None)
+            request.session.pop("password_reset_user", None)
+            request.session.pop("otp_created_at", None)
+
+            messages.success(request, "Password reset successful! You can now log in.")
+            return redirect("login")
+    else:
+        form = SetNewPasswordForm(user)
+
+    return render(request, "users/reset_password_set.html", {"form": form})

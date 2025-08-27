@@ -51,7 +51,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Staff, Branch, Position, Department
 from .forms import StaffForm
-
+@login_required
 def staff_dashboard(request):
     query = request.GET.get('search', '')
     page = request.GET.get('page', 1)
@@ -75,7 +75,7 @@ def staff_dashboard(request):
         'query': query
     }
     return render(request, 'staff_management/staff_dashboard.html', context)
-
+@login_required
 def search_staff(request):
     query = request.GET.get('search', '')
     page = int(request.GET.get('page', 1))
@@ -121,7 +121,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import Staff
 from .forms import StaffForm
-
+@login_required
 def add_staff(request):
     if request.method == 'POST':
         form = StaffForm(request.POST, request.FILES)
@@ -134,7 +134,7 @@ def add_staff(request):
     else:
         form = StaffForm()
     return render(request, 'staff_management/add_staff.html', {'form': form})
-
+@login_required
 def update_staff(request, staff_id):
     staff = get_object_or_404(Staff, id=staff_id)
     if request.method == 'POST':
@@ -163,7 +163,7 @@ from django.contrib import messages
 from django.utils import timezone
 from decimal import Decimal
 from .models import Staff, Target, TargetTransaction, StaffTargetType
-
+@login_required
 def add_target(request, staff_id):
     staff = get_object_or_404(Staff, id=staff_id)
     target_types = StaffTargetType.objects.all()
@@ -262,7 +262,6 @@ logger = logging.getLogger(__name__)
 @login_required
 def update_target(request, target_id):
     target = get_object_or_404(Target, id=target_id)
-    # Debug: Log target attributes
     logger.debug(f"Target object: {target.__dict__}")
     
     if request.method == 'POST':
@@ -322,7 +321,6 @@ def update_target(request, target_id):
             target.current_value = new_current_value
             target.save()
             
-            # Use target_type.stname for success message
             messages.success(request, f"{transaction_type} of {actual_value} for '{target.target_type.stname}' recorded successfully!")
         except ValueError:
             messages.error(request, "Invalid transaction value. Please enter a valid number.")
@@ -538,7 +536,7 @@ def staff_target_type_delete(request, pk):
         'is_delete': True
     }
     return render(request, 'staff_management/staff_target_type_confirm_delete.html', context)
-
+@login_required
 def test_view(request):
     """A simple test view to verify routing is working"""
     return HttpResponse("<h1>Test View is Working!</h1><p>If you can see this, your URL routing is functioning.</p>")
@@ -552,7 +550,7 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .models import Staff
-
+@login_required
 def search_staff(request):
     query = request.GET.get('search', '')
     page = int(request.GET.get('page', 1))
@@ -612,7 +610,6 @@ def edit_target_goal(request, target_id):
     
     if request.method == 'POST':
         try:
-            # Retrieve form data
             period = request.POST.get('period')
             goal_value = request.POST.get('goal_value')
             start_date = request.POST.get('start_date')
@@ -647,13 +644,12 @@ def edit_target_goal(request, target_id):
                 messages.error(request, "Invalid date format. Please use YYYY-MM-DD.")
                 return redirect('staff_management:view_performance', staff_id=target.staff.id)
 
-            # Update target (target_type remains unchanged)
+            # Update target
             target.period = period
             target.goal_value = goal_value
             target.start_date = start_date
             target.end_date = end_date
 
-            # Save with validation
             target.full_clean()  # Run model validation
             target.save()
             messages.success(request, f"Target '{target.target_type.stname}' updated successfully.")
@@ -664,7 +660,6 @@ def edit_target_goal(request, target_id):
         return redirect('staff_management:view_performance', staff_id=target.staff.id)
     
     return redirect('staff_management:view_performance', staff_id=target.staff.id)
-
 
 ################################################################################################
 

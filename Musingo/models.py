@@ -9,13 +9,15 @@ from Customer.models import Customer
 class DocumentCustody(models.Model):
     DOCUMENT_TYPES = [
         ('ID', 'Identification Document'),
-        ('TITLE', 'Title Deed'),
-        ('PASSPORT', 'Passport'),
+        ('Land TITLE', 'Land Title'),
+        ('Plot Agreement', 'Plot Agreement'),
+        ('Will', 'Will'),
+        ('Academic Document', 'Academic Document'),
         ('OTHER', 'Other'),
     ]
     STORAGE_REASONS = [
         ('COLLATERAL', 'Collateral'),
-        ('SAFEKEEPING', 'Safekeeping'),
+        ('DOCUMENT CUSTODY', 'Document Custody'),
         ('OTHER', 'Other'),
     ]
     STATUS_CHOICES = [

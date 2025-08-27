@@ -1,8 +1,14 @@
 from django.urls import path
-from .views import user_list, manage_user_modules, update_user_modules
+from .views import (
+    user_list, manage_user_modules, update_user_modules,
+    user_login, user_logout, two_factorauth, verify_2fa, home, resend_otp,
+    manage_group_permissions, group_list, setting, two_factor_setup,
+    create_user, edit_user, toggle_user_status, delete_user,
+    reset_password_set,  # Added missing import
+    reset_password_verify,  # Added missing import
+    forgot_password  # Added missing import
+)
 from django.urls import path
-
-from .views import user_login, user_logout, two_factorauth, verify_2fa,home,resend_otp,manage_group_permissions, group_list,setting,two_factor_setup
 
 urlpatterns = [
     path("", user_login, name="login"),
@@ -17,7 +23,14 @@ urlpatterns = [
     path('users/', user_list, name='user_list'),
     path('users/<int:user_id>/modules/', manage_user_modules, name='manage_user_modules'),
     path('users/<int:user_id>/modules/update/', update_user_modules, name='update_user_modules'),
-    path('groups/', group_list, name='group_list'),
-    path('manage-permissions/<int:group_id>/', manage_group_permissions, name='manage_group_permissions'),
+    path("users/", user_list, name="user_list"),
+    path("create/user", create_user, name="create_user"),
+    path("<int:user_id>/edit/", edit_user, name="edit_user"),
+    path("<int:user_id>/toggle/", toggle_user_status, name="toggle_user_status"),
+    path("<int:user_id>/delete/", delete_user, name="delete_user"),
+    # Removed duplicate entries using 'views.' which is not defined
+    path("forgot-password/", forgot_password, name="forgot_password"),
+    path("reset-password/verify/", reset_password_verify, name="reset_password_verify"),
+    path("reset-password/set/", reset_password_set, name="reset_password_set"),
     
 ]

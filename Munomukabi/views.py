@@ -1265,7 +1265,7 @@ from django.db.models import Q
 from .models import Member
 
 logger = logging.getLogger(__name__)
-
+@login_required
 def munolist(request):
     search_query = request.GET.get('search', '').strip()
     logger.debug(f"Search query: {search_query}, Page: {request.GET.get('page', 1)}")

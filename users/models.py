@@ -1,14 +1,9 @@
+# users/models.py
 from django.db import models
-from django.contrib.auth.models import User  # Using built-in User model
-from django.db import models
-from django.conf import settings
-from django_otp.plugins.otp_totp.models import TOTPDevice
-from django_otp.util import random_hex
-
-from django.db import models
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from base64 import b32decode
 from django.conf import settings
+from base64 import b32decode
 
 def validate_base32(value):
     if value:
@@ -23,13 +18,11 @@ class TwoFactorAuth(models.Model):
     email_otp = models.CharField(max_length=6, blank=True, null=True)
     otp_created_at = models.DateTimeField(blank=True, null=True)
     mfa_enabled = models.BooleanField(default=False)
-    auth_method = models.CharField(max_length=20, blank=True, null=True)  # Track method
+    auth_method = models.CharField(max_length=20, blank=True, null=True)
 
     def clean(self):
         if self.secret_key:
             validate_base32(self.secret_key)
-
-
 
 class Module(models.Model):
     name = models.CharField(max_length=255)
@@ -39,20 +32,14 @@ class Module(models.Model):
         return self.name
 
 class UserModuleAccess(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Linking to built-in User
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     module = models.ForeignKey(Module, on_delete=models.CASCADE)
-    
+
     class Meta:
-        unique_together = ('user', 'module')  # Prevent duplicate user-module entries
+        unique_together = ('user', 'module')
 
     def __str__(self):
         return f"{self.user.username} - {self.module.name}"
-    
-
-
-
-from django.db import models
-from django.contrib.auth.models import User
 
 class UserSession(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='active_session')
@@ -61,11 +48,29 @@ class UserSession(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.session_key}"
-    
+#######################################################################################
+from django.db import models
+from django.contrib.auth.models import User
+from django.utils import timezone
+
+class FailedLoginAttempt(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="failed_login")
+    attempts = models.PositiveIntegerField(default=0)
+    last_attempt = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.attempts} failed attempts"
 
 
+# users/models.py
+from django.conf import settings
+from django.db import models
 
-    
+class PasswordHistory(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    password = models.CharField(max_length=128)  # Store hashed password
+    created_at = models.DateTimeField(auto_now_add=True)
 
-
-
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = "Password Histories"

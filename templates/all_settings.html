@@ -2,7 +2,7 @@
 {% block title %}Settings - Sao Zirobwe SACCO{% endblock %}
 
 {% block content %}
-<div class="container py-3">
+<div class="container py-4">
     <style>
         :root {
             --primary-color: #16508e;
@@ -10,45 +10,47 @@
             --text-color: #1a2533;
             --muted-text: #6c757d;
             --bg-light: #f8f9fa;
-            --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .settings-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-top: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 28px;
+            margin-top: 20px;
         }
 
         .settings-card {
-            background: white;
-            border: 1px solid #e0e0e0;
+            background: #fff;
+            border: 1px solid #e5e7eb;
             border-left: 4px solid var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            transition: all 0.2s ease;
+            border-radius: 10px;
+            padding: 24px;
+            transition: all 0.25s ease;
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            align-items: start;
+            align-items: flex-start;
         }
 
         .settings-card:hover {
-            transform: translateY(-3px);
+            transform: translateY(-5px);
             border-left-color: var(--secondary-color);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
         }
 
         .settings-card i {
-            font-size: 1.3rem;
+            font-size: 1.6rem;
             color: var(--primary-color);
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .settings-card a {
             color: var(--primary-color);
             font-weight: 600;
             text-decoration: none;
-            font-size: 1rem;
+            font-size: 1.05rem;
+            margin-bottom: 6px;
         }
 
         .settings-card a:hover {
@@ -56,49 +58,67 @@
         }
 
         .settings-card p {
-            margin-top: 6px;
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             color: var(--muted-text);
+            margin: 0;
         }
 
         .section-heading {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--text-color);
-            margin-top: 32px;
-            margin-bottom: 12px;
+            margin-top: 40px;
+            margin-bottom: 16px;
             border-left: 4px solid var(--primary-color);
-            padding-left: 10px;
+            padding-left: 12px;
         }
 
         .page-title {
-            font-size: 1.35rem;
-            font-weight: 600;
+            font-size: 1.6rem;
+            font-weight: 700;
             color: var(--text-color);
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: left;
-            padding-left: 2px;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            background: transparent;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
         }
     </style>
 
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-2">
+        <ol class="breadcrumb mb-3">
             <li class="breadcrumb-item"><a href="{% url 'delegate_list' %}">Home</a></li>
             <li class="breadcrumb-item active" aria-current="page">Settings</li>
         </ol>
     </nav>
 
-    <h2 class="page-title">System Settings</h2>
+    <h2 class="page-title">⚙️ System Settings</h2>
 
     <!-- Configuration Options -->
     <div class="section-heading">Configuration</div>
     <div class="settings-grid">
-        
         <div class="settings-card">
             <i class="fas fa-users-cog"></i>
             <a href="{% url 'user_list' %}">Manage User Access</a>
             <p>Handle permissions and user roles.</p>
+        </div>
+        <div class="settings-card">
+            <i class="fas fa-user-plus"></i>
+            <a href="{% url 'create_user' %}">Create User</a>
+            <p>Add new users and assign initial access.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-history"></i>
@@ -133,7 +153,7 @@
         <div class="settings-card">
             <i class="fas fa-plus-circle"></i>
             <a href="{% url 'staff_management:staff_target_type_create' %}">Add Target Type</a>
-            <p>Define types like Savings, Shares, Membership.</p>
+            <p>Define targets like Savings, Shares, Membership.</p>
         </div>
     </div>
 
@@ -148,7 +168,7 @@
         <div class="settings-card">
             <i class="fas fa-calendar-alt"></i>
             <a href="{% url 'add_term_details' %}">Add Term Details</a>
-            <p>Create a new election term with details like expiry date and officers.</p>
+            <p>Create a new election term with expiry date and officers.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-list"></i>

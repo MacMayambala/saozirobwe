@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block title %}Delete User{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <div class="card p-4 shadow-sm rounded-3 bg-white">
+        <h3 class="mb-4 text-dark">Are you sure you want to delete user "{{ user.username }}"?</h3>
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-danger px-4">Yes, Delete</button>
+                <a href="{% url 'user_list' %}" class="btn btn-secondary px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    /* Card Styling */
+    .card {
+        border: none;
+        border-radius: 8px;
+        background: var(--white);
+        box-shadow: var(--shadow-light);
+        transition: box-shadow 0.3s ease, background 0.3s ease;
+    }
+
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        box-shadow: var(--shadow-dark);
+        border: 1px solid var(--border-dark);
+    }
+
+    /* Heading Styling */
+    h3 {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+
+    .dark-mode h3 {
+        color: var(--text-light);
+    }
+
+    /* Button Styling */
+    .btn-danger {
+        background: var(--danger);
+        border: none;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-danger:hover {
+        background: #c82333; /* Darker danger color */
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: var(--text-muted);
+        border: none;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+        background: var(--black2);
+        transform: translateY(-2px);
+    }
+
+    .dark-mode .btn-danger {
+        background: var(--danger);
+        color: var(--white);
+    }
+
+    .dark-mode .btn-danger:hover {
+        background: #c82333;
+    }
+
+    .dark-mode .btn-secondary {
+        background: var(--dark-accent);
+        color: var(--text-light);
+    }
+
+    .dark-mode .btn-secondary:hover {
+        background: var(--border-dark);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 576px) {
+        .card {
+            padding: 1.5rem;
+        }
+
+        .btn-danger,
+        .btn-secondary {
+            padding: 0.65rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+        }
+    }
+</style>
+
+<!-- Confirmation Dialog Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function (event) {
+            if (!confirm('Are you sure you want to delete user "{{ user.username }}"? This action cannot be undone.')) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

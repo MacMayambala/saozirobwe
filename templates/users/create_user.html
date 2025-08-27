@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Create User{% endblock %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="container py-4">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb mb-3">
+            <li class="breadcrumb-item"><a href="{% url 'delegate_list' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'user_list' %}">User Management</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Create User</li>
+        </ol>
+    </nav>
+
+    <!-- Page Heading -->
+    <h2 class="mb-4 fw-bold text-dark">👤 Create New User</h2>
+
+    <!-- User Form Card -->
+    <div class="card p-4 shadow-sm rounded-3 bg-white">
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+
+            <!-- Global Form Errors -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        {% for error in form.non_field_errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            <div class="row g-3">
+                {% for field in form %}
+                    <div class="col-md-6">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
+
+                        <!-- Input -->
+                        {{ field|add_class:"form-control" }}
+
+                        <!-- Help Text -->
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+
+                        <!-- Field Errors -->
+                        {% if field.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in field.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="fas fa-user-plus me-2"></i> Create User
+                </button>
+                <a href="{% url 'user_list' %}" class="btn btn-secondary px-4">
+                    <i class="fas fa-times me-2"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

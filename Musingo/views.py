@@ -27,15 +27,13 @@ def document_list(request):
 
 @login_required
 def admin_document_list(request):
-    """Displays all documents for admins (staff) and superusers"""
-    if not (request.user.is_staff or request.user.is_superuser):
-        messages.error(request, "Only admins can access this page.")
-        return redirect("document_list")
-
+    """Displays all documents for any logged-in user"""
+    
     query = request.GET.get('q', '')
     documents = DocumentCustody.objects.all()
+    
     if query:
-        # Filter by customer member_number or other relevant field instead of account_number
+        # Filter by customer member_number or other relevant field
         documents = documents.filter(customer__member_number__icontains=query)
     
     # Order by most recent date_received (descending order)

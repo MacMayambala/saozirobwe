@@ -635,7 +635,7 @@
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item d-flex align-items-center" href="{% url 'two_factor_setup' %}"><i class="bi bi-shield-lock me-2"></i> 2FA Setup</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item d-flex align-items-center" href="#"><i class="bi bi-question-circle me-2"></i> Need Help?</a></li>
+                        <li><a class="dropdown-item d-flex align-items-center" href="{% url 'reset_password_set' %}"><i class="bi bi-question-circle me-2"></i> Reset Password</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <form action="{% url 'logout' %}" method="post">

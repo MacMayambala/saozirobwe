@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+{% block title %}Edit User{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-4 text-dark">Edit User: {{ user.username }}</h2>
+    <div class="card p-4 shadow-sm rounded-3 bg-white">
+        <form method="post" class="needs-validation" novalidate>
+            {% csrf_token %}
+            <div class="row g-3">
+                {% for field in form %}
+                    <div class="col-md-6">
+                        <label for="{{ field.id_for_label }}" class="form-label fw-semibold">
+                            {{ field.label }}
+                            {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                            {% endif %}
+                        </label>
+                        {{ field }}
+                        {% if field.errors %}
+                            <div class="invalid-feedback">
+                                {{ field.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-success px-4">Save Changes</button>
+                <a href="{% url 'user_list' %}" class="btn btn-secondary px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom Styles -->
+<style>
+    /* Form Styling */
+    .card {
+        border: none;
+        border-radius: 8px;
+        background: var(--white);
+        box-shadow: var(--shadow-light);
+        transition: box-shadow 0.3s ease, background 0.3s ease;
+    }
+
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        box-shadow: var(--shadow-dark);
+        border: 1px solid var(--border-dark);
+    }
+
+    .form-label {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600; /* Bold for labels */
+        color: var(--text-dark);
+        margin-bottom: 0.5rem;
+    }
+
+    .dark-mode .form-label {
+        color: var(--text-light);
+    }
+
+    .form-control {
+        border-radius: 6px;
+        border: 1px solid var(--text-muted);
+        padding: 0.75rem;
+        font-size: 0.9rem;
+        font-family: 'Poppins', sans-serif;
+        background: var(--white);
+        color: var(--text-dark);
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .dark-mode .form-control {
+        background: var(--dark-accent);
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+
+    .form-control:focus {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); /* Matches --primary */
+        outline: none;
+    }
+
+    .form-control.is-invalid {
+        border-color: var(--danger);
+    }
+
+    .invalid-feedback {
+        font-size: 0.8rem;
+        color: var(--danger);
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .dark-mode .form-text {
+        color: var(--text-light);
+    }
+
+    /* Button Styling */
+    .btn-success {
+        background: var(--success);
+        border: none;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-success:hover {
+        background: #218838; /* Darker green for hover */
+        transform: translateY(-2px);
+    }
+
+    .btn-secondary {
+        background: var(--text-muted);
+        border: none;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        border-radius: 6px;
+        padding: 0.75rem 1.5rem;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .btn-secondary:hover {
+        background: var(--black2);
+        transform: translateY(-2px);
+    }
+
+    .dark-mode .btn-success {
+        background: var(--success);
+        color: var(--white);
+    }
+
+    .dark-mode .btn-success:hover {
+        background: #218838;
+    }
+
+    .dark-mode .btn-secondary {
+        background: var(--dark-accent);
+        color: var(--text-light);
+    }
+
+    .dark-mode .btn-secondary:hover {
+        background: var(--border-dark);
+    }
+
+    /* Responsive Adjustments */
+    @media (max-width: 576px) {
+        .card {
+            padding: 1.5rem;
+        }
+
+        .btn-success,
+        .btn-secondary {
+            padding: 0.65rem 1rem;
+            font-size: 0.85rem;
+        }
+
+        .form-control {
+            font-size: 0.85rem;
+            padding: 0.65rem;
+        }
+
+        .form-label {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<!-- Form Validation Script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const forms = document.querySelectorAll('.needs-validation');
+        forms.forEach(form => {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    });
+</script>
+{% endblock %}
