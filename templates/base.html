@@ -737,7 +737,7 @@
                 </a>
             </li>
             {% endif %}
-            {% if 'Import' in allowed_modules %}
+            <!-- {% if 'Import' in allowed_modules %}
             <li>
                 <a href="{% url 'excel_import' %}">
                     <span class="icon">
@@ -746,7 +746,7 @@
                     <span class="title">Import</span>
                 </a>
             </li>
-            {% endif %}
+            {% endif %} -->
             <li>
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}

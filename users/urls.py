@@ -19,6 +19,9 @@ urlpatterns = [
     path('2fa/resend/', resend_otp, name='resend_otp'),
     path('setting/', setting, name='setting'),
     path("2fa/onboard/", two_factor_setup, name="two_factor_setup"),
+    path('groups/', group_list, name='group_list'),
+    path('groups/<int:group_id>/permissions/', manage_group_permissions, name='manage_group_permissions'),
+
 
     path('users/', user_list, name='user_list'),
     path('users/<int:user_id>/modules/', manage_user_modules, name='manage_user_modules'),

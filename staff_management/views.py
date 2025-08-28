@@ -662,17 +662,66 @@ def edit_target_goal(request, target_id):
     return redirect('staff_management:view_performance', staff_id=target.staff.id)
 
 ################################################################################################
-
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from django.utils import timezone
-from django.contrib.auth.models import User, Group
-from .models import Staff, Leave
 from datetime import datetime
+import logging
+import requests
+from .models import Staff, Leave
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# === SMS Function ===
+def send_sms_speedamobile(phone_number, message_text):
+    """
+    Send an SMS using the SpeedaMobile API.
+    
+    Args:
+        phone_number (str): Recipient's phone number.
+        message_text (str): Message content (max 160 characters).
+    
+    Returns:
+        dict: API response.
+    """
+    url = "http://apidocs.speedamobile.com/api/SendSMS"
+    payload = {
+        "api_id": "API67606975827",  # Replace with environment variable in production
+        "api_password": "Admin@sao256",  # Replace with environment variable in production
+        "sms_type": "P",
+        "encoding": "T",
+        "sender_id": "BULKSMS",
+        "phonenumber": phone_number,
+        "textmessage": message_text[:160],
+    }
+    try:
+        response = requests.post(url, json=payload, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        logger.error(f"SMS API error for {phone_number}: {str(e)}")
+        return {"status": "F", "remarks": str(e)}
 
 @login_required
 def leave_management(request, staff_id):
+    """
+    Handle leave management for a specific staff member, including requesting, reviewing,
+    approving, or rejecting leaves. Sends notifications for actions and enforces business rules.
+    
+    Args:
+        request: HTTP request object.
+        staff_id: ID of the staff member.
+    
+    Returns:
+        Rendered template for GET requests or redirects/JSON responses for POST requests.
+    """
+    # Fetch staff and related data
     staff = get_object_or_404(Staff, id=staff_id)
     leaves = staff.leaves.all().order_by('-created_at')
     user = request.user
@@ -681,86 +730,237 @@ def leave_management(request, staff_id):
     has_approved_leave = staff.leaves.filter(status='Approved').exists()
     latest_approved_leave = staff.leaves.filter(status='Approved').order_by('-created_at').first() if has_approved_leave else None
 
-    # Define authorized groups and statuses
+    # Group-based permissions
     authorized_groups = ['Manager', 'HR Manager', 'General Manager']
     can_reject_statuses = ['Pending', 'Reviewed', 'HR_Reviewed']
-
-    # Check if the user is in an authorized group
     is_authorized = user.groups.filter(name__in=authorized_groups).exists()
     is_manager = user.groups.filter(name='Manager').exists()
     is_hr_manager = user.groups.filter(name='HR Manager').exists()
     is_general_manager = user.groups.filter(name='General Manager').exists()
-
-    # Get the Staff record for the logged-in user
     reviewing_staff = Staff.objects.filter(user=user).first()
 
-    print(f"User: {user.username}, Groups: {[g.name for g in user.groups.all()]}, Is Authorized: {is_authorized}")
-    for leave in leaves:
-        print(f"Leave ID: {leave.id}, Status: {leave.status}")
-
     if request.method == 'POST':
-        leave_id = request.POST.get('leave_id')
         action = request.POST.get('action')
+        input_password = request.POST.get('password', '')
+
+        # Password verification for sensitive actions
+        if action in ['review', 'hr_review', 'approve', 'reject'] and not user.check_password(input_password):
+            logger.warning(f"Invalid password attempt by user {user.username} for action {action}")
+            messages.error(request, "Incorrect password.")
+            return JsonResponse({'success': False, 'error': 'Incorrect password'}, status=401)
+
+        leave_id = request.POST.get('leave_id')
         leave = get_object_or_404(Leave, id=leave_id) if leave_id else None
+        comment = request.POST.get('comment', '').strip()[:500]  # Limit comment length
 
+        # === Request New Leave ===
         if action == 'request' and not leave_id:
-            leave_type = request.POST.get('leave_type')
-            start_date = request.POST.get('start_date')
-            end_date = request.POST.get('end_date')
-            reason = request.POST.get('reason')
-
             try:
-                if not start_date or not end_date:
-                    raise ValueError("Start date and end date are required.")
-                start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
-                end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+                leave_type = request.POST.get('leave_type')
+                start_date_str = request.POST.get('start_date')
+                end_date_str = request.POST.get('end_date')
+                reason = request.POST.get('reason', '').strip()[:500]
+
+                # Input validation
+                if not all([leave_type, start_date_str, end_date_str]):
+                    raise ValueError("Leave type, start date, and end date are required.")
+
+                try:
+                    start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+                    end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+                except ValueError:
+                    raise ValueError("Invalid date format. Use YYYY-MM-DD.")
+
                 if end_date < start_date:
                     raise ValueError("End date must be after start date.")
+                if start_date < timezone.now().date():
+                    raise ValueError("Start date cannot be in the past.")
 
-                Leave.objects.create(
+                # Business rules
+                ongoing_same_leave = staff.leaves.filter(
+                    leave_type=leave_type,
+                    status='Approved',
+                    end_date__gte=timezone.now().date()
+                ).exists()
+                past_two_leaves = staff.leaves.filter(
+                    leave_type=leave_type,
+                    start_date__year=timezone.now().year
+                ).count()
+
+                if ongoing_same_leave:
+                    raise ValueError(f"You are already on {leave_type} leave.")
+                if past_two_leaves >= 2:
+                    raise ValueError(f"You cannot request {leave_type} leave more than twice this year.")
+
+                # Create leave request
+                leave = Leave.objects.create(
                     staff=staff,
                     leave_type=leave_type,
                     start_date=start_date,
                     end_date=end_date,
-                    reason=reason
+                    reason=reason or None,
+                    created_at=timezone.now()
                 )
-                messages.success(request, f"Leave request for {staff.full_name} submitted successfully.")
+                logger.info(f"Leave request created for {staff.full_name}: {leave_type} from {start_date} to {end_date}")
+
+                # Send confirmation notification
+                subject = "Leave Request Submitted"
+                message_text = f"Dear {staff.full_name},\n\nYour {leave_type} leave request from {start_date} to {end_date} has been submitted and is pending review."
+                contact_info = f"Contact: {staff.phone}"
+                if staff.next_of_kin_phone:
+                    contact_info += f" | Emergency: {staff.next_of_kin_phone}"
+                message_text += f"\n{contact_info}\nSAO ZIROBWE SACCO"
+
+                # Email notification
+                if staff.email:
+                    try:
+                        context = {
+                            "first_name": staff.first_name,
+                            "last_name": staff.last_name,
+                            "leave_type": leave_type,
+                            "start_date": start_date,
+                            "end_date": end_date,
+                            "status": "Pending",
+                        }
+                        html_content = render_to_string("email/leave_notification.html", context)
+                        text_content = strip_tags(html_content)
+                        email = EmailMultiAlternatives(
+                            subject=subject,
+                            body=text_content,
+                            from_email="Sao Zirobwe Sacco <noreply@saozirobwe.co.ug>",
+                            to=[staff.email],
+                            headers={'Reply-To': 'info@saozirobwe.co.ug'}
+                        )
+                        email.attach_alternative(html_content, "text/html")
+                        email.send(fail_silently=False)
+                        logger.info(f"Confirmation email sent to {staff.email}")
+                    except Exception as e:
+                        logger.error(f"Failed to send confirmation email to {staff.email}: {str(e)}")
+
+                # SMS notification
+                if staff.phone:
+                    sms_result = send_sms_speedamobile(staff.phone, message_text)
+                    if sms_result.get("status") != "S":
+                        logger.error(f"Failed to send SMS to {staff.phone}: {sms_result.get('remarks')}")
+
+                messages.success(request, "Leave request submitted successfully.")
+                return redirect('staff_management:leave_management', staff_id=staff.id)
+
             except ValueError as e:
+                logger.error(f"Leave request error for {staff.full_name}: {str(e)}")
                 messages.error(request, str(e))
+                return redirect('staff_management:leave_management', staff_id=staff.id)
             except Exception as e:
-                messages.error(request, f"Error submitting leave request: {str(e)}")
-            return redirect('staff_management:leave_management', staff_id=staff_id)
+                logger.error(f"Unexpected error in leave request for {staff.full_name}: {str(e)}")
+                messages.error(request, "An unexpected error occurred.")
+                return redirect('staff_management:leave_management', staff_id=staff.id)
 
+        # === Review / Approve / Reject Leave ===
         elif action in ['review', 'hr_review', 'approve', 'reject'] and leave:
-            if action == 'review' and is_manager and leave.status == 'Pending':
-                leave.status = 'Reviewed'
-                leave.manager_reviewed_by = reviewing_staff
-                leave.save()
-                messages.success(request, f"Leave request for {staff.full_name} reviewed by manager.")
-            elif action == 'hr_review' and is_hr_manager and leave.status == 'Reviewed':
-                leave.status = 'HR_Reviewed'
-                leave.hr_reviewed_by = reviewing_staff
-                leave.save()
-                messages.success(request, f"Leave request for {staff.full_name} reviewed by HR manager.")
-            elif action == 'approve' and is_general_manager and leave.status == 'HR_Reviewed':
-                leave.status = 'Approved'
-                leave.gm_approved_by = reviewing_staff
-                leave.save()
-                messages.success(request, f"Leave request for {staff.full_name} approved.")
-            elif action == 'reject' and is_authorized and leave.status in can_reject_statuses:
-                leave.status = 'Rejected'
-                leave.save()
-                messages.success(request, f"Leave request for {staff.full_name} rejected.")
-            else:
-                messages.error(request, "Invalid action or insufficient permissions.")
-            return redirect('staff_management:leave_management', staff_id=staff_id)
+            try:
+                action_success = False
+                subject = None
+                message_text = None
 
+                if action == 'review' and is_manager and leave.status == 'Pending':
+                    leave.status = 'Reviewed'
+                    leave.manager_reviewed_by = reviewing_staff.user if reviewing_staff else None
+                    leave.comment = comment or None
+                    subject = "Leave Reviewed by Manager"
+                    message_text = f"Dear {staff.full_name},\n\nYour {leave.leave_type} leave has been reviewed by a manager."
+                    action_success = True
+
+                elif action == 'hr_review' and is_hr_manager and leave.status == 'Reviewed':
+                    leave.status = 'HR_Reviewed'
+                    leave.hr_reviewed_by = reviewing_staff.user if reviewing_staff else None
+                    leave.comment = comment or None
+                    subject = "Leave Reviewed by HR"
+                    message_text = f"Dear {staff.full_name},\n\nYour {leave.leave_type} leave has been reviewed by HR."
+                    action_success = True
+
+                elif action == 'approve' and is_general_manager and leave.status == 'HR_Reviewed':
+                    leave.status = 'Approved'
+                    leave.gm_approved_by = reviewing_staff.user if reviewing_staff else None
+                    leave.comment = comment or None
+                    subject = "Leave Approved"
+                    message_text = f"Dear {staff.full_name},\n\nYour {leave.leave_type} leave from {leave.start_date} to {leave.end_date} has been approved."
+                    action_success = True
+
+                elif action == 'reject' and is_authorized and leave.status in can_reject_statuses:
+                    leave.status = 'Rejected'
+                    leave.comment = comment or None
+                    subject = "Leave Rejected"
+                    message_text = f"Dear {staff.full_name},\n\nYour {leave.leave_type} leave from {leave.start_date} to {leave.end_date} has been rejected. Comment: {comment or 'None'}"
+                    action_success = True
+
+                if action_success:
+                    leave.updated_at = timezone.now()
+                    leave.save()
+                    logger.info(f"Leave {action} successful for {staff.full_name}: {leave.leave_type} (ID: {leave.id})")
+
+                    # Add contact info to message
+                    contact_info = f"Contact: {staff.phone}"
+                    if staff.next_of_kin_phone:
+                        contact_info += f" | Emergency: {staff.next_of_kin_phone}"
+                    message_text += f"\n{contact_info}\nSAO ZIROBWE SACCO"
+
+                    # Email notification
+                    if staff.email:
+                        try:
+                            context = {
+                                "first_name": staff.first_name,
+                                "last_name": staff.last_name,
+                                "leave_type": leave.leave_type,
+                                "start_date": leave.start_date,
+                                "end_date": leave.end_date,
+                                "status": leave.status,
+                                "comment": leave.comment,
+                            }
+                            html_content = render_to_string("email/leave_notification.html", context)
+                            text_content = strip_tags(html_content)
+                            email = EmailMultiAlternatives(
+                                subject=subject,
+                                body=text_content,
+                                from_email="Sao Zirobwe Sacco <noreply@saozirobwe.co.ug>",
+                                to=[staff.email],
+                                headers={'Reply-To': 'info@saozirobwe.co.ug'}
+                            )
+                            email.attach_alternative(html_content, "text/html")
+                            email.send(fail_silently=False)
+                            logger.info(f"{action.capitalize()} email sent to {staff.email}")
+                        except Exception as e:
+                            logger.error(f"Failed to send {action} email to {staff.email}: {str(e)}")
+
+                    # SMS notification
+                    if staff.phone:
+                        sms_result = send_sms_speedamobile(staff.phone, message_text)
+                        if sms_result.get("status") != "S":
+                            logger.error(f"Failed to send {action} SMS to {staff.phone}: {sms_result.get('remarks')}")
+
+                    messages.success(request, f"Leave {action} successful.")
+                    return JsonResponse({'success': True, 'message': f"Leave {action} successful."})
+
+                else:
+                    logger.warning(f"Invalid action or permissions for user {user.username}: {action} on leave {leave.id}")
+                    messages.error(request, "Invalid action or insufficient permissions.")
+                    return JsonResponse({'success': False, 'error': 'Invalid action or insufficient permissions.'}, status=403)
+
+            except Exception as e:
+                logger.error(f"Error processing {action} for leave {leave.id}: {str(e)}")
+                messages.error(request, "An unexpected error occurred.")
+                return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
+
+        else:
+            logger.warning(f"Invalid POST request by {user.username}: action={action}, leave_id={leave_id}")
+            messages.error(request, "Invalid request.")
+            return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
+
+    # GET request - render page
     context = {
         'staff': staff,
         'leaves': leaves,
         'has_approved_leave': has_approved_leave,
         'latest_approved_leave': latest_approved_leave,
-        'can_reject_statuses': can_reject_statuses,
         'is_authorized': is_authorized,
         'is_manager': is_manager,
         'is_hr_manager': is_hr_manager,

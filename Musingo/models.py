@@ -11,6 +11,7 @@ class DocumentCustody(models.Model):
         ('ID', 'Identification Document'),
         ('Land TITLE', 'Land Title'),
         ('Plot Agreement', 'Plot Agreement'),
+        ('Kibanja Agreement', 'Kibanja Agreement'),
         ('Will', 'Will'),
         ('Academic Document', 'Academic Document'),
         ('OTHER', 'Other'),

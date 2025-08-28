@@ -65,14 +65,18 @@
                             </p>
                             <p class="text-muted mb-1">{{ customer.village|default:"N/A" }}</p>
                         </div>
-                        <div class="member-actions flex-1 d-flex gap-3 justify-content-end" style="flex-basis: 30%; min-width: 200px;">
-                            {% if customer.phone %}
-                                <a href="tel:{{ customer.phone }}" class="text-primary action-link d-flex align-items-center" aria-label="Call {{ customer.first_name }}"><i class="fas fa-phone me-1"></i>+{{ customer.phone }}</a>
-                            {% else %}
-                                <span class="text-muted d-flex align-items-center"><i class="fas fa-phone me-1"></i>N/A</span>
-                            {% endif %}
-                            <a href="#" class="text-primary action-link d-flex align-items-center" aria-label="View {{ customer.first_name }}'s Village"><i class="fas fa-map-marker-alt me-1"></i>{{ customer.village|default:"N/A" }}</a>
-                        </div>
+                       <div class="member-meta flex-1" style="flex-basis: 30%; min-width: 200px;">
+                            <ul class="list-unstyled mb-0">
+                                <li class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-phone me-2 text-primary"></i>
+                                    <span>{{ customer.phone|default:"N/A" }}</span>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <i class="fas fa-map-marker-alt me-2 text-secondary"></i>
+                                    <span>{{ customer.village|default:"N/A" }}</span>
+                                </li>
+                            </ul>
+                        </div>>
                     </div>
                 </div>
                 {% empty %}

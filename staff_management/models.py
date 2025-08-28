@@ -224,14 +224,8 @@ class TargetTransaction(models.Model):
 
 
 ################################################################################################################
-# staff_management/models.py
-from django.db import models
-from django.contrib.auth.models import User
-from django.utils import timezone
-
 class Leave(models.Model):
     staff = models.ForeignKey('Staff', on_delete=models.CASCADE, related_name='leaves')
-
     leave_type = models.CharField(max_length=50, choices=[
         ('Annual', 'Annual'),
         ('Sick', 'Sick'),
@@ -239,10 +233,10 @@ class Leave(models.Model):
         ('Paternity', 'Paternity'),
         ('Other', 'Other')
     ])
-
     start_date = models.DateField()
     end_date = models.DateField()
     reason = models.TextField(blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)  # Added comment
 
     status = models.CharField(max_length=20, choices=[
         ('Pending', 'Pending'),

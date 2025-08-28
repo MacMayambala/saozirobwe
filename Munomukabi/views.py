@@ -123,7 +123,7 @@ def muno_member_detail(request, cus_id):
         return redirect('mono_list')
     
     form = RenewalForm(initial={'subscription_start': date.today()})
-    return render(request, 'Munomukabitemp/muno_details.html', {
+    return render(request, 'munomukabitemp/muno_details.html', {
         'form': form,
         'member': member,
         'customer': customer,
@@ -223,7 +223,7 @@ def renew_sub(request, member_id):
                     member.save()
 
                 # Show confirmation modal
-                return render(request, 'Munomukabitemp/muno_details.html', {
+                return render(request, 'munomukabitemp/muno_details.html', {
                     'member': member,
                     'form': form,
                     'show_confirmation': True,
@@ -246,14 +246,14 @@ def renew_sub(request, member_id):
                     form.add_error('booklet_number', "This booklet number is already in use.")
                 else:
                     messages.error(request, "An unexpected error occurred while renewing the subscription.")
-                return render(request, 'Munomukabitemp/muno_details.html', {
+                return render(request, 'munomukabitemp/muno_details.html', {
                     'form': form,
                     'member': member,
                     'show_modal': True
                 })
         else:
             messages.error(request, "Please correct the errors in the form below.")
-            return render(request, 'Munomukabitemp/muno_details.html', {
+            return render(request, 'munomukabitemp/muno_details.html', {
                 'form': form,
                 'member': member,
                 'show_modal': True
@@ -261,7 +261,7 @@ def renew_sub(request, member_id):
     else:
         form = RenewalForm(initial={'subscription_start': date.today()}, user=request.user)
 
-    return render(request, 'Munomukabitemp/muno_details.html', {
+    return render(request, 'munomukabitemp/muno_details.html', {
         'form': form,
         'member': member,
         'show_modal': False  # No modal on initial GET

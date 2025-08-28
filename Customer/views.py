@@ -70,13 +70,22 @@ def edit_customer(request, cus_id):
 
 
 ##########################################################################
+@login_required
 def download_template(request):
     """Generate and download a sample Excel template for importing customers"""
     import pandas as pd
     from io import BytesIO
     from django.http import HttpResponse
     from openpyxl.utils import get_column_letter
-    
+    from openpyxl.styles import PatternFill, Font
+
+    # Required fields list
+    required_fields = [
+        'branch', 'mem_reg_date', 'member_number', 'first_name',
+        'surname', 'gender', 'dob', 'id_number', 'card_number',
+        'phone', 'kin_sname', 'kin_fname', 'kin_phone'
+    ]
+
     # Create a DataFrame with sample data and column headers
     data = {
         # Required fields with sample data
@@ -89,11 +98,11 @@ def download_template(request):
         'dob': ['1985-06-15'],
         'id_number': ['CM12345678PP9A'],
         'card_number': ['12345678'],
-        'phone_number1': ['256701234567'],
+        'phone': ['256701234567'],
         'kin_sname': ['Smith'],
         'kin_fname': ['Jane'],
         'kin_phone': ['256712345678'],
-        
+
         # Optional fields with examples
         'middle_name1': ['Robert'],
         'middle_name2': [''],
@@ -126,23 +135,32 @@ def download_template(request):
         'income_frequency': ['Monthly'],
         'income_per_month': [300000]
     }
-    
+
     # Create DataFrame
     df = pd.DataFrame(data)
-    
+
     # Create Excel file in memory
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
         df.to_excel(writer, index=False, sheet_name='Template')
-        
+
         # Get the worksheet
         worksheet = writer.sheets['Template']
-        
-        # Add some formatting/width adjustments - using proper column letter generation
-        for idx, col in enumerate(df.columns):
-            column_letter = get_column_letter(idx + 1)  # Use openpyxl's utility function
-            worksheet.column_dimensions[column_letter].width = 20
-    
+
+        # Style definitions
+        required_fill = PatternFill(start_color="FFD966", end_color="FFD966", fill_type="solid")  # Light yellow
+        required_font = Font(bold=True, color="000000")  # Bold black font
+
+        # Adjust widths + highlight required headers
+        for idx, col in enumerate(df.columns, 1):
+            col_letter = get_column_letter(idx)
+            worksheet.column_dimensions[col_letter].width = 20
+
+            cell = worksheet[f"{col_letter}1"]  # Header cell
+            if col in required_fields:
+                cell.fill = required_fill
+                cell.font = required_font
+
     # Prepare response
     output.seek(0)
     response = HttpResponse(
@@ -150,10 +168,9 @@ def download_template(request):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename=customer_import_template.xlsx'
-    
+
     return response
 
-
 # Import necessary libraries
 from django.shortcuts import render, redirect
 from django.contrib import messages
@@ -165,18 +182,16 @@ import re
 from datetime import datetime
 from .models import Customer
 
-# Import necessary libraries
+import os, re
+import pandas as pd
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.core.files.storage import FileSystemStorage
 from django.core.exceptions import ValidationError
-from django.urls import reverse
-import pandas as pd
-import os
-import re
-from datetime import datetime
-from .models import Customer
+from django.core.files.storage import FileSystemStorage
+from staff_management.models import Branch
+from .models import Customer  # adjust if Customer is in another app
 
+@login_required
 def excel_import(request):
     """View to handle Excel file uploads for Customer data import"""
     if request.method == 'POST' and request.FILES.get('excel_file'):
@@ -196,18 +211,15 @@ def excel_import(request):
             # Read Excel file with pandas
             df = pd.read_excel(file_path)
             
-            # Track results
             records_imported = 0
             failed_records = []
             
             # Process each row
             for index, row in df.iterrows():
                 try:
-                    # Create Customer dictionary from row data
                     customer_data = {}
                     
-                    # Map Excel columns to model fields based on headers
-                    # Handle dates - convert Excel dates to Python datetime
+                    # Dates
                     if 'mem_reg_date' in row and pd.notna(row['mem_reg_date']):
                         try:
                             customer_data['mem_reg_date'] = pd.to_datetime(row['mem_reg_date']).date()
@@ -220,9 +232,8 @@ def excel_import(request):
                         except Exception:
                             raise ValidationError("Invalid date of birth format")
                     
-                    # Handle boolean fields
+                    # Boolean fields
                     if 'is_pwd' in row:
-                        # Convert various formats to boolean
                         if isinstance(row['is_pwd'], bool):
                             customer_data['is_pwd'] = row['is_pwd']
                         elif isinstance(row['is_pwd'], str):
@@ -230,12 +241,12 @@ def excel_import(request):
                         elif isinstance(row['is_pwd'], (int, float)):
                             customer_data['is_pwd'] = bool(row['is_pwd'])
                     
-                    # Add text fields
+                    # Text fields
                     text_fields = [
-                        'branch', 'member_number', 'email', 'salutation', 'first_name', 
+                        'member_number', 'email', 'salutation', 'first_name', 
                         'middle_name1', 'middle_name2', 'surname', 'gender', 'marital_status',
                         'home_ownership', 'id_number', 'card_number', 'nin_village', 'nin_parish',
-                        'nin_s_county', 'nin_county', 'nin_district', 'phone_number1', 
+                        'nin_s_county', 'nin_county', 'nin_district', 'phone', 
                         'phone_number2', 'village', 'parish', 's_county', 'county', 'district',
                         'sao_zone', 'kin_sname', 'kin_fname', 'kin_sname2', 'kin_phone',
                         'kin_address', 'kin_relationship', 'employment', 'occupation',
@@ -247,20 +258,29 @@ def excel_import(request):
                         if field in row and pd.notna(row[field]):
                             customer_data[field] = str(row[field]).strip()
                     
-                    # Handle numeric fields
+                    # Numeric fields
                     if 'income_per_month' in row and pd.notna(row['income_per_month']):
                         try:
                             customer_data['income_per_month'] = float(row['income_per_month'])
                         except ValueError:
                             raise ValidationError("Invalid income value")
                     
-                    # Data validation for specific fields
+                    # ✅ Branch lookup (ForeignKey instead of choices)
+                    if 'branch' in row and pd.notna(row['branch']):
+                        try:
+                            # Adjust depending on Excel: is it branch name, code, or ID?
+                            branch_obj = Branch.objects.get(name=row['branch'].strip())
+                            customer_data['branch'] = branch_obj
+                        except Branch.DoesNotExist:
+                            raise ValidationError(f"Invalid branch: {row['branch']}")
+                    
+                    # Regex validations
                     if 'id_number' in customer_data:
                         if not re.match(r'^(CF|CM)[A-Z0-9]{11}[A-Z]$', customer_data['id_number']):
                             raise ValidationError("ID number format is invalid")
                     
-                    if 'phone_number1' in customer_data:
-                        if not re.match(r'^256\d{9}$', customer_data['phone_number1']):
+                    if 'phone' in customer_data:
+                        if not re.match(r'^256\d{9}$', customer_data['phone']):
                             raise ValidationError("Phone number format is invalid")
                     
                     if 'phone_number2' in customer_data and customer_data['phone_number2']:
@@ -271,53 +291,34 @@ def excel_import(request):
                         if not re.match(r'^256\d{9}$', customer_data['kin_phone']):
                             raise ValidationError("Kin phone number format is invalid")
                     
-                    # Validate choice fields
-                    if 'branch' in customer_data and customer_data['branch'] not in [choice[0] for choice in Customer.br_CHOICES]:
-                        raise ValidationError(f"Invalid branch: {customer_data['branch']}")
-                    
-                    if 'salutation' in customer_data and customer_data['salutation'] not in [choice[0] for choice in Customer.SALUTATION_CHOICES]:
-                        raise ValidationError(f"Invalid salutation: {customer_data['salutation']}")
-                    
-                    if 'gender' in customer_data and customer_data['gender'] not in [choice[0] for choice in Customer.GENDER_CHOICES]:
-                        raise ValidationError(f"Invalid gender: {customer_data['gender']}")
-                    
-                    if 'marital_status' in customer_data and customer_data['marital_status'] not in [choice[0] for choice in Customer.MARITAL_STATUS_CHOICES]:
-                        raise ValidationError(f"Invalid marital status: {customer_data['marital_status']}")
-                    
-                    if 'home_ownership' in customer_data and customer_data['home_ownership'] not in [choice[0] for choice in Customer.HOME_OWNERSHIP_CHOICES]:
-                        raise ValidationError(f"Invalid home ownership: {customer_data['home_ownership']}")
-                    
-                    if 'sao_zone' in customer_data and customer_data['sao_zone'] not in [choice[0] for choice in Customer.SAO_ZONE_CHOICES]:
-                        raise ValidationError(f"Invalid SAO zone: {customer_data['sao_zone']}")
-                    
-                    # Required fields check (only checking a subset of important fields)
-                    required_fields = ['branch', 'mem_reg_date', 'member_number', 'first_name', 
-                                      'surname', 'gender', 'dob', 'id_number', 'card_number',
-                                      'phone_number1', 'kin_sname', 'kin_fname', 'kin_phone']
+                    # Required fields
+                    required_fields = [
+                        'branch', 'mem_reg_date', 'member_number', 'first_name', 
+                        'surname', 'gender', 'dob', 'id_number', 'card_number',
+                        'phone', 'kin_sname', 'kin_fname', 'kin_phone'
+                    ]
                     
                     for field in required_fields:
                         if field not in customer_data or not customer_data[field]:
                             raise ValidationError(f"Required field '{field}' is missing")
                     
-                    # Create and save the Customer instance
+                    # Save customer
                     customer = Customer(**customer_data)
-                    customer.full_clean()  # Validate model constraints
+                    customer.full_clean()
                     customer.save()
                     records_imported += 1
                     
                 except Exception as e:
-                    # Add to failed records
-                    error_message = str(e)
                     failed_records.append({
-                        'row': index + 2,  # +2 because Excel rows start at 1 and we have headers
-                        'error': error_message
+                        'row': index + 2,
+                        'error': str(e)
                     })
             
-            # Delete the temporary file
+            # Cleanup
             if os.path.exists(file_path):
                 os.remove(file_path)
             
-            # Report results
+            # Messages
             if records_imported > 0:
                 messages.success(request, f"Successfully imported {records_imported} customer(s)")
             
@@ -326,23 +327,12 @@ def excel_import(request):
                 if len(failed_records) > 5:
                     failed_rows += f" and {len(failed_records) - 5} more"
                 messages.warning(request, f"Failed to import {len(failed_records)} customer(s). Check rows: {failed_rows}")
-                # Store failed records in session for detailed display
                 request.session['failed_records'] = failed_records
             
-            # Change this line to redirect to a valid URL that exists in your project
-            # Option 1: Redirect back to the same import page with messages
             return redirect('excel_import')
-            
-            # Option 2: If you have a customer list page, make sure its URL name is correct
-            # return redirect('your_actual_customer_list_url_name')
-            
-            # Option 3: Redirect to admin page or home page
-            # return redirect('admin:index')  # For admin index
-            # return redirect('/')  # For home page
             
         except Exception as e:
             messages.error(request, f"Error processing Excel file: {str(e)}")
-            # Delete the temporary file
             if os.path.exists(file_path):
                 os.remove(file_path)
             return redirect('excel_import')

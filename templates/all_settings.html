@@ -108,24 +108,36 @@
     <h2 class="page-title">⚙️ System Settings</h2>
 
     <!-- Configuration Options -->
-    <div class="section-heading">Configuration</div>
-    <div class="settings-grid">
-        <div class="settings-card">
-            <i class="fas fa-users-cog"></i>
-            <a href="{% url 'user_list' %}">Manage User Access</a>
-            <p>Handle permissions and user roles.</p>
-        </div>
-        <div class="settings-card">
-            <i class="fas fa-user-plus"></i>
-            <a href="{% url 'create_user' %}">Create User</a>
-            <p>Add new users and assign initial access.</p>
-        </div>
-        <div class="settings-card">
-            <i class="fas fa-history"></i>
-            <a href="{% url 'audit_trails' %}">Audit Trails</a>
-            <p>Track system activity and user logs.</p>
-        </div>
+ <!-- Configuration Options -->
+<div class="section-heading">Configuration</div>
+<div class="settings-grid">
+    <div class="settings-card">
+        <i class="fas fa-users-cog"></i>
+        <a href="{% url 'user_list' %}">Manage User Access</a>
+        <p>Handle permissions and user roles.</p>
     </div>
+    <div class="settings-card">
+        <i class="fas fa-user-plus"></i>
+        <a href="{% url 'create_user' %}">Create User</a>
+        <p>Add new users and assign initial access.</p>
+    </div>
+    <div class="settings-card">
+        <i class="fas fa-history"></i>
+        <a href="{% url 'audit_trails' %}">Audit Trails</a>
+        <p>Track system activity and user logs.</p>
+    </div>
+
+    {% if 'Import' in allowed_modules %}
+    <div class="settings-card">
+        <span class="icon">
+            <ion-icon name="cloud-upload-outline"></ion-icon>
+        </span>
+        <a href="{% url 'excel_import' %}">Import</a>
+        <p>Upload data from Excel sheets into the system.</p>
+    </div>
+    {% endif %}
+</div>
+
 
     <!-- Staff Management -->
     <div class="section-heading">Staff Management</div>
