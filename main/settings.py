@@ -24,14 +24,14 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-#SECRET_KEY = 'django-insecure-ylb894sik=!@53v&(fk2ek3g+qy2z(gv9y%(i7=qe9drmh2n$r'
-SECRET_KEY = config('DJANGO_SECRET_KEY')
+SECRET_KEY = 'django-insecure-ylb894sik=!@53v&(fk2ek3g+qy2z(gv9y%(i7=qe9drmh2n$r'
+#SECRET_KEY = config('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 CSRF_COOKIE_HTTPONLY = True
-#ALLOWED_HOSTS = ['*']
-ALLOWED_HOSTS = ['webapp.saozirobwe.co.ug', 'htts://webapp.saozirobwe.co.ug']
+ALLOWED_HOSTS = ['*']
+#ALLOWED_HOSTS = ['webapp.saozirobwe.co.ug', 'htts://webapp.saozirobwe.co.ug']
 
 
 # Application definition
@@ -99,14 +99,14 @@ WSGI_APPLICATION = 'main.wsgi.application'
 
 DATABASES = {
     'default': {
-        #'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': BASE_DIR / 'db.sqlite3',
-        'ENGINE': config('DB_ENGINE'),
-        'NAME': config('DB_NAME'),
-        'USER': config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST': config('DB_HOST'),  # Set to empty string for localhost
-        'PORT': config('DB_PORT'),  # Set to empty string for default
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': config('DB_ENGINE'),
+        # 'NAME': config('DB_NAME'),
+        # 'USER': config('DB_USER'),
+        # 'PASSWORD': config('DB_PASSWORD'),
+        # 'HOST': config('DB_HOST'),  # Set to empty string for localhost
+        # 'PORT': config('DB_PORT'),  # Set to empty string for default
     }
 }
 

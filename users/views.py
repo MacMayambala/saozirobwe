@@ -15,35 +15,63 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from .models import UserSession
 
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .models import CustomUser
+from .models import UserSession  # assuming you have this model
+
+MAX_FAILED_ATTEMPTS = 3
+
 def user_login(request):
-    """Handles user login, enforces single-device login, and redirects to 2FA setup if successful."""
+    """Handles user login and locks account after 3 failed attempts until superuser reactivates."""
     if request.method == "POST":
         username = request.POST.get("username")
         password = request.POST.get("password")
 
+        try:
+            user_obj = User.objects.get(username=username)
+            custom_user = user_obj.customuser
+        except (User.DoesNotExist, CustomUser.DoesNotExist):
+            user_obj = None
+            custom_user = None
+
+        if user_obj and not user_obj.is_active:
+            messages.error(request, "Your account is inactive. Please contact a superuser to reactivate.")
+            return render(request, "login/auth/login.html")
+
         user = authenticate(request, username=username, password=password)
 
         if user:
-            # Log the user in
+            # Reset failed attempts after successful login
+            if custom_user:
+                custom_user.failed_login_attempts = 0
+                custom_user.save()
+
             login(request, user)
 
-            # Get the current session key
+            # Single-device login enforcement
             session_key = request.session.session_key
-
-            # Invalidate any existing session for this user
             UserSession.objects.filter(user=user).delete()
-
-            # Store the new session key
             UserSession.objects.create(user=user, session_key=session_key)
 
-            # Ensure 2FA is required
             request.session["2fa_verified"] = False
-            return redirect("two_factor_auth")  # Redirect to 2FA setup
+            return redirect("two_factor_auth")
+
         else:
+            # Invalid login
             messages.error(request, "Invalid username or password.")
 
-    return render(request, "login/auth/login.html")
+            # Increment failed login attempts
+            if custom_user:
+                custom_user.failed_login_attempts += 1
+                if custom_user.failed_login_attempts >= MAX_FAILED_ATTEMPTS:
+                    user_obj.is_active = False  # deactivate account
+                    user_obj.save()
+                    messages.error(request, "Your account has been deactivated due to too many failed login attempts. Contact a superuser.")
+                custom_user.save()
 
+    return render(request, "login/auth/login.html")
 
 
 
@@ -548,30 +576,30 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .forms import CustomUserCreationForm, CustomUserEditForm
 
-@login_required
-def user_list(request):
-    if not request.user.is_staff and not request.user.is_superuser:
-        messages.error(request, "Only admins can manage users.")
-        return redirect("delegate_list")
-
-    users = User.objects.all().order_by("-date_joined")
-    return render(request, "users/user_list.html", {"users": users})
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.models import User, Group, Permission
+from .forms import CustomUserCreationForm, CustomUserEditForm
 
 @login_required
 def create_user(request):
     if not request.user.is_staff and not request.user.is_superuser:
         messages.error(request, "Only admins can create users.")
         return redirect("user_list")
-
+    
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            # Assign groups to the user
+            groups = form.cleaned_data['groups']
+            user.groups.set(groups)
             messages.success(request, "User created successfully!")
             return redirect("user_list")
     else:
         form = CustomUserCreationForm()
-
+    
     return render(request, "users/create_user.html", {"form": form})
 
 @login_required
@@ -580,16 +608,19 @@ def edit_user(request, user_id):
     if not request.user.is_staff and not request.user.is_superuser:
         messages.error(request, "Only admins can edit users.")
         return redirect("user_list")
-
+    
     if request.method == "POST":
         form = CustomUserEditForm(request.POST, instance=user)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            # Update group assignments
+            groups = form.cleaned_data['groups']
+            user.groups.set(groups)
             messages.success(request, "User updated successfully!")
             return redirect("user_list")
     else:
         form = CustomUserEditForm(instance=user)
-
+    
     return render(request, "users/edit_user.html", {"form": form, "user": user})
 
 @login_required
@@ -766,3 +797,17 @@ def reset_password_set(request):
         form = SetNewPasswordForm(user)
 
     return render(request, "users/reset_password_set.html", {"form": form})
+
+
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.shortcuts import render
+from django.contrib.auth.models import User
+
+def users_list(request):
+    users = User.objects.all().select_related('customuser__branch')
+    # add branch_name attribute to each user
+    for u in users:
+        u.branch_name = getattr(u.customuser.branch, "name", "N/A") if hasattr(u, "customuser") else "N/A"
+    return render(request, 'users/user_list.html', {'users': users})
+

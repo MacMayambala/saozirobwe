@@ -4,7 +4,6 @@
 
 {% block content %}
 <div class="container py-4">
-
     <!-- Breadcrumb -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb mb-3">
@@ -15,7 +14,7 @@
     </nav>
 
     <!-- Page Heading -->
-    <h2 class="mb-4 fw-bold text-dark">👤 Create New User</h2>
+    <h2 class="mb-4 fw-bold text-dark">Create New User</h2>
 
     <!-- User Form Card -->
     <div class="card p-4 shadow-sm rounded-3 bg-white">
@@ -43,8 +42,12 @@
                             {% endif %}
                         </label>
 
-                        <!-- Input -->
-                        {{ field|add_class:"form-control" }}
+                        <!-- Handle groups field specifically for multiple select -->
+                        {% if field.name == 'groups' %}
+                            {{ field|add_class:"form-select" }}
+                        {% else %}
+                            {{ field|add_class:"form-control" }}
+                        {% endif %}
 
                         <!-- Help Text -->
                         {% if field.help_text %}

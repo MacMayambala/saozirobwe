@@ -1,6 +1,6 @@
 from django.urls import path
 from .views import (
-    user_list, manage_user_modules, update_user_modules,
+    users_list, manage_user_modules, update_user_modules,
     user_login, user_logout, two_factorauth, verify_2fa, home, resend_otp,
     manage_group_permissions, group_list, setting, two_factor_setup,
     create_user, edit_user, toggle_user_status, delete_user,
@@ -23,14 +23,15 @@ urlpatterns = [
     path('groups/<int:group_id>/permissions/', manage_group_permissions, name='manage_group_permissions'),
 
 
-    path('users/', user_list, name='user_list'),
+    path('users_list/', users_list, name='user_list'),
     path('users/<int:user_id>/modules/', manage_user_modules, name='manage_user_modules'),
     path('users/<int:user_id>/modules/update/', update_user_modules, name='update_user_modules'),
-    path("users/", user_list, name="user_list"),
+    #path("users_list/", user_list, name="user_list"),
     path("create/user", create_user, name="create_user"),
     path("<int:user_id>/edit/", edit_user, name="edit_user"),
     path("<int:user_id>/toggle/", toggle_user_status, name="toggle_user_status"),
     path("<int:user_id>/delete/", delete_user, name="delete_user"),
+    #path("users/<int:user_id>/toggle-block/", views.toggle_user_block, name="toggle_user_block"),
     # Removed duplicate entries using 'views.' which is not defined
     path("forgot-password/", forgot_password, name="forgot_password"),
     path("reset-password/verify/", reset_password_verify, name="reset_password_verify"),

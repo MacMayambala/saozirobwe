@@ -1,63 +1,115 @@
-# users/forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, UserChangeForm
-from django.contrib.auth.models import User
-from .models import Module
+from django.contrib.auth.models import User, Group
+from staff_management.models import Branch  # Assuming you have a Branch model
+
+from django import forms
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User, Group
+from staff_management.models import Branch
+from .models import CustomUser
 
 class CustomUserCreationForm(UserCreationForm):
-    email = forms.EmailField(required=True)
-    modules = forms.ModelMultipleChoiceField(
-        queryset=Module.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
+    branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(),
+        required=True,
+        label="Branch",
+        help_text="Select the branch where the user is assigned."
+    )
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all(),
         required=False,
-        label="Assign Modules"
+        label="Groups",
+        help_text="Select the groups to assign roles to the user."
     )
 
     class Meta:
         model = User
-        fields = ("username", "email", "password1", "password2", "is_staff", "is_active")
-
-    def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
-        if commit:
-            user.save()
-            # assign modules
-            for module in self.cleaned_data.get("modules", []):
-                user.usermoduleaccess_set.create(module=module)
-        return user
-
-class CustomUserEditForm(UserChangeForm):
-    password = None  # hide password field
-    email = forms.EmailField(required=True)
-    modules = forms.ModelMultipleChoiceField(
-        queryset=Module.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
-        required=False,
-        label="Assign Modules"
-    )
-
-    class Meta:
-        model = User
-        fields = ("username", "email", "is_staff", "is_active")
+        fields = (
+            'username', 'first_name', 'last_name', 'email',
+            'branch', 'groups', 'password1', 'password2'
+        )
 
     def __init__(self, *args, **kwargs):
-        user_instance = kwargs.get("instance")
         super().__init__(*args, **kwargs)
-        if user_instance:
-            self.fields["modules"].initial = [m.module for m in user_instance.usermoduleaccess_set.all()]
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
 
     def save(self, commit=True):
-        user = super().save(commit=False)
-        user.email = self.cleaned_data["email"]
+        # Save base User first
+        user = super().save(commit=commit)
+
+        # Save branch into CustomUser
+        branch = self.cleaned_data.get('branch')
+        customuser, created = CustomUser.objects.get_or_create(user=user)
+        customuser.branch = branch
         if commit:
-            user.save()
-            # update modules
-            user.usermoduleaccess_set.all().delete()
-            for module in self.cleaned_data.get("modules", []):
-                user.usermoduleaccess_set.create(module=module)
+            customuser.save()
+
+        # Save groups into User.groups
+        groups = self.cleaned_data.get('groups')
+        if groups:
+            user.groups.set(groups)
+
         return user
-################################################################################################################
+
+from django import forms
+from django.contrib.auth.forms import UserChangeForm
+from django.contrib.auth.models import User, Group
+from staff_management.models import Branch
+from .models import CustomUser
+
+class CustomUserEditForm(UserChangeForm):
+    branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(),
+        required=True,
+        label="Branch",
+        help_text="Select the branch where the user is assigned."
+    )
+    groups = forms.ModelMultipleChoiceField(
+        queryset=Group.objects.all(),
+        required=False,
+        label="Groups",
+        help_text="Select the groups to assign roles to the user."
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            'username', 'first_name', 'last_name', 'email', 
+            'branch', 'groups', 'is_active', 'is_staff'
+        )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            field.widget.attrs.update({'class': 'form-control'})
+        # Remove password field from edit form
+        self.fields.pop('password', None)
+
+        # Pre-fill branch and groups from instance
+        if self.instance:
+            if hasattr(self.instance, 'customuser'):
+                self.fields['branch'].initial = self.instance.customuser.branch
+            self.fields['groups'].initial = self.instance.groups.all()
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+
+        # Update CustomUser branch
+        branch = self.cleaned_data.get('branch')
+        customuser, created = CustomUser.objects.get_or_create(user=user)
+        customuser.branch = branch
+        if commit:
+            customuser.save()
+
+        # Update User groups
+        groups = self.cleaned_data.get('groups')
+        if groups is not None:
+            user.groups.set(groups)
+
+        return user
+########################################################################################
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import SetPasswordForm
@@ -96,3 +148,4 @@ class CustomSetPasswordForm(SetPasswordForm):
                 raise ValidationError("You cannot reuse a previous password.")
 
         return new_password
+#############################################################################################################

@@ -74,3 +74,32 @@ class PasswordHistory(models.Model):
     class Meta:
         ordering = ['-created_at']
         verbose_name_plural = "Password Histories"
+##################################################################################################
+
+from django.db import models
+from django.contrib.auth.models import User
+
+class CustomUser(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customuser')
+    branch = models.ForeignKey(
+        'staff_management.Branch',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="Branch"
+    )
+    # Add other fields as needed
+    failed_login_attempts = models.IntegerField(default=0)
+    
+
+    def __str__(self):
+        return f"{self.user.username} - {self.branch if self.branch else 'No Branch'}"
+
+    @property
+    def branch_name(self):
+        return self.branch.name if self.branch else "N/A"
+
+    class Meta:
+        verbose_name = "Custom User"
+        verbose_name_plural = "Custom Users"
+

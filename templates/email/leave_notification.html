@@ -3,35 +3,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Notification - Sao Zirobwe SACCO</title>
+    {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; color: #333; line-height: 1.6; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
-        .header { background: #0d6efd; color: #fff; padding: 10px; text-align: center; border-radius: 8px 8px 0 0; }
-        .content { padding: 20px; }
-        .footer { font-size: 0.9em; color: #777; text-align: center; margin-top: 20px; }
-        .contact { margin-top: 20px; }
+        /* Reset default styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #f5f6f5;
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+            color: #1a202c;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background-color: #1e40af; /* Professional blue */
+            padding: 16px;
+            color: #ffffff;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .header img {
+            height: 40px;
+            width: auto;
+        }
+
+        .header h2 {
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .content {
+            padding: 24px;
+            text-align: center;
+        }
+
+        .content p {
+            font-size: 15px;
+            margin-bottom: 16px;
+            color: #374151;
+        }
+
+        .content .greeting {
+            font-weight: 500;
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .leave-details {
+            background-color: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .leave-details ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .leave-details li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .leave-details li strong {
+            color: #1a202c;
+        }
+
+        .contact {
+            margin-top: 20px;
+            text-align: left;
+            font-size: 14px;
+            background-color: #f7fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .contact p {
+            margin-bottom: 8px;
+            color: #374151;
+        }
+
+        .contact p strong {
+            color: #1a202c;
+        }
+
+        .footer {
+            background-color: #f9fafb;
+            padding: 12px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer a {
+            color: #1e40af;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .container {
+                margin: 12px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 12px;
+            }
+
+            .header h2 {
+                font-size: 20px;
+            }
+
+            .header img {
+                height: 32px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .leave-details li {
+                font-size: 13px;
+            }
+
+            .content p {
+                font-size: 14px;
+            }
+
+            .content .greeting {
+                font-size: 15px;
+            }
+
+            .contact {
+                font-size: 13px;
+            }
+
+            .footer {
+                padding: 10px;
+                font-size: 11px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h2>Sao Zirobwe SACCO - Leave Notification</h2>
+            <img src="{% static 'images/logo.png' %}" alt="Sao Zirobwe SACCO Logo">
+            <h2>Leave Notification</h2>
         </div>
         <div class="content">
-            <p>Dear {{ first_name }} {{ last_name }},</p>
+            <p class="greeting">Dear {{ first_name }} {{ last_name }},</p>
             <p>We are writing to inform you about the status of your {{ leave_type }} leave request:</p>
-            <ul>
-                <li><strong>Leave Type:</strong> {{ leave_type }}</li>
-                <li><strong>Start Date:</strong> {{ start_date|date:"d/m/Y" }}</li>
-                <li><strong>End Date:</strong> {{ end_date|date:"d/m/Y" }}</li>
-                <li><strong>Status:</strong> {{ status }}</li>
-                {% if comment %}
-                    <li><strong>Comment:</strong> {{ comment }}</li>
-                {% endif %}
-                {% if remaining_days %}
-                    <li><strong>Remaining Days:</strong> {{ remaining_days }} day{{ remaining_days|pluralize }}</li>
-                {% endif %}
-            </ul>
+            <div class="leave-details">
+                <ul>
+                    <li><strong>Leave Type:</strong> {{ leave_type }}</li>
+                    <li><strong>Start Date:</strong> {{ start_date|date:"d M Y" }}</li>
+                    <li><strong>End Date:</strong> {{ end_date|date:"d M Y" }}</li>
+                    <li><strong>Status:</strong> {{ status }}</li>
+                    {% if comment %}
+                        <li><strong>Comment:</strong> {{ comment }}</li>
+                    {% endif %}
+                    {% if remaining_days %}
+                        <li><strong>Remaining Days:</strong> {{ remaining_days }} day{{ remaining_days|pluralize }}</li>
+                    {% endif %}
+                </ul>
+            </div>
             <div class="contact">
                 <p><strong>Contact Information:</strong></p>
                 <p>Phone: {{ staff.phone }}</p>
@@ -41,7 +212,8 @@
             </div>
         </div>
         <div class="footer">
-            <p>Sao Zirobwe SACCO<br>Email: info@saozirobwe.co.ug</p>
+            <p>© {% now "Y" %} <a href="https://saozirobwe.co.ug">Sao Zirobwe SACCO</a>. All rights reserved.</p>
+            <p>Contact us: <a href="mailto:info@saozirobwe.co.ug">info@saozirobwe.co.ug</a> | +256 776 203 790</p>
         </div>
     </div>
 </body>

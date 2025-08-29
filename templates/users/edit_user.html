@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}Edit User{% endblock %}
+{% load widget_tweaks %}
+
 {% block content %}
 <div class="container py-4">
     <h2 class="mb-4 text-dark">Edit User: {{ user.username }}</h2>
@@ -15,10 +17,17 @@
                                 <span class="text-danger">*</span>
                             {% endif %}
                         </label>
-                        {{ field }}
+                        <!-- Handle groups field specifically for multiple select -->
+                        {% if field.name == 'groups' %}
+                            {{ field|add_class:"form-select" }}
+                        {% else %}
+                            {{ field|add_class:"form-control" }}
+                        {% endif %}
                         {% if field.errors %}
-                            <div class="invalid-feedback">
-                                {{ field.errors|join:", " }}
+                            <div class="invalid-feedback d-block">
+                                {% for error in field.errors %}
+                                    {{ error }}
+                                {% endfor %}
                             </div>
                         {% endif %}
                         {% if field.help_text %}
@@ -54,7 +63,7 @@
 
     .form-label {
         font-family: 'Poppins', sans-serif;
-        font-weight: 600; /* Bold for labels */
+        font-weight: 600;
         color: var(--text-dark);
         margin-bottom: 0.5rem;
     }
@@ -63,7 +72,7 @@
         color: var(--text-light);
     }
 
-    .form-control {
+    .form-control, .form-select {
         border-radius: 6px;
         border: 1px solid var(--text-muted);
         padding: 0.75rem;
@@ -74,19 +83,19 @@
         transition: border-color 0.3s ease, box-shadow 0.3s ease;
     }
 
-    .dark-mode .form-control {
+    .dark-mode .form-control, .dark-mode .form-select {
         background: var(--dark-accent);
         color: var(--text-light);
         border-color: var(--border-dark);
     }
 
-    .form-control:focus {
+    .form-control:focus, .form-select:focus {
         border-color: var(--primary);
-        box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25); /* Matches --primary */
+        box-shadow: 0 0 0 0.2rem rgba(22, 80, 142, 0.25);
         outline: none;
     }
 
-    .form-control.is-invalid {
+    .form-control.is-invalid, .form-select.is-invalid {
         border-color: var(--danger);
     }
 
@@ -116,7 +125,7 @@
     }
 
     .btn-success:hover {
-        background: #218838; /* Darker green for hover */
+        background: #218838;
         transform: translateY(-2px);
     }
 
@@ -165,7 +174,7 @@
             font-size: 0.85rem;
         }
 
-        .form-control {
+        .form-control, .form-select {
             font-size: 0.85rem;
             padding: 0.65rem;
         }
