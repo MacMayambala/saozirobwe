@@ -570,38 +570,66 @@ def two_factor_setup(request):
         "is_setup": False
     })
 # users/views.py
-from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from users.forms import CustomUserCreationForm, CustomUserEditForm
+from users.models import CustomUser
+
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.contrib.auth.models import User
+from users.forms import CustomUserCreationForm
+from users.models import CustomUser
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from .forms import CustomUserCreationForm, CustomUserEditForm
+from django.shortcuts import render, redirect
+from .forms import CustomUserCreationForm
+from .models import CustomUser
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.models import User, Group, Permission
-from .forms import CustomUserCreationForm, CustomUserEditForm
+from django.shortcuts import render, redirect
+from .forms import CustomUserCreationForm
+from .models import CustomUser
 
 @login_required
 def create_user(request):
     if not request.user.is_staff and not request.user.is_superuser:
         messages.error(request, "Only admins can create users.")
         return redirect("user_list")
-    
+
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Assign groups to the user
-            groups = form.cleaned_data['groups']
-            user.groups.set(groups)
-            messages.success(request, "User created successfully!")
+            # Save user with password
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data["password1"])
+            user.save()  # Save user first
+
+            # Let form handle branch, groups, and modules
+            form.save(commit=True)  # Calls CustomUserCreationForm.save()
+
+            # Set password_expired
+            custom_user, created = CustomUser.objects.get_or_create(user=user)
+            custom_user.password_expired = True  # Force password change
+            custom_user.save()
+
+            messages.success(request, f"User {user.username} created successfully! Password will expire on first login.")
             return redirect("user_list")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{field}: {error}")
     else:
         form = CustomUserCreationForm()
-    
+
     return render(request, "users/create_user.html", {"form": form})
 
+
+    
 @login_required
 def edit_user(request, user_id):
     user = get_object_or_404(User, id=user_id)

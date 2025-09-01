@@ -79,21 +79,22 @@ class PasswordHistory(models.Model):
 from django.db import models
 from django.contrib.auth.models import User
 
+from django.contrib.auth.models import User
+from django.db import models
+
 class CustomUser(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customuser')
     branch = models.ForeignKey(
         'staff_management.Branch',
         on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
+        null=True,  # Keep null=True for database but enforce required in forms
         verbose_name="Branch"
     )
-    # Add other fields as needed
     failed_login_attempts = models.IntegerField(default=0)
-    
+    password_expired = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.branch if self.branch else 'No Branch'}"
+        return f"{self.user.username} - {self.branch.name if self.branch else 'No Branch'}"
 
     @property
     def branch_name(self):
@@ -103,3 +104,6 @@ class CustomUser(models.Model):
         verbose_name = "Custom User"
         verbose_name_plural = "Custom Users"
 
+
+
+        

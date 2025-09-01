@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}Cron Job Management{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="text-dark mb-4">Cron Job Management</h2>
+    <div class="card shadow-sm rounded-3 bg-white">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped m-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th scope="col" class="fw-semibold">Job Name</th>
+                            <th scope="col" class="fw-semibold">Command</th>
+                            <th scope="col" class="fw-semibold">Current Schedule</th>
+                            <th scope="col" class="fw-semibold">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in cron_jobs %}
+                        <tr>
+                            <td>{{ job.name }}</td>
+                            <td>{{ job.command }}</td>
+                            <td>{{ job.time }} daily</td>
+                            <td>
+                                <button type="button" 
+                                        class="btn btn-sm btn-primary me-1 action-btn"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#confirmModal"
+                                        data-action="run"
+                                        data-job-id="{{ job.id }}"
+                                        data-job-time="{{ job.time }}">
+                                    Run Now
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-sm btn-warning me-1 action-btn"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#confirmModal"
+                                        data-action="update"
+                                        data-job-id="{{ job.id }}"
+                                        data-job-time="{{ job.time }}">
+                                    Update Schedule
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">No cron jobs configured.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Single Modal for All Jobs -->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Confirm Action</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Please enter your password to confirm the action: <strong class="action-text">Run Now</strong></p>
+                <div class="time-picker" style="display: none;">
+                    <label class="form-label">Select Time (Daily)</label>
+                    <div class="row">
+                        <div class="col">
+                            <select name="hour" class="form-select" id="hourSelect"></select>
+                        </div>
+                        <div class="col">
+                            <select name="minute" class="form-select" id="minuteSelect"></select>
+                        </div>
+                    </div>
+                </div>
+                <form method="POST" action="{% url 'cron_management' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" id="formAction" value="run">
+                    <input type="hidden" name="job_id" id="formJobId" value="">
+                    <input type="hidden" name="hour" id="hiddenHour" value="">
+                    <input type="hidden" name="minute" id="hiddenMinute" value="">
+                    <div class="mb-3">
+                        <label for="passwordInput" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="passwordInput" name="password" required>
+                    </div>
+                    {% if messages %}
+                    <div class="mb-3">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <button type="submit" class="btn btn-primary">Confirm</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const hourSelect = document.getElementById('hourSelect');
+    const minuteSelect = document.getElementById('minuteSelect');
+
+    // Populate hour and minute dropdowns
+    for (let h = 0; h < 24; h++) {
+        let val = h < 10 ? '0' + h : '' + h;
+        hourSelect.innerHTML += `<option value="${val}">${val}</option>`;
+    }
+    ["00","15","30","45"].forEach(m => minuteSelect.innerHTML += `<option value="${m}">${m}</option>`);
+
+    const actionButtons = document.querySelectorAll('.action-btn');
+    actionButtons.forEach(btn => {
+        btn.addEventListener('click', function () {
+            const action = this.dataset.action;
+            const jobId = this.dataset.jobId;
+            const jobTime = this.dataset.jobTime;
+            const modal = document.getElementById('confirmModal');
+            const actionText = modal.querySelector('.action-text');
+            const timePicker = modal.querySelector('.time-picker');
+
+            document.getElementById('formAction').value = action;
+            document.getElementById('formJobId').value = jobId;
+            actionText.textContent = action === 'run' ? 'Run Now' : 'Update Schedule';
+            timePicker.style.display = action === 'update' ? 'block' : 'none';
+
+            if(action === 'update') {
+                const [hour, minute] = jobTime.split(':');
+                hourSelect.value = hour;
+                minuteSelect.value = minute;
+                document.getElementById('hiddenHour').value = hour;
+                document.getElementById('hiddenMinute').value = minute;
+
+                hourSelect.onchange = () => document.getElementById('hiddenHour').value = hourSelect.value;
+                minuteSelect.onchange = () => document.getElementById('hiddenMinute').value = minuteSelect.value;
+            }
+        });
+    });
+});
+</script>
+
+<!-- Styles -->
+<style>
+/* Keep your previous styles */
+.card { border:none; border-radius:8px; background:var(--white); box-shadow:var(--shadow-light); }
+.table { font-family:'Poppins', sans-serif; font-size:0.9rem; border-collapse: separate; border-spacing:0; }
+/* ... rest of your previous CSS ... */
+</style>
+{% endblock %}

@@ -191,48 +191,41 @@ from django.core.files.storage import FileSystemStorage
 from staff_management.models import Branch
 from .models import Customer  # adjust if Customer is in another app
 
+from django.conf import settings
+
 @login_required
 def excel_import(request):
     """View to handle Excel file uploads for Customer data import"""
     if request.method == 'POST' and request.FILES.get('excel_file'):
-        excel_file = request.FILES['excel_file']
-        
+        excel_file = request.FILES['excel_file']    
+
         # Check file extension
         if not excel_file.name.endswith(('.xls', '.xlsx')):
             messages.error(request, "Uploaded file must be an Excel file (.xls or .xlsx)")
             return redirect('excel_import')
-            
+        
         # Save the file temporarily
         fs = FileSystemStorage(location=os.path.join(os.getcwd(), 'temp'))
         filename = fs.save(excel_file.name, excel_file)
         file_path = fs.path(filename)
         
         try:
-            # Read Excel file with pandas
             df = pd.read_excel(file_path)
             
             records_imported = 0
             failed_records = []
             
-            # Process each row
             for index, row in df.iterrows():
                 try:
                     customer_data = {}
-                    
-                    # Dates
+
+                    # --- Dates ---
                     if 'mem_reg_date' in row and pd.notna(row['mem_reg_date']):
-                        try:
-                            customer_data['mem_reg_date'] = pd.to_datetime(row['mem_reg_date']).date()
-                        except Exception:
-                            raise ValidationError("Invalid registration date format")
-                            
+                        customer_data['mem_reg_date'] = pd.to_datetime(row['mem_reg_date']).date()
                     if 'dob' in row and pd.notna(row['dob']):
-                        try:
-                            customer_data['dob'] = pd.to_datetime(row['dob']).date()
-                        except Exception:
-                            raise ValidationError("Invalid date of birth format")
+                        customer_data['dob'] = pd.to_datetime(row['dob']).date()
                     
-                    # Boolean fields
+                    # --- Boolean ---
                     if 'is_pwd' in row:
                         if isinstance(row['is_pwd'], bool):
                             customer_data['is_pwd'] = row['is_pwd']
@@ -241,7 +234,7 @@ def excel_import(request):
                         elif isinstance(row['is_pwd'], (int, float)):
                             customer_data['is_pwd'] = bool(row['is_pwd'])
                     
-                    # Text fields
+                    # --- Text ---
                     text_fields = [
                         'member_number', 'email', 'salutation', 'first_name', 
                         'middle_name1', 'middle_name2', 'surname', 'gender', 'marital_status',
@@ -253,88 +246,55 @@ def excel_import(request):
                         'employer_name', 'employer_address', 'employer_phone1', 
                         'employer_phone2', 'income_frequency'
                     ]
-                    
                     for field in text_fields:
                         if field in row and pd.notna(row[field]):
                             customer_data[field] = str(row[field]).strip()
                     
-                    # Numeric fields
+                    # --- Numeric ---
                     if 'income_per_month' in row and pd.notna(row['income_per_month']):
-                        try:
-                            customer_data['income_per_month'] = float(row['income_per_month'])
-                        except ValueError:
-                            raise ValidationError("Invalid income value")
+                        customer_data['income_per_month'] = float(row['income_per_month'])
                     
-                    # ✅ Branch lookup (ForeignKey instead of choices)
+                    # --- Branch FK ---
                     if 'branch' in row and pd.notna(row['branch']):
                         try:
-                            # Adjust depending on Excel: is it branch name, code, or ID?
                             branch_obj = Branch.objects.get(name=row['branch'].strip())
                             customer_data['branch'] = branch_obj
                         except Branch.DoesNotExist:
                             raise ValidationError(f"Invalid branch: {row['branch']}")
-                    
-                    # Regex validations
-                    if 'id_number' in customer_data:
-                        if not re.match(r'^(CF|CM)[A-Z0-9]{11}[A-Z]$', customer_data['id_number']):
-                            raise ValidationError("ID number format is invalid")
-                    
-                    if 'phone' in customer_data:
-                        if not re.match(r'^256\d{9}$', customer_data['phone']):
-                            raise ValidationError("Phone number format is invalid")
-                    
-                    if 'phone_number2' in customer_data and customer_data['phone_number2']:
-                        if not re.match(r'^256\d{9}$', customer_data['phone_number2']):
-                            raise ValidationError("Second phone number format is invalid")
-                    
-                    if 'kin_phone' in customer_data:
-                        if not re.match(r'^256\d{9}$', customer_data['kin_phone']):
-                            raise ValidationError("Kin phone number format is invalid")
-                    
-                    # Required fields
-                    required_fields = [
-                        'branch', 'mem_reg_date', 'member_number', 'first_name', 
-                        'surname', 'gender', 'dob', 'id_number', 'card_number',
-                        'phone', 'kin_sname', 'kin_fname', 'kin_phone'
-                    ]
-                    
-                    for field in required_fields:
-                        if field not in customer_data or not customer_data[field]:
-                            raise ValidationError(f"Required field '{field}' is missing")
-                    
-                    # Save customer
+
+                    # --- Save ---
                     customer = Customer(**customer_data)
-                    customer.full_clean()
-                    customer.save()
-                    records_imported += 1
                     
+                    if settings.BULK_IMPORT_MODE:
+                        customer.save()  # Skip validations
+                    else:
+                        customer.full_clean()  # Enforce validations
+                        customer.save()
+                    
+                    records_imported += 1
+
                 except Exception as e:
-                    failed_records.append({
-                        'row': index + 2,
-                        'error': str(e)
-                    })
+                    failed_records.append({'row': index + 2, 'error': str(e)})
             
-            # Cleanup
             if os.path.exists(file_path):
                 os.remove(file_path)
             
-            # Messages
             if records_imported > 0:
                 messages.success(request, f"Successfully imported {records_imported} customer(s)")
             
             if failed_records:
-                failed_rows = ", ".join([str(record['row']) for record in failed_records[:5]])
+                failed_rows = ", ".join([str(r['row']) for r in failed_records[:5]])
                 if len(failed_records) > 5:
                     failed_rows += f" and {len(failed_records) - 5} more"
                 messages.warning(request, f"Failed to import {len(failed_records)} customer(s). Check rows: {failed_rows}")
                 request.session['failed_records'] = failed_records
             
             return redirect('excel_import')
-            
+
         except Exception as e:
             messages.error(request, f"Error processing Excel file: {str(e)}")
             if os.path.exists(file_path):
                 os.remove(file_path)
             return redirect('excel_import')
-    
+
     return render(request, 'import.html')

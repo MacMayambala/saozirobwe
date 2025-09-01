@@ -1205,7 +1205,7 @@ def member_register(request):
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from Munomukabi.models import CronJobStatus
-from Munomukabi.management.commands.notify_expired_members import Command as NotifyCommand
+from Munomukabi.management.commands.expiry_notification import Command as NotifyCommand
 import threading
 from django.http import JsonResponse
 

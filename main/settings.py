@@ -38,6 +38,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'django_crontab',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -128,6 +129,10 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+# settings.py
+
+# Enable or disable bulk import mode (skip validations if True)
+BULK_IMPORT_MODE = True
 
 
 # Internationalization
@@ -189,4 +194,9 @@ EMAIL_HOST_PASSWORD = 'nwyh yoab bpbp rrmg'  # Generate an app-specific password
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
+
+CRONJOBS = [
+    ('0 8 * * *', 'staff_management.management.commands.leave_reminder.Command', [], {}, 'leave_reminder'),
+    ('0 9 * * *', 'Munomukabi.management.commands.expiry_notification.Command', [], {}, 'membership_expiry'),
+]
 

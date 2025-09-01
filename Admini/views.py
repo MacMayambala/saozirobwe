@@ -10,6 +10,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from Reports.models import UserActivity 
 from users.models import TwoFactorAuth
+
+
 def user_login(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -54,9 +56,9 @@ def dashboard(request):
 def reports(request):
     return render(request, 'reports.html')
 
-@login_required
-def settings(request):
-    return render(request, 'settings.html')
+# @login_required
+# def settings(request):
+#     return render(request, 'settings.html')
 
 @login_required
 def home(request):
@@ -205,3 +207,135 @@ def audit_trails(request):
             'page_obj': page_obj,
         }
         return render(request, 'audits.html', context)
+########################################################################################################################################
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.contrib.auth import authenticate
+from django.shortcuts import render, redirect
+from django.core.management import call_command, CommandError
+from django.conf import settings
+from django.http import HttpResponseForbidden
+import logging
+
+logger = logging.getLogger(__name__)
+
+def superuser_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            return HttpResponseForbidden("Permission denied.")
+        return view_func(request, *args, **kwargs)
+    wrapper.__name__ = view_func.__name__
+    wrapper.__doc__ = view_func.__doc__
+    return wrapper
+
+@login_required
+@superuser_required
+def cron_management(request):
+    """Manage and run cron jobs for leave reminders and membership expiry notifications."""
+    cron_jobs = [
+        {
+            'name': 'Leave Reminder',
+            'command': 'staff_management.management.commands.leave_reminder.Command',
+            'id': 'leave_reminder',
+            'schedule': '0 8 * * *',
+            'time': '08:00',
+        },
+        {
+            'name': 'Membership Expiry Notification',
+            'command': 'Munomukabi.management.commands.expiry_notification.Command',
+            'id': 'membership_expiry',
+            'schedule': '0 9 * * *',
+            'time': '09:00',
+        },
+    ]
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        job_id = request.POST.get("job_id")
+        password = request.POST.get("password")
+
+        # Verify password
+        if not password:
+            messages.error(request, "Password is required to perform this action.")
+            return redirect("cron_management")
+
+        auth_user = authenticate(username=request.user.username, password=password)
+        if not auth_user:
+            messages.error(request, "Incorrect password.")
+            return redirect("cron_management")
+
+        # Run job immediately
+        if action == "run":
+            try:
+                if job_id == "leave_reminder":
+                    call_command("leave_reminder")
+                    messages.success(request, "Leave reminder job executed successfully.")
+                elif job_id == "membership_expiry":
+                    call_command("expiry_notification")
+                    messages.success(request, "Membership expiry job executed successfully.")
+                else:
+                    messages.error(request, "Invalid job ID.")
+            except CommandError as e:
+                logger.error(f"Failed to run command {job_id}: {str(e)}")
+                messages.error(request, f"Failed to run job: {str(e)}")
+            except Exception as e:
+                logger.error(f"Unexpected error running command {job_id}: {str(e)}")
+                messages.error(request, f"Unexpected error: {str(e)}")
+
+        # Update schedule
+        elif action == "update":
+            hour = request.POST.get("hour")
+            minute = request.POST.get("minute")
+            frequency = request.POST.get("frequency", "daily")  # new field: daily, weekly, monthly
+
+            if not _is_valid_time(hour, minute):
+                messages.error(request, "Invalid time selected.")
+                return redirect("cron_management")
+
+            # Construct cron expression
+            if frequency == "daily":
+                schedule = f"{minute} {hour} * * *"
+            elif frequency == "weekly":
+                # Default to Monday (1)
+                schedule = f"{minute} {hour} * * 1"
+            elif frequency == "monthly":
+                # Default to 1st of month
+                schedule = f"{minute} {hour} 1 * *"
+            else:
+                messages.error(request, "Invalid frequency.")
+                return redirect("cron_management")
+
+            # Update settings.CRONTAB dynamically
+            try:
+                from django_crontab.crontab import Crontab
+                crontab = Crontab()
+                crontab.load()  # load current crontab from settings
+
+                # Remove existing job safely
+                crontab.jobs = [job for job in crontab.jobs if job.name != job_id]
+
+                # Add updated job
+                job_command = next((j['command'] for j in cron_jobs if j['id'] == job_id), None)
+                if job_command:
+                    crontab.add_job(job_id, schedule, job_command)
+                    crontab.write()
+                    messages.success(request, f"Schedule for {job_id} updated to {hour}:{minute} ({frequency}).")
+                else:
+                    messages.error(request, "Job command not found.")
+
+            except Exception as e:
+                logger.error(f"Failed to update schedule for {job_id}: {str(e)}")
+                messages.error(request, f"Failed to update schedule: {str(e)}")
+
+        return redirect("cron_management")
+
+    return render(request, "admin/cron_management.html", {"cron_jobs": cron_jobs})
+
+
+def _is_valid_time(hour, minute):
+    try:
+        hour = int(hour)
+        minute = int(minute)
+        return 0 <= hour <= 23 and 0 <= minute <= 59
+    except (ValueError, TypeError):
+        return False

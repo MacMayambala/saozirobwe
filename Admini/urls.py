@@ -10,7 +10,8 @@ urlpatterns = [
     path('dashboard/', views.home, name='home'),  # Added trailing slash for consistency
     path('reports/', views.reports, name='reports'),
     path('audit-trails/', views.audit_trails, name='audit_trails'),
-    path('settings/', views.settings, name='settings'),
+    #path('settings/', views.settings, name='settings'),
+    path('cron-management/', views.cron_management, name='cron_management'),
     
     
     
