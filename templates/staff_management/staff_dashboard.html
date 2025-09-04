@@ -1,132 +1,88 @@
 {% extends 'base.html' %}
 {% load static %}
-{% block title %}Members - Sao Zirobwe SACCO{% endblock %}
+
+{% block title %}Staff Dashboard - Sao Zirobwe SACCO{% endblock %}
+
 {% block content %}
 <div class="container">
-    <div class="header-section d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1"><i class="fas fa-users me-2"></i>Customers</h2>
-            <p class="text-muted mb-0">Manage and view all customer information</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'member_registration' %}" class="btn btn-primary px-4" aria-label="Register Customer">
-                <i class="fas fa-user-plus me-2"></i>Register Customer
-            </a>
-        </div>
-    </div>
-    
-    <div class="card shadow-sm border-0">
-        <div class="card-body p-4">
-            <!-- Tabs for Different Customer Types -->
-            <ul class="nav nav-tabs mb-4" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active px-4" href="#" role="tab" aria-selected="true">
-                        <i class="fas fa-user me-2"></i>INDIVIDUALS
-                    </a>
-                </li>
-            </ul>
-            
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <!-- Messages Section -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <!-- Header Section -->
+            <div class="header-section d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="bi bi-people-fill me-2"></i>Staff Dashboard</h2>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'staff_management:add_branch' %}" class="btn btn-primary" aria-label="Add Branch"><i class="bi bi-building-add me-2"></i>Add Branch</a>
+                    <a href="{% url 'staff_management:add_staff' %}" class="btn btn-primary" aria-label="Add Staff"><i class="bi bi-person-plus-fill me-2"></i>Add Staff</a>
+                </div>
+            </div>
+
             <!-- Search Bar -->
             <div class="search-container mb-4">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="fas fa-search text-muted"></i>
-                    </span>
-                    <input type="text" id="search_member" class="form-control border-start-0 ps-0" placeholder="Search customers by name, ID, or contact..." aria-label="Search customers">
-                </div>
+                <input type="text" id="search_staff" class="form-control" placeholder="Search staff by name, email, or phone" aria-label="Search staff">
             </div>
-            
+
             <!-- Spinner -->
-            <div id="loading-spinner" class="text-center mt-3 mb-4" style="display: none;" aria-live="polite">
+            <div id="loading-spinner" class="text-center mt-3" style="display: none;">
                 <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading customers...</span>
+                    <span class="visually-hidden">Loading...</span>
                 </div>
             </div>
-            
-            <!-- Customer List -->
-            <div class="member-list" id="member-list" role="region" aria-label="Customer List">
-                {% for customer in customers %}
-                <div class="member-card mb-3 border rounded-lg overflow-hidden transition-all">
-                    <div class="member-row d-flex align-items-center p-4">
-                        <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
-                            <div class="d-flex align-items-center gap-3">
-                                {% if customer.profile_picture %}
-                                    <img src="{{ customer.profile_picture.url }}" alt="{{ customer.first_name }} {{ customer.surname }}" class="rounded-circle profile-placeholder" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--primary-color);">
-                                {% else %}
-                                    <div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border: 2px solid var(--primary-color); background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: #ffffff; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif;" aria-label="Placeholder for {{ customer.first_name }} {{ customer.surname }}">
-                                        {{ customer.first_name|first }}{{ customer.surname|first }}
-                                    </div>
-                                {% endif %}
-                                <div class="member-name">
-                                    <h5 class="mb-0 fw-semibold">
-                                        <a href="{% url 'memberSum' customer.cus_id %}" class="text-decoration-none text-dark" aria-label="View {{ customer.first_name }} {{ customer.surname }} Details">
-                                            {{ customer.first_name }} {{ customer.surname }}
-                                        </a>
-                                    </h5>
-                                    <div class="d-flex align-items-center gap-2 mt-1">
-                                        <span class="badge bg-light text-dark fw-normal">{{ customer.member_number }}</span>
-                                        <span class="badge bg-primary-subtle text-primary fw-normal">{{ customer.branch|default:"Busiika Branch" }}</span>
-                                    </div>
-                                </div>
+
+            <!-- Staff List -->
+            <div class="staff-list" id="staff-list">
+                {% for staff in staff_list %}
+                <div class="card mb-3 shadow-sm staff-card">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div class="staff-info d-flex align-items-center gap-3">
+                            {% if staff.profile_photo %}
+                                <img src="{{ staff.profile_photo.url }}" alt="{{ staff.first_name }} {{ staff.last_name }}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--primary);">
+                            {% else %}
+                                <i class="bi bi-person-circle" style="font-size: 2.5rem; color: var(--text-muted);"></i>
+                            {% endif %}
+                            <div>
+                                <h5 class="mb-0">
+                                    <a href="{% url 'staff_management:view_performance' staff.id %}" class="text-decoration-none text-dark" aria-label="View {{ staff.first_name }} {{ staff.last_name }} Performance">
+                                        {{ staff.first_name }} {{ staff.last_name }}
+                                    </a>
+                                </h5>
+                                <p class="text-muted mb-0">{{ staff.email|default:"N/A" }}</p>
                             </div>
                         </div>
-                        <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas fa-venus-mars text-muted"></i>
-                                <span class="text-muted">{{ customer.gender }}</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-birthday-cake text-muted"></i>
-                                <span class="text-muted">
-                                    {% if customer.age %}
-                                        {{ customer.age }} YEARS
-                                    {% else %}
-                                        N/A
-                                    {% endif %}
-                                </span>
-                            </div>
+                        <div class="staff-meta text-end">
+                            <p class="text-muted mb-0">+{{ staff.phone|default:"N/A" }}</p>
+                            <p class="text-muted mb-0">{{ staff.position.name|default:"N/A" }}</p>
                         </div>
-                       <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas fa-phone text-primary"></i>
-                                <span>{{ customer.phone|default:"N/A" }}</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-map-marker-alt text-secondary"></i>
-                                <span>{{ customer.village|default:"N/A" }}</span>
-                            </div>
+                        <div class="staff-status text-end">
+                            <p class="text-muted mb-0">{{ staff.department.name|default:"N/A" }}</p>
                         </div>
-                        <div class="member-actions">
-                            <a href="{% url 'memberSum' customer.cus_id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" aria-label="View details">
-                                <i class="fas fa-eye me-1"></i>View
-                            </a>
+                        <div class="staff-actions d-flex gap-3">
+                            <a href="{% url 'staff_management:add_target' staff.id %}" class="text-primary action-link" aria-label="Add Target for {{ staff.first_name }}"><i class="bi bi-plus-circle me-1"></i>Add Target</a>
+                            <a href="{% url 'staff_management:view_performance' staff.id %}" class="text-primary action-link" aria-label="View Performance for {{ staff.first_name }}"><i class="bi bi-eye me-1"></i>View Performance</a>
+                            <a href="{% url 'staff_management:update_staff' staff.id %}" class="text-primary action-link" aria-label="Update {{ staff.first_name }}"><i class="bi bi-pencil me-1"></i>Update</a>
                         </div>
                     </div>
                 </div>
                 {% empty %}
-                <div class="text-center py-5">
-                    <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
-                    <h5 class="text-muted mb-3">No customers found</h5>
-                    <p class="text-muted mb-4">Get started by registering your first customer</p>
-                    <a href="{% url 'member_registration' %}" class="btn btn-primary px-4">
-                        <i class="fas fa-user-plus me-2"></i>Register Customer
-                    </a>
-                </div>
+                <p class="text-center text-muted">No staff found.</p>
                 {% endfor %}
             </div>
-            
+
             <!-- Pagination -->
-            <div class="pagination-container d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                <div id="page-info" class="text-muted"></div>
-                <div class="d-flex align-items-center gap-2">
-                    <a href="#" id="prev-page" class="btn btn-sm btn-outline-secondary rounded-circle" aria-label="Previous Page">
-                        <i class="fas fa-chevron-left"></i>
-                    </a>
-                    <div id="page-numbers" class="d-flex gap-1"></div>
-                    <a href="#" id="next-page" class="btn btn-sm btn-outline-secondary rounded-circle" aria-label="Next Page">
-                        <i class="fas fa-chevron-right"></i>
-                    </a>
-                </div>
+            <div class="pagination d-flex justify-content-center align-items-center gap-2 mt-4">
+                <span id="page-info" class="text-muted"></span>
+                <a href="#" id="prev-page" class="btn btn-outline-primary btn-sm" aria-label="Previous Page"><i class="bi bi-chevron-left"></i></a>
+                <div id="page-numbers" class="d-flex gap-1"></div>
+                <a href="#" id="next-page" class="btn btn-outline-primary btn-sm" aria-label="Next Page"><i class="bi bi-chevron-right"></i></a>
             </div>
         </div>
     </div>
@@ -142,644 +98,541 @@
         --background-light: #f4f6f9;
         --error-color: #dc3545;
         --success-color: #28a745;
-        --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08);
-        --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+        --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.1);
+        --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.3);
         --dark-card-bg: #2a3435;
         --border-dark: #3a4445;
         --transition: all 0.3s ease;
     }
-    
+
     .container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px 15px;
         width: 100%;
     }
-    
+
     .main.active .container {
-        max-width: 1400px;
+        max-width: 1400px; /* Wider when sidebar is collapsed */
     }
-    
+
     h2 {
         color: var(--text-dark);
-        font-weight: 700;
+        font-weight: 600;
         font-family: 'Poppins', sans-serif;
         font-size: 1.8rem;
         margin: 0;
     }
-    
+
     .dark-mode h2 {
         color: var(--text-light);
     }
-    
+
     .card {
-        border-radius: 16px;
+        border-radius: 12px;
         background: #ffffff;
         box-shadow: var(--shadow-light);
         border: none;
+        backdrop-filter: blur(6px); /* Subtle glassmorphism */
         transition: var(--transition);
     }
-    
+
     .dark-mode .card {
         background: var(--dark-card-bg);
         border: 1px solid var(--border-dark);
         box-shadow: var(--shadow-dark);
     }
-    
+
     .card-body {
         padding: 1.5rem;
     }
-    
-    .search-container {
-        position: relative;
-    }
-    
-    .input-group-text {
-        border-radius: 12px 0 0 12px;
-    }
-    
+
     .form-control {
         border: 1px solid #e0e0e0;
-        border-radius: 0 12px 12px 0;
-        padding: 12px 15px;
+        border-radius: 8px;
+        padding: 10px 15px;
         font-size: 0.95rem;
         font-family: 'Poppins', sans-serif;
         font-weight: 400;
         background: #f8f9fa;
         transition: var(--transition);
     }
-    
+
     .dark-mode .form-control {
         background: var(--border-dark);
         color: var(--text-light);
         border-color: var(--border-dark);
     }
-    
+
     .form-control:focus {
         border-color: var(--primary-color);
         background: #ffffff;
-        box-shadow: 0 0 0 0.25rem rgba(22, 80, 142, 0.15);
+        box-shadow: 0 0 8px rgba(22, 80, 142, 0.2);
         outline: none;
     }
-    
+
     .dark-mode .form-control:focus {
         background: #ffffff;
         color: var(--text-dark);
     }
-    
+
     .btn-primary {
         background: var(--primary-color);
         border: none;
-        border-radius: 12px;
-        padding: 10px 20px;
+        border-radius: 8px;
+        padding: 8px 16px;
         font-size: 0.95rem;
         font-weight: 600;
         font-family: 'Poppins', sans-serif;
         color: #ffffff;
         transition: var(--transition);
-        box-shadow: 0 4px 10px rgba(22, 80, 142, 0.2);
     }
-    
+
     .btn-primary:hover {
         background: var(--primary-dark);
-        transform: translateY(-2px);
-        box-shadow: 0 6px 15px rgba(22, 80, 142, 0.3);
+        transform: scale(1.05);
+        box-shadow: var(--shadow-light);
     }
-    
+
     .btn-outline-primary {
         border-color: var(--primary-color);
         color: var(--primary-color);
-        border-radius: 12px;
-        padding: 6px 12px;
+        border-radius: 8px;
+        padding: 6px 10px;
         font-size: 0.9rem;
         font-weight: 600;
         font-family: 'Poppins', sans-serif;
         transition: var(--transition);
     }
-    
+
     .btn-outline-primary:hover {
         background: var(--primary-color);
         color: #ffffff;
-        transform: translateY(-2px);
+        transform: scale(1.05);
     }
-    
-    .btn-outline-secondary {
-        border-color: #dee2e6;
-        color: #6c757d;
-        border-radius: 50%;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: var(--transition);
-    }
-    
-    .btn-outline-secondary:hover {
-        background: #f8f9fa;
+
+    .btn-outline-primary.disabled {
         border-color: #adb5bd;
-        color: #495057;
-    }
-    
-    .btn-outline-secondary.disabled {
-        border-color: #dee2e6;
         color: #adb5bd;
         pointer-events: none;
     }
-    
-    .nav-tabs {
-        border-bottom: 2px solid #f1f3f5;
-    }
-    
-    .nav-tabs .nav-link {
-        font-family: 'Poppins', sans-serif;
-        font-weight: 600;
-        font-size: 0.95rem;
-        color: var(--text-dark);
-        border: none;
-        border-bottom: 2px solid transparent;
-        padding: 10px 20px;
-        transition: var(--transition);
-        border-radius: 8px 8px 0 0;
-    }
-    
-    .nav-tabs .nav-link:hover {
-        color: var(--primary-dark);
-        background-color: rgba(22, 80, 142, 0.05);
-    }
-    
-    .nav-tabs .nav-link.active {
-        color: var(--primary-color);
-        border-bottom: 2px solid var(--primary-color);
-        background: transparent;
-    }
-    
-    .dark-mode .nav-tabs {
-        border-bottom: 2px solid var(--border-dark);
-    }
-    
-    .dark-mode .nav-tabs .nav-link {
-        color: var(--text-light);
-    }
-    
-    .dark-mode .nav-tabs .nav-link:hover {
-        color: var(--text-light);
-        background-color: rgba(255, 255, 255, 0.05);
-    }
-    
-    .dark-mode .nav-tabs .nav-link.active {
-        color: var(--primary-color);
-        border-bottom: 2px solid var(--primary-color);
-    }
-    
-    .member-card {
-        border-radius: 12px;
-        background: #ffffff;
-        transition: var(--transition);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
-    
-    .dark-mode .member-card {
-        background: var(--dark-card-bg);
-        border: 1px solid var(--border-dark);
-    }
-    
-    .member-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-light);
-        border-color: var(--primary-color);
-    }
-    
-    .member-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        width: 100%;
-    }
-    
-    .member-info {
-        display: flex;
-        align-items: center;
-        flex-wrap: nowrap;
-    }
-    
-    .member-info .member-name {
-        flex-grow: 1;
-        min-width: 0;
-    }
-    
-    .member-info h5 {
-        font-weight: 600;
-        font-family: 'Poppins', sans-serif;
-        font-size: 1.1rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        max-width: 200px;
-    }
-    
-    .member-info h5 a {
-        color: var(--text-dark);
-        transition: var(--transition);
-    }
-    
-    .dark-mode .member-info h5 a {
-        color: var(--text-light);
-    }
-    
-    .member-info h5 a:hover {
-        color: var(--primary-color);
-    }
-    
-    .badge {
-        font-size: 0.75rem;
-        padding: 0.35em 0.65em;
-        font-weight: 500;
-    }
-    
-    .member-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    
-    .member-meta span {
-        font-weight: 400;
-        font-family: 'Poppins', sans-serif;
+
+    .alert {
+        border-radius: 10px;
+        padding: 12px 20px;
         font-size: 0.9rem;
-    }
-    
-    .text-primary {
-        color: var(--primary-color) !important;
-        font-weight: 600;
-        transition: var(--transition);
-    }
-    
-    .text-primary:hover {
-        color: var(--primary-dark) !important;
-    }
-    
-    .text-muted {
         font-weight: 400;
         font-family: 'Poppins', sans-serif;
-        color: #6c757d !important;
+        color: #ffffff;
+        box-shadow: var(--shadow-dark);
+        margin-bottom: 1.5rem;
+        backdrop-filter: blur(6px);
+        animation: slideIn 0.4s ease;
     }
-    
-    .profile-placeholder {
-        transition: var(--transition);
+
+    @keyframes slideIn {
+        from { transform: translateY(20px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
     }
-    
-    .dark-mode .profile-placeholder {
-        background: linear-gradient(135deg, #3a4445, #2a3435);
+
+    .alert-success {
+        background: var(--success-color);
+    }
+
+    .alert-danger {
+        background: var(--error-color);
+    }
+
+    .alert-info {
+        background: rgba(22, 80, 142, 0.1);
+        color: var(--text-dark);
+        border: 1px solid var(--primary-color);
+        backdrop-filter: blur(6px);
+    }
+
+    .dark-mode .alert-info {
+        background: rgba(255, 255, 255, 0.1);
         color: var(--text-light);
         border-color: var(--text-light);
     }
-    
-    .pagination-container {
-        margin-top: 2rem;
+
+    .staff-list .card {
+        border-radius: 10px;
+        border: 1px solid #e9ecef;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-    
-    .pagination a.page-number {
-        padding: 8px 12px;
-        border: 1px solid #dee2e6;
-        border-radius: 8px;
-        text-decoration: none;
+
+    .dark-mode .staff-list .card {
+        border-color: var(--border-dark);
+    }
+
+    .staff-list .card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-dark);
+        background: #f8f9fa;
+    }
+
+    .dark-mode .staff-list .card:hover {
+        background: var(--dark-accent);
+    }
+
+    .staff-info h5 a {
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
         color: var(--text-dark);
-        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .dark-mode .staff-info h5 a {
+        color: var(--text-light);
+    }
+
+    .staff-info h5 a:hover {
+        color: var(--primary-color);
+    }
+
+    .text-primary {
+        color: var(--primary-color) !important;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        transition: var(--transition);
+    }
+
+    .text-primary:hover {
+        color: var(--primary-dark) !important;
+        transform: scale(1.05);
+    }
+
+    .staff-meta p,
+    .staff-status p {
+        font-size: 0.9rem;
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+    }
+
+    .pagination a.page-number {
+        padding: 6px 12px;
+        border: 1px solid var(--primary-color);
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--primary-color);
+        font-weight: 600;
         font-size: 0.9rem;
         font-family: 'Poppins', sans-serif;
         background: #ffffff;
-        margin: 0 2px;
+        margin: 0 3px;
         transition: var(--transition);
-        min-width: 40px;
-        text-align: center;
     }
-    
+
     .pagination a.page-number:hover {
         background: var(--primary-color);
         color: #ffffff;
-        border-color: var(--primary-color);
+        transform: scale(1.05);
     }
-    
+
     .pagination a.page-number.active {
         background: var(--primary-color);
         color: #ffffff;
         border-color: var(--primary-color);
     }
-    
+
     .dark-mode .pagination a.page-number {
         background: var(--dark-card-bg);
         color: var(--text-light);
-        border-color: var(--border-dark);
+        border-color: var(--text-light);
     }
-    
+
     .dark-mode .pagination a.page-number:hover {
         background: var(--primary-color);
         color: #ffffff;
     }
-    
+
     .dark-mode .pagination a.page-number.active {
         background: var(--primary-color);
         color: #ffffff;
     }
-    
+
     .spinner-border {
         width: 2rem;
         height: 2rem;
         border-width: 0.3em;
         animation: spin 1s linear infinite;
     }
-    
+
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-    
+
     @media (max-width: 991px) {
         .container {
             padding: 15px 10px;
         }
+
         .card-body {
             padding: 1.25rem;
         }
-        .member-row {
+
+        .staff-list .card {
             flex-direction: column;
             align-items: flex-start;
             gap: 12px;
         }
-        .member-info,
-        .member-meta,
-        .member-actions {
-            flex-basis: 100% !important;
-            min-width: 0;
-        }
-        .member-actions {
+
+        .staff-actions {
             justify-content: flex-start;
             width: 100%;
-        }
-        .member-meta {
-            flex-direction: row;
             flex-wrap: wrap;
-            gap: 16px;
+        }
+
+        .staff-meta,
+        .staff-status {
+            text-align: left;
         }
     }
-    
+
     @media (max-width: 480px) {
         .container {
             padding: 10px 8px;
         }
+
         .card-body {
             padding: 1rem;
         }
+
         h2 {
             font-size: 1.6rem;
         }
+
         .btn-primary {
-            padding: 8px 16px;
+            padding: 6px 12px;
             font-size: 0.9rem;
         }
-        .member-info h5 {
+
+        .staff-info h5 {
             font-size: 1rem;
-            max-width: 150px;
         }
-        .member-meta span {
+
+        .staff-meta p,
+        .staff-status p {
             font-size: 0.85rem;
         }
-        .member-info .member-name {
-            max-width: 100%;
-        }
-        .profile-placeholder {
-            font-size: 0.8rem;
-        }
-        .badge {
-            font-size: 0.7rem;
+
+        .staff-actions a {
+            font-size: 0.85rem;
         }
     }
-    
+
     /* Accessibility */
     a:focus,
     button:focus,
-    .form-control:focus,
-    .profile-placeholder:focus {
+    .form-control:focus {
         outline: 2px solid var(--primary-color);
         outline-offset: 2px;
     }
 </style>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const searchInput = document.getElementById("search_member");
-    const memberList = document.getElementById("member-list");
-    const spinner = document.getElementById("loading-spinner");
-    const prevPage = document.getElementById("prev-page");
-    const nextPage = document.getElementById("next-page");
-    const pageInfo = document.getElementById("page-info");
-    const pageNumbersContainer = document.getElementById("page-numbers");
-    // Base URLs for dynamic construction
-    const searchUrl = "{% url 'search_members' %}";
-    const memberSumUrlBase = "{% url 'memberSum' 0 %}".replace('0/', '');
-    let currentPage = 1;
-    let totalPages = 1;
-    let totalItems = 0;
-    const itemsPerPage = 5;
-    
-    function fetchMembers(query, page = 1) {
-        spinner.style.display = "block";
-        memberList.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
-        fetch(`${searchUrl}?search=${encodeURIComponent(query)}&page=${page}`, {
-            headers: { "X-Requested-With": "XMLHttpRequest" }
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-            return response.json();
-        })
-        .then(data => {
-            spinner.style.display = "none";
-            memberList.innerHTML = "";
-            if (data.customers.length === 0) {
-                memberList.innerHTML = `
-                    <div class="text-center py-5">
-                        <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
-                        <h5 class="text-muted mb-3">No customers found</h5>
-                        <p class="text-muted mb-4">Try adjusting your search or register a new customer</p>
-                        <a href="{% url 'member_registration' %}" class="btn btn-primary px-4">
-                            <i class="fas fa-user-plus me-2"></i>Register Customer
-                        </a>
-                    </div>
-                `;
-            } else {
-                data.customers.forEach(customer => {
-                    const memberCard = `
-                        <div class="member-card mb-3 border rounded-lg overflow-hidden transition-all">
-                            <div class="member-row d-flex align-items-center p-4">
-                                <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
-                                    <div class="d-flex align-items-center gap-3">
-                                        ${customer.profile_picture ?
-                                            `<img src="${customer.profile_picture}" alt="${customer.first_name} ${customer.surname}" class="rounded-circle profile-placeholder" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--primary-color);">` :
-                                            `<div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border: 2px solid var(--primary-color); background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: #ffffff; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif;" aria-label="Placeholder for ${customer.first_name} ${customer.surname}">${customer.first_name.charAt(0)}${customer.surname.charAt(0)}</div>`}
-                                        <div class="member-name">
-                                            <h5 class="mb-0 fw-semibold">
-                                                <a href="${memberSumUrlBase}${customer.cus_id}/" class="text-decoration-none text-dark" aria-label="View ${customer.first_name} ${customer.surname} Details">
-                                                    ${customer.first_name} ${customer.surname}
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchInput = document.getElementById("search_staff");
+        const staffList = document.getElementById("staff-list");
+        const spinner = document.getElementById("loading-spinner");
+        const prevPage = document.getElementById("prev-page");
+        const nextPage = document.getElementById("next-page");
+        const pageInfo = document.getElementById("page-info");
+        const pageNumbersContainer = document.getElementById("page-numbers");
+
+        // Base URLs for dynamic construction
+        const searchUrl = "{% url 'staff_management:search_staff' %}";
+        const viewPerformanceUrlBase = "{% url 'staff_management:view_performance' 0 %}".replace('0/', '');
+        const addTargetUrlBase = "{% url 'staff_management:add_target' 0 %}".replace('0/', '');
+        const updateStaffUrlBase = "{% url 'staff_management:update_staff' 0 %}".replace('0/', '');
+
+        let currentPage = 1;
+        let totalPages = 1;
+        let totalItems = 0;
+        const itemsPerPage = 5;
+
+        function fetchStaff(query, page = 1) {
+            spinner.style.display = "block";
+
+            fetch(`${searchUrl}?search=${encodeURIComponent(query)}&page=${page}`, {
+                headers: { "X-Requested-With": "XMLHttpRequest" }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                spinner.style.display = "none";
+                staffList.innerHTML = "";
+
+                if (data.staff.length === 0) {
+                    staffList.innerHTML = "<p class='text-center text-muted'>No staff found.</p>";
+                } else {
+                    data.staff.forEach(staff => {
+                        const staffCard = `
+                            <div class="card mb-3 shadow-sm staff-card">
+                                <div class="card-body d-flex justify-content-between align-items-center">
+                                    <div class="staff-info d-flex align-items-center gap-3">
+                                        ${staff.profile_photo ? 
+                                            `<img src="${staff.profile_photo}" alt="${staff.first_name} ${staff.last_name}" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; border: 2px solid var(--primary-color);">` : 
+                                            `<i class="bi bi-person-circle" style="font-size: 2.5rem; color: var(--secondary-color);"></i>`}
+                                        <div>
+                                            <h5 class="mb-0">
+                                                <a href="${viewPerformanceUrlBase}${staff.id}/" class="text-decoration-none text-dark" aria-label="View ${staff.first_name} ${staff.last_name} Performance">
+                                                    ${staff.first_name} ${staff.last_name}
                                                 </a>
                                             </h5>
-                                            <div class="d-flex align-items-center gap-2 mt-1">
-                                                <span class="badge bg-light text-dark fw-normal">${customer.member_number}</span>
-                                                <span class="badge bg-primary-subtle text-primary fw-normal">${customer.branch || "Busiika Branch"}</span>
-                                            </div>
+                                            <p class="text-muted mb-0">${staff.email || "N/A"}</p>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <i class="fas fa-venus-mars text-muted"></i>
-                                        <span class="text-muted">${customer.gender}</span>
+                                    <div class="staff-meta text-end">
+                                        <p class="text-muted mb-0">+${staff.phone || "N/A"}</p>
+                                        <p class="text-muted mb-0">${staff.position || "N/A"}</p>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fas fa-birthday-cake text-muted"></i>
-                                        <span class="text-muted">
-                                            ${customer.age ? customer.age + ' YEARS' : 'N/A'}
-                                        </span>
+                                    <div class="staff-status text-end">
+                                        <p class="text-muted mb-0">${staff.department || "N/A"}</p>
                                     </div>
-                                </div>
-                                <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
-                                    <div class="d-flex align-items-center gap-2 mb-2">
-                                        <i class="fas fa-phone text-primary"></i>
-                                        <span>${customer.phone || "N/A"}</span>
+                                    <div class="staff-actions d-flex gap-3">
+                                        <a href="${addTargetUrlBase}${staff.id}/" class="text-primary action-link" aria-label="Add Target for ${staff.first_name}"><i class="bi bi-plus-circle me-1"></i>Add Target</a>
+                                        <a href="${viewPerformanceUrlBase}${staff.id}/" class="text-primary action-link" aria-label="View Performance for ${staff.first_name}"><i class="bi bi-eye me-1"></i>View Performance</a>
+                                        <a href="${updateStaffUrlBase}${staff.id}/" class="text-primary action-link" aria-label="Update ${staff.first_name}"><i class="bi bi-pencil me-1"></i>Update</a>
                                     </div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <i class="fas fa-map-marker-alt text-secondary"></i>
-                                        <span>${customer.village || "N/A"}</span>
-                                    </div>
-                                </div>
-                                <div class="member-actions">
-                                    <a href="${memberSumUrlBase}${customer.cus_id}/" class="btn btn-sm btn-outline-primary rounded-pill px-3" aria-label="View details">
-                                        <i class="fas fa-eye me-1"></i>View
-                                    </a>
                                 </div>
                             </div>
-                        </div>
-                    `;
-                    memberList.innerHTML += memberCard;
+                        `;
+                        staffList.innerHTML += staffCard;
+                    });
+
+                    // Update pagination data
+                    currentPage = data.current_page;
+                    totalPages = data.total_pages;
+                    totalItems = data.total_items || (data.total_pages * itemsPerPage);
+
+                    // Update page info
+                    const startItem = (currentPage - 1) * itemsPerPage + 1;
+                    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+                    pageInfo.textContent = `${startItem} - ${endItem} of ${totalItems} STAFF`;
+
+                    // Update Previous/Next buttons
+                    prevPage.classList.toggle("disabled", !data.has_previous);
+                    nextPage.classList.toggle("disabled", !data.has_next);
+
+                    // Generate dynamic page numbers
+                    generatePageNumbers();
+                }
+            })
+            .catch(error => {
+                spinner.style.display = "none";
+                staffList.innerHTML = "<p class='text-center text-muted'>Error fetching data.</p>";
+                console.error("Error fetching staff:", error);
+            });
+        }
+
+        function generatePageNumbers() {
+            pageNumbersContainer.innerHTML = "";
+            
+            const maxPagesToShow = 4;
+            let startPage = Math.max(1, currentPage - 2);
+            let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+            if (endPage - startPage + 1 < maxPagesToShow) {
+                startPage = Math.max(1, endPage - maxPagesToShow + 1);
+            }
+
+            if (startPage > 1) {
+                const firstPageLink = document.createElement("a");
+                firstPageLink.href = "#";
+                firstPageLink.className = "page-number";
+                firstPageLink.textContent = "1";
+                firstPageLink.setAttribute("aria-label", "Go to page 1");
+                firstPageLink.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fetchStaff(searchInput.value, 1);
                 });
-                // Update pagination data
-                currentPage = data.current_page;
-                totalPages = data.total_pages;
-                totalItems = data.total_items || (data.total_pages * itemsPerPage);
-                // Update page info
-                const startItem = (currentPage - 1) * itemsPerPage + 1;
-                const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-                pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} customers`;
-                // Update Previous/Next buttons
-                prevPage.classList.toggle("disabled", !data.has_previous);
-                nextPage.classList.toggle("disabled", !data.has_next);
-                // Generate dynamic page numbers
-                generatePageNumbers();
+                pageNumbersContainer.appendChild(firstPageLink);
+
+                if (startPage > 2) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.textContent = "...";
+                    ellipsis.style.margin = "0 5px";
+                    pageNumbersContainer.appendChild(ellipsis);
+                }
             }
-        })
-        .catch(error => {
-            spinner.style.display = "none";
-            memberList.innerHTML = `
-                <div class="text-center py-5">
-                    <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
-                    <h5 class="text-muted mb-3">Error loading data</h5>
-                    <p class="text-muted mb-4">Please try again later</p>
-                    <button class="btn btn-primary px-4" onclick="fetchMembers('', 1)">
-                        <i class="fas fa-sync-alt me-2"></i>Retry
-                    </button>
-                </div>
-            `;
-            console.error("Error fetching customers:", error);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const pageLink = document.createElement("a");
+                pageLink.href = "#";
+                pageLink.className = `page-number${i === currentPage ? " active" : ""}`;
+                pageLink.textContent = i;
+                pageLink.setAttribute("aria-label", `Go to page ${i}`);
+                pageLink.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fetchStaff(searchInput.value, i);
+                });
+                pageNumbersContainer.appendChild(pageLink);
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.textContent = "...";
+                    ellipsis.style.margin = "0 5px";
+                    pageNumbersContainer.appendChild(ellipsis);
+                }
+
+                const lastPageLink = document.createElement("a");
+                lastPageLink.href = "#";
+                lastPageLink.className = "page-number";
+                lastPageLink.textContent = totalPages;
+                lastPageLink.setAttribute("aria-label", `Go to page ${totalPages}`);
+                lastPageLink.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    fetchStaff(searchInput.value, totalPages);
+                });
+                pageNumbersContainer.appendChild(lastPageLink);
+            }
+        }
+
+        searchInput.addEventListener("input", function() {
+            fetchStaff(searchInput.value, 1);
         });
-    }
-    
-    function generatePageNumbers() {
-        pageNumbersContainer.innerHTML = "";
-        
-        const maxPagesToShow = 4;
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-        if (endPage - startPage + 1 < maxPagesToShow) {
-            startPage = Math.max(1, endPage - maxPagesToShow + 1);
-        }
-        if (startPage > 1) {
-            const firstPageLink = document.createElement("a");
-            firstPageLink.href = "#";
-            firstPageLink.className = "page-number";
-            firstPageLink.textContent = "1";
-            firstPageLink.setAttribute("aria-label", "Go to page 1");
-            firstPageLink.addEventListener("click", (e) => {
-                e.preventDefault();
-                fetchMembers(searchInput.value, 1);
+
+        prevPage.addEventListener("click", function(e) {
+            e.preventDefault();
+            if (currentPage > 1) fetchStaff(searchInput.value, currentPage - 1);
+        });
+
+        nextPage.addEventListener("click", function(e) {
+            e.preventDefault();
+            if (currentPage < totalPages) fetchStaff(searchInput.value, currentPage + 1);
+        });
+
+        fetchStaff("");
+
+        // Accessibility: Keyboard navigation for pagination
+        document.querySelectorAll(".page-number, #prev-page, #next-page").forEach(link => {
+            link.addEventListener("keydown", function(e) {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    link.click();
+                }
             });
-            pageNumbersContainer.appendChild(firstPageLink);
-            if (startPage > 2) {
-                const ellipsis = document.createElement("span");
-                ellipsis.textContent = "...";
-                ellipsis.style.margin = "0 5px";
-                pageNumbersContainer.appendChild(ellipsis);
-            }
-        }
-        for (let i = startPage; i <= endPage; i++) {
-            const pageLink = document.createElement("a");
-            pageLink.href = "#";
-            pageLink.className = `page-number${i === currentPage ? " active" : ""}`;
-            pageLink.textContent = i;
-            pageLink.setAttribute("aria-label", `Go to page ${i}`);
-            pageLink.addEventListener("click", (e) => {
-                e.preventDefault();
-                fetchMembers(searchInput.value, i);
-            });
-            pageNumbersContainer.appendChild(pageLink);
-        }
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                const ellipsis = document.createElement("span");
-                ellipsis.textContent = "...";
-                ellipsis.style.margin = "0 5px";
-                pageNumbersContainer.appendChild(ellipsis);
-            }
-            const lastPageLink = document.createElement("a");
-            lastPageLink.href = "#";
-            lastPageLink.className = "page-number";
-            lastPageLink.textContent = totalPages;
-            lastPageLink.setAttribute("aria-label", `Go to page ${totalPages}`);
-            lastPageLink.addEventListener("click", (e) => {
-                e.preventDefault();
-                fetchMembers(searchInput.value, totalPages);
-            });
-            pageNumbersContainer.appendChild(lastPageLink);
-        }
-    }
-    
-    let debounceTimeout;
-    searchInput.addEventListener("input", function() {
-        clearTimeout(debounceTimeout);
-        debounceTimeout = setTimeout(() => fetchMembers(searchInput.value, 1), 300);
-    });
-    
-    prevPage.addEventListener("click", function(e) {
-        e.preventDefault();
-        if (currentPage > 1) fetchMembers(searchInput.value, currentPage - 1);
-    });
-    
-    nextPage.addEventListener("click", function(e) {
-        e.preventDefault();
-        if (currentPage < totalPages) fetchMembers(searchInput.value, currentPage + 1);
-    });
-    
-    // Accessibility: Keyboard navigation for pagination and tabs
-    document.querySelectorAll(".page-number, #prev-page, #next-page, .nav-link").forEach(link => {
-        link.addEventListener("keydown", function(e) {
-            if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                link.click();
-            }
         });
     });
-    
-    fetchMembers("");
-});
+
+    // Auto-dismiss alerts after 5 seconds
+    document.addEventListener('DOMContentLoaded', function () {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.classList.remove('show');
+                setTimeout(() => alert.style.display = 'none', 500);
+            }, 5000);
+        });
+    });
 </script>
 {% endblock %}

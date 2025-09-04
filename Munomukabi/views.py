@@ -48,6 +48,23 @@ from django.http import JsonResponse
 from .models import Member
 
 
+from functools import wraps
+
+from functools import wraps
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import redirect
+
+def superuser_or_redirect(view_func):
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, "You do not have permission to access this page.")
+            # Redirect to previous page if available, else fallback
+            return redirect(request.META.get('HTTP_REFERER', 'staff_management:staff_dashboard'))
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 
 
@@ -1440,6 +1457,7 @@ def search_members(request):
                     'gender': customer.gender,
                     'age': customer.age,
                     'village': customer.village,
+                    'branch': str(customer.branch.name) if customer.branch else 'NA',
                     'phone': customer.phone,
                     'profile_picture': customer.profile_picture.url if customer.profile_picture else None,
                 }

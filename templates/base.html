@@ -11,6 +11,12 @@
     <!-- Favicons -->
     <link href="{% static 'assets/img/favicon.png' %}" rel="icon">
     <link href="{% static 'assets/img/apple-touch-icon.png' %}" rel="apple-touch-icon">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-pV3v+U6u4u+1Dq1cF+4vNqgFvK6j+Dw6SxQ6eIb2U4NU3v1uK9U0Zp/1N+7xJ5hOCaF9EoNwUJGhTdYd9rGSag==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
 
     <!-- Google Fonts: Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -727,13 +733,11 @@
                 </a>
             </li>
             {% endif %}
-            {% if 'Settings' in allowed_modules %}
+            {% if 'Groups' in allowed_modules %}
             <li>
-                <a href="{% url 'setting' %}">
-                    <span class="icon">
-                        <ion-icon name="settings-outline"></ion-icon>
-                    </span>
-                    <span class="title">Settings</span>
+                <a href="#" aria-label="Groups">
+                    <span class="icon"><i class="fas fa-users"></i></span>
+                    <span class="title">Groups</span>
                 </a>
             </li>
             {% endif %}

@@ -21,6 +21,24 @@ from django.shortcuts import render, redirect
 from .models import CustomUser
 from .models import UserSession  # assuming you have this model
 
+
+from functools import wraps
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import redirect
+
+def superuser_or_redirect(view_func):
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, "You do not have permission to access this page.")
+            # Redirect to previous page if available, else fallback
+            return redirect(request.META.get('HTTP_REFERER', 'staff_management:staff_dashboard'))
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
 MAX_FAILED_ATTEMPTS = 3
 
 def user_login(request):
@@ -609,6 +627,7 @@ from .forms import CustomUserCreationForm
 from .models import CustomUser
 
 @login_required
+@superuser_or_redirect
 def create_user(request):
     if not request.user.is_staff and not request.user.is_superuser:
         messages.error(request, "Only admins can create users.")
@@ -642,8 +661,9 @@ def create_user(request):
     return render(request, "users/create_user.html", {"form": form})
 
 
-    
+   
 @login_required
+@superuser_or_redirect 
 def edit_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if not request.user.is_staff and not request.user.is_superuser:
@@ -665,6 +685,7 @@ def edit_user(request, user_id):
     return render(request, "users/edit_user.html", {"form": form, "user": user})
 
 @login_required
+@superuser_or_redirect 
 def toggle_user_status(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if not request.user.is_staff and not request.user.is_superuser:
@@ -678,6 +699,7 @@ def toggle_user_status(request, user_id):
     return redirect("user_list")
 
 @login_required
+@superuser_or_redirect 
 def delete_user(request, user_id):
     user = get_object_or_404(User, id=user_id)
     if not request.user.is_staff and not request.user.is_superuser:

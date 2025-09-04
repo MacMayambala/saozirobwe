@@ -90,6 +90,7 @@ class CustomUser(models.Model):
         null=True,  # Keep null=True for database but enforce required in forms
         verbose_name="Branch"
     )
+    
     failed_login_attempts = models.IntegerField(default=0)
     password_expired = models.BooleanField(default=True)
     last_password_change = models.DateTimeField(null=True, blank=True)  # 👈 track last change

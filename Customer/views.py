@@ -2,6 +2,27 @@ from django.contrib import messages
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import CustomerForm
+
+
+from functools import wraps
+from functools import wraps
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.shortcuts import redirect
+
+def superuser_or_redirect(view_func):
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, "You do not have permission to access this page.")
+            # Redirect to previous page if available, else fallback
+            return redirect(request.META.get('HTTP_REFERER', 'staff_management:staff_dashboard'))
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+
+
 @login_required
 def registermember(request):
     if request.method == "POST":

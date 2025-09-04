@@ -1,7 +1,24 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Staff, StaffTargetType, Target, Department, Position, TargetTransaction
+from functools import wraps
+
+from functools import wraps
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.shortcuts import redirect
+
+def superuser_or_redirect(view_func):
+    @wraps(view_func)
+    @login_required
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, "You do not have permission to access this page.")
+            # Redirect to previous page if available, else fallback
+            return redirect(request.META.get('HTTP_REFERER', 'staff_management:staff_dashboard'))
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
 
 
 # staff_management/views.py
@@ -122,6 +139,7 @@ from django.contrib import messages
 from .models import Staff
 from .forms import StaffForm
 @login_required
+@superuser_or_redirect
 def add_staff(request):
     if request.method == 'POST':
         form = StaffForm(request.POST, request.FILES)
@@ -164,6 +182,7 @@ from django.utils import timezone
 from decimal import Decimal
 from .models import Staff, Target, TargetTransaction, StaffTargetType
 @login_required
+@superuser_or_redirect
 def add_target(request, staff_id):
     staff = get_object_or_404(Staff, id=staff_id)
     target_types = StaffTargetType.objects.all()
@@ -260,6 +279,7 @@ from .models import Target, TargetTransaction
 logger = logging.getLogger(__name__)
 
 @login_required
+@superuser_or_redirect
 def update_target(request, target_id):
     target = get_object_or_404(Target, id=target_id)
     logger.debug(f"Target object: {target.__dict__}")
@@ -362,7 +382,19 @@ class BranchForm(forms.ModelForm):
             raise forms.ValidationError("Branch name cannot be empty.")
         return name
 
+from functools import wraps
+
+def superuser_or_redirect(view_func):
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_superuser:
+            messages.error(request, "You do not have permission to access this page.")
+            return redirect('staff_management:staff_dashboard')
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
 @login_required
+@superuser_or_redirect
 def add_branch(request):
     if request.method == 'POST':
         form = BranchForm(request.POST)
@@ -376,8 +408,8 @@ def add_branch(request):
         form = BranchForm()
     return render(request, 'staff_management/add_branch.html', {'form': form})
 
-
 @login_required
+@superuser_or_redirect
 def delete_target(request, target_id):
     target = get_object_or_404(Target, id=target_id)
     staff_id = target.staff.id
@@ -421,7 +453,11 @@ def view_performance(request, staff_id):
         'latest_approved_leave': latest_approved_leave,
     })
 
+def superuser_required(user):
+    return user.is_superuser
+
 @login_required
+@superuser_or_redirect
 def add_position(request):
     if request.method == 'POST':
         try:
@@ -437,6 +473,9 @@ def add_position(request):
 
 @login_required
 def add_department(request):
+    if not request.user.is_superuser:
+        messages.error(request, "You do not have permission to add a department.")
+        return redirect('staff_management:staff_dashboard')
     if request.method == 'POST':
         try:
             name = request.POST['name']
