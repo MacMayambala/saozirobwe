@@ -169,6 +169,9 @@ class Customer(models.Model):
             else:
                 last_number = 1
             self.cus_id = f"{branch_code}{year_suffix:02d}{str(last_number).zfill(5)}"
+        # ✅ ID number validation: only accept 14 characters, otherwise NULL
+        if self.id_number and len(str(self.id_number)) != 14:
+           self.id_number = None
 
         # ✅ Phone validation: only accept 12 characters, otherwise NULL
         for field in ['phone', 'phone_number2', 'kin_phone']:
