@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-
 {% block title %}Members - Sao Zirobwe SACCO{% endblock %}
-
 {% block content %}
 <div class="container">
     <div class="header-section d-flex justify-content-between align-items-center mb-4">
@@ -17,25 +15,22 @@
             <ul class="nav nav-tabs mb-3" role="tablist">
                 <li class="nav-item"><a class="nav-link active" href="#" role="tab" aria-selected="true">INDIVIDUALS</a></li>
             </ul>
-
             <!-- Search Bar -->
             <div class="mb-3">
                 <input type="text" id="search_member" class="form-control" placeholder="Search customers" aria-label="Search customers">
             </div>
-
             <!-- Spinner -->
             <div id="loading-spinner" class="text-center mt-3" style="display: none;" aria-live="polite">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading customers...</span>
                 </div>
             </div>
-
             <!-- Customer List -->
             <div class="member-list" id="member-list" role="region" aria-label="Customer List">
                 {% for customer in customers %}
                 <div class="card mb-2 border-0 border-bottom member-card">
                     <div class="member-row d-flex align-items-center p-3">
-                        <div class="member-info flex-2" style="flex-basis: 40%; min-width: 250px;">
+                        <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
                             <div class="d-flex align-items-center gap-3">
                                 {% if customer.profile_picture %}
                                     <img src="{{ customer.profile_picture.url }}" alt="{{ customer.first_name }} {{ customer.surname }}" class="rounded-circle profile-placeholder" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid var(--primary-color);">
@@ -54,18 +49,18 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="member-meta flex-1" style="flex-basis: 30%; min-width: 150px;">
-                            <p class="text-muted mb-1">{{ customer.gender }}</p>
+                        <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
+                            <p class="text-muted mb-1"><strong>Branch:</strong> {{ customer.branch|default:"Busiika Branch" }}</p>
+                            <p class="text-muted mb-1"><strong>Gender:</strong> {{ customer.gender }}</p>
                             <p class="text-muted mb-1">
                                 {% if customer.age %}
-                                    {{ customer.age }} YEARS
+                                    <strong>Age:</strong> {{ customer.age }} YEARS
                                 {% else %}
-                                    N/A YEARS
+                                    <strong>Age:</strong> N/A
                                 {% endif %}
                             </p>
-                            <p class="text-muted mb-1">{{ customer.village|default:"N/A" }}</p>
                         </div>
-                       <div class="member-meta flex-1" style="flex-basis: 30%; min-width: 200px;">
+                       <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
                             <ul class="list-unstyled mb-0">
                                 <li class="d-flex align-items-center mb-1">
                                     <i class="fas fa-phone me-2 text-primary"></i>
@@ -76,14 +71,13 @@
                                     <span>{{ customer.village|default:"N/A" }}</span>
                                 </li>
                             </ul>
-                        </div>>
+                        </div>
                     </div>
                 </div>
                 {% empty %}
                 <p class="text-center text-muted">No customers found. <a href="{% url 'member_registration' %}" class="text-primary">Register a new customer</a> to get started.</p>
                 {% endfor %}
             </div>
-
             <!-- Pagination -->
             <div class="pagination d-flex justify-content-center align-items-center gap-2 mt-3" id="pagination">
                 <span id="page-info" class="text-muted" style="min-width: 150px; text-align: center;"></span>
@@ -94,7 +88,6 @@
         </div>
     </div>
 </div>
-
 <style>
     :root {
         --primary-color: #16508e;
@@ -111,18 +104,15 @@
         --border-dark: #3a4445;
         --transition: all 0.3s ease;
     }
-
     .container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px 15px;
         width: 100%;
     }
-
     .main.active .container {
         max-width: 1400px;
     }
-
     h2 {
         color: var(--text-dark);
         font-weight: 600;
@@ -130,11 +120,9 @@
         font-size: 1.8rem;
         margin: 0;
     }
-
     .dark-mode h2 {
         color: var(--text-light);
     }
-
     .card {
         border-radius: 12px;
         background: #ffffff;
@@ -143,17 +131,14 @@
         backdrop-filter: blur(6px);
         transition: var(--transition);
     }
-
     .dark-mode .card {
         background: var(--dark-card-bg);
         border: 1px solid var(--border-dark);
         box-shadow: var(--shadow-dark);
     }
-
     .card-body {
         padding: 1.5rem;
     }
-
     .form-control {
         border: 1px solid #e0e0e0;
         border-radius: 8px;
@@ -164,25 +149,21 @@
         background: #f8f9fa;
         transition: var(--transition);
     }
-
     .dark-mode .form-control {
         background: var(--border-dark);
         color: var(--text-light);
         border-color: var(--border-dark);
     }
-
     .form-control:focus {
         border-color: var(--primary-color);
         background: #ffffff;
         box-shadow: 0 0 8px rgba(22, 80, 142, 0.2);
         outline: none;
     }
-
     .dark-mode .form-control:focus {
         background: #ffffff;
         color: var(--text-dark);
     }
-
     .btn-primary {
         background: var(--primary-color);
         border: none;
@@ -194,13 +175,11 @@
         color: #ffffff;
         transition: var(--transition);
     }
-
     .btn-primary:hover {
         background: var(--primary-dark);
         transform: scale(1.05);
         box-shadow: var(--shadow-light);
     }
-
     .btn-outline-primary {
         border-color: var(--primary-color);
         color: var(--primary-color);
@@ -211,23 +190,19 @@
         font-family: 'Poppins', sans-serif;
         transition: var(--transition);
     }
-
     .btn-outline-primary:hover {
         background: var(--primary-color);
         color: #ffffff;
         transform: scale(1.05);
     }
-
     .btn-outline-primary.disabled {
         border-color: #adb5bd;
         color: #adb5bd;
         pointer-events: none;
     }
-
     .nav-tabs {
         border-bottom: 2px solid var(--primary-color);
     }
-
     .nav-tabs .nav-link {
         font-family: 'Poppins', sans-serif;
         font-weight: 600;
@@ -238,52 +213,42 @@
         padding: 8px 16px;
         transition: var(--transition);
     }
-
     .nav-tabs .nav-link:hover {
         color: var(--primary-dark);
         border-bottom: 2px solid var(--primary-dark);
     }
-
     .nav-tabs .nav-link.active {
         color: var(--primary-color);
         border-bottom: 2px solid var(--primary-color);
         background: transparent;
     }
-
     .dark-mode .nav-tabs .nav-link {
         color: var(--text-light);
     }
-
     .dark-mode .nav-tabs .nav-link:hover {
         color: var(--text-light);
         border-bottom: 2px solid var(--text-light);
     }
-
     .dark-mode .nav-tabs .nav-link.active {
         color: var(--primary-color);
         border-bottom: 2px solid var(--primary-color);
     }
-
     .member-list .card {
         border-radius: 8px;
         border-bottom: 1px solid #e9ecef;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
-
     .dark-mode .member-list .card {
         border-bottom: 1px solid var(--border-dark);
     }
-
     .member-list .card:hover {
         transform: translateY(-3px);
         box-shadow: var(--shadow-dark);
         background: #f8f9fa;
     }
-
     .dark-mode .member-list .card:hover {
         background: var(--dark-accent, #2c3a3c);
     }
-
     .member-row {
         display: flex;
         align-items: center;
@@ -291,18 +256,15 @@
         gap: 16px;
         width: 100%;
     }
-
     .member-info {
         display: flex;
         align-items: center;
         flex-wrap: nowrap;
     }
-
     .member-info .member-name {
         flex-grow: 1;
         min-width: 0;
     }
-
     .member-info h5 {
         font-weight: 600;
         font-family: 'Poppins', sans-serif;
@@ -312,20 +274,16 @@
         text-overflow: ellipsis;
         max-width: 200px;
     }
-
     .member-info h5 a {
         color: var(--text-dark);
         transition: var(--transition);
     }
-
     .dark-mode .member-info h5 a {
         color: var(--text-light);
     }
-
     .member-info h5 a:hover {
         color: var(--primary-color);
     }
-
     .member-meta p {
         font-weight: 400;
         font-family: 'Poppins', sans-serif;
@@ -335,7 +293,13 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-
+    .member-meta p strong {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    .dark-mode .member-meta p strong {
+        color: var(--text-light);
+    }
     .member-actions {
         display: flex;
         align-items: center;
@@ -343,7 +307,6 @@
         gap: 12px;
         flex-wrap: wrap;
     }
-
     .member-actions a,
     .member-actions span {
         font-weight: 400;
@@ -352,37 +315,30 @@
         text-decoration: none;
         transition: var(--transition);
     }
-
     .text-primary {
         color: var(--primary-color) !important;
         font-weight: 600;
         transition: var(--transition);
     }
-
     .text-primary:hover {
         color: var(--primary-dark) !important;
         transform: scale(1.05);
     }
-
     .text-muted {
         font-weight: 400;
         font-family: 'Poppins', sans-serif;
     }
-
     .profile-placeholder {
         transition: var(--transition);
     }
-
     .dark-mode .profile-placeholder {
         background: linear-gradient(135deg, #3a4445, #2a3435);
         color: var(--text-light);
         border-color: var(--text-light);
     }
-
     .pagination {
         gap: 8px !important;
     }
-
     .pagination a.page-number {
         padding: 6px 12px;
         border: 1px solid var(--primary-color);
@@ -396,116 +352,94 @@
         margin: 0 3px;
         transition: var(--transition);
     }
-
     .pagination a.page-number:hover {
         background: var(--primary-color);
         color: #ffffff;
         transform: scale(1.05);
     }
-
     .pagination a.page-number.active {
         background: var(--primary-color);
         color: #ffffff;
         border-color: var(--primary-color);
     }
-
     .dark-mode .pagination a.page-number {
         background: var(--dark-card-bg);
         color: var(--text-light);
         border-color: var(--text-light);
     }
-
     .dark-mode .pagination a.page-number:hover {
         background: var(--primary-color);
         color: #ffffff;
     }
-
     .dark-mode .pagination a.page-number.active {
         background: var(--primary-color);
         color: #ffffff;
     }
-
     .spinner-border {
         width: 2rem;
         height: 2rem;
         border-width: 0.3em;
         animation: spin 1s linear infinite;
     }
-
     @keyframes spin {
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
     }
-
     @media (max-width: 991px) {
         .container {
             padding: 15px 10px;
         }
-
         .card-body {
             padding: 1.25rem;
         }
-
         .member-row {
             flex-direction: column;
             align-items: flex-start;
             gap: 12px;
         }
-
         .member-info,
         .member-meta,
         .member-actions {
             flex-basis: 100% !important;
             min-width: 0;
         }
-
         .member-actions {
             justify-content: flex-start;
         }
-
         .member-meta {
             text-align: left;
         }
     }
-
     @media (max-width: 480px) {
         .container {
             padding: 10px 8px;
         }
-
         .card-body {
             padding: 1rem;
         }
-
         h2 {
             font-size: 1.6rem;
         }
-
         .btn-primary {
             padding: 6px 12px;
             font-size: 0.9rem;
         }
-
         .member-info h5 {
             font-size: 0.95rem;
             max-width: 150px;
         }
-
         .member-meta p,
         .member-actions a,
         .member-actions span {
             font-size: 0.85rem;
         }
-
         .member-info .member-name {
             max-width: 100%;
         }
-
         .profile-placeholder {
             font-size: 0.8rem;
         }
     }
-
     /* Accessibility */
     a:focus,
     button:focus,
@@ -515,7 +449,6 @@
         outline-offset: 2px;
     }
 </style>
-
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const searchInput = document.getElementById("search_member");
@@ -525,20 +458,16 @@ document.addEventListener("DOMContentLoaded", function() {
     const nextPage = document.getElementById("next-page");
     const pageInfo = document.getElementById("page-info");
     const pageNumbersContainer = document.getElementById("page-numbers");
-
     // Base URLs for dynamic construction
     const searchUrl = "{% url 'search_members' %}";
     const memberSumUrlBase = "{% url 'memberSum' 0 %}".replace('0/', '');
-
     let currentPage = 1;
     let totalPages = 1;
     let totalItems = 0;
     const itemsPerPage = 5;
-
     function fetchMembers(query, page = 1) {
         spinner.style.display = "block";
         memberList.innerHTML = '<div class="text-center text-muted">Loading...</div>';
-
         fetch(`${searchUrl}?search=${encodeURIComponent(query)}&page=${page}`, {
             headers: { "X-Requested-With": "XMLHttpRequest" }
         })
@@ -549,7 +478,6 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(data => {
             spinner.style.display = "none";
             memberList.innerHTML = "";
-
             if (data.customers.length === 0) {
                 memberList.innerHTML = `<p class="text-center text-muted">No customers found. <a href="{% url 'member_registration' %}" class="text-primary">Register a new customer</a> to get started.</p>`;
             } else {
@@ -557,7 +485,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     const memberCard = `
                         <div class="card mb-2 border-0 border-bottom member-card">
                             <div class="member-row d-flex align-items-center p-3">
-                                <div class="member-info flex-2" style="flex-basis: 40%; min-width: 250px;">
+                                <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
                                     <div class="d-flex align-items-center gap-3">
                                         ${customer.profile_picture ?
                                             `<img src="${customer.profile_picture}" alt="${customer.first_name} ${customer.surname}" class="rounded-circle profile-placeholder" style="width: 40px; height: 40px; object-fit: cover; border: 2px solid var(--primary-color);">` :
@@ -572,37 +500,39 @@ document.addEventListener("DOMContentLoaded", function() {
                                         </div>
                                     </div>
                                 </div>
-                                <div class="member-meta flex-1" style="flex-basis: 30%; min-width: 150px;">
-                                    <p class="text-muted mb-1">${customer.gender}</p>
-                                    <p class="text-muted mb-1">${customer.age ? customer.age + ' YEARS' : 'N/A YEARS'}</p>
-                                    <p class="text-muted mb-1">${customer.village || 'N/A'}</p>
+                                <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
+                                    <p class="text-muted mb-1"><strong>Branch:</strong> ${customer.branch || "Busiika Branch"}</p>
+                                    <p class="text-muted mb-1"><strong>Gender:</strong> ${customer.gender}</p>
+                                    <p class="text-muted mb-1"><strong>Age:</strong> ${customer.age ? customer.age + ' YEARS' : 'N/A'}</p>
                                 </div>
-                                <div class="member-actions flex-1 d-flex gap-3 justify-content-end" style="flex-basis: 30%; min-width: 200px;">
-                                    ${customer.phone ?
-                                        `<a href="tel:${customer.phone}" class="text-primary action-link d-flex align-items-center" aria-label="Call ${customer.first_name}"><i class="fas fa-phone me-1"></i>+${customer.phone}</a>` :
-                                        `<span class="text-muted d-flex align-items-center"><i class="fas fa-phone me-1"></i>N/A</span>`}
-                                    <a href="#" class="text-primary action-link d-flex align-items-center" aria-label="View ${customer.first_name}'s Village"><i class="fas fa-map-marker-alt me-1"></i>${customer.village || 'N/A'}</a>
+                                <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="d-flex align-items-center mb-1">
+                                            <i class="fas fa-phone me-2 text-primary"></i>
+                                            <span>${customer.phone || "N/A"}</span>
+                                        </li>
+                                        <li class="d-flex align-items-center">
+                                            <i class="fas fa-map-marker-alt me-2 text-secondary"></i>
+                                            <span>${customer.village || "N/A"}</span>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                     `;
                     memberList.innerHTML += memberCard;
                 });
-
                 // Update pagination data
                 currentPage = data.current_page;
                 totalPages = data.total_pages;
                 totalItems = data.total_items || (data.total_pages * itemsPerPage);
-
                 // Update page info
                 const startItem = (currentPage - 1) * itemsPerPage + 1;
                 const endItem = Math.min(currentPage * itemsPerPage, totalItems);
                 pageInfo.textContent = `${startItem} - ${endItem} of ${totalItems} INDIVIDUALS`;
-
                 // Update Previous/Next buttons
                 prevPage.classList.toggle("disabled", !data.has_previous);
                 nextPage.classList.toggle("disabled", !data.has_next);
-
                 // Generate dynamic page numbers
                 generatePageNumbers();
             }
@@ -613,18 +543,15 @@ document.addEventListener("DOMContentLoaded", function() {
             console.error("Error fetching customers:", error);
         });
     }
-
     function generatePageNumbers() {
         pageNumbersContainer.innerHTML = "";
         
         const maxPagesToShow = 4;
         let startPage = Math.max(1, currentPage - 2);
         let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
-
         if (endPage - startPage + 1 < maxPagesToShow) {
             startPage = Math.max(1, endPage - maxPagesToShow + 1);
         }
-
         if (startPage > 1) {
             const firstPageLink = document.createElement("a");
             firstPageLink.href = "#";
@@ -636,7 +563,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 fetchMembers(searchInput.value, 1);
             });
             pageNumbersContainer.appendChild(firstPageLink);
-
             if (startPage > 2) {
                 const ellipsis = document.createElement("span");
                 ellipsis.textContent = "...";
@@ -644,7 +570,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 pageNumbersContainer.appendChild(ellipsis);
             }
         }
-
         for (let i = startPage; i <= endPage; i++) {
             const pageLink = document.createElement("a");
             pageLink.href = "#";
@@ -657,7 +582,6 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             pageNumbersContainer.appendChild(pageLink);
         }
-
         if (endPage < totalPages) {
             if (endPage < totalPages - 1) {
                 const ellipsis = document.createElement("span");
@@ -665,7 +589,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 ellipsis.style.margin = "0 5px";
                 pageNumbersContainer.appendChild(ellipsis);
             }
-
             const lastPageLink = document.createElement("a");
             lastPageLink.href = "#";
             lastPageLink.className = "page-number";
@@ -678,23 +601,19 @@ document.addEventListener("DOMContentLoaded", function() {
             pageNumbersContainer.appendChild(lastPageLink);
         }
     }
-
     let debounceTimeout;
     searchInput.addEventListener("input", function() {
         clearTimeout(debounceTimeout);
         debounceTimeout = setTimeout(() => fetchMembers(searchInput.value, 1), 300);
     });
-
     prevPage.addEventListener("click", function(e) {
         e.preventDefault();
         if (currentPage > 1) fetchMembers(searchInput.value, currentPage - 1);
     });
-
     nextPage.addEventListener("click", function(e) {
         e.preventDefault();
         if (currentPage < totalPages) fetchMembers(searchInput.value, currentPage + 1);
     });
-
     // Accessibility: Keyboard navigation for pagination and tabs
     document.querySelectorAll(".page-number, #prev-page, #next-page, .nav-link").forEach(link => {
         link.addEventListener("keydown", function(e) {
@@ -704,7 +623,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         });
     });
-
     fetchMembers("");
 });
 </script>

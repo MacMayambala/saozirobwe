@@ -6,7 +6,8 @@ from .views import (
     create_user, edit_user, toggle_user_status, delete_user,
     reset_password_set,  # Added missing import
     reset_password_verify,  # Added missing import
-    forgot_password  # Added missing import
+    forgot_password,  # Added missing import
+    force_password_change  # Added missing import
 )
 from django.urls import path
 
@@ -36,5 +37,6 @@ urlpatterns = [
     path("forgot-password/", forgot_password, name="forgot_password"),
     path("reset-password/verify/", reset_password_verify, name="reset_password_verify"),
     path("reset-password/set/", reset_password_set, name="reset_password_set"),
+    path("force-password-change/", force_password_change, name="force_password_change"),
     
 ]

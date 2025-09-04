@@ -92,6 +92,7 @@ class CustomUser(models.Model):
     )
     failed_login_attempts = models.IntegerField(default=0)
     password_expired = models.BooleanField(default=True)
+    last_password_change = models.DateTimeField(null=True, blank=True)  # 👈 track last change
 
     def __str__(self):
         return f"{self.user.username} - {self.branch.name if self.branch else 'No Branch'}"

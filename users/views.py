@@ -37,7 +37,7 @@ def user_login(request):
             custom_user = None
 
         if user_obj and not user_obj.is_active:
-            messages.error(request, "Your account is inactive. Please contact a superuser to reactivate.")
+            messages.error(request, "Your account is inactive. Please contact a Admin to reactivate.")
             return render(request, "login/auth/login.html")
 
         user = authenticate(request, username=username, password=password)
@@ -68,7 +68,7 @@ def user_login(request):
                 if custom_user.failed_login_attempts >= MAX_FAILED_ATTEMPTS:
                     user_obj.is_active = False  # deactivate account
                     user_obj.save()
-                    messages.error(request, "Your account has been deactivated due to too many failed login attempts. Contact a superuser.")
+                    messages.error(request, "Your account has been deactivated due to too many failed login attempts. Contact a Admin.")
                 custom_user.save()
 
     return render(request, "login/auth/login.html")
@@ -333,6 +333,15 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 import random
 
+
+from django.contrib import messages
+from django.shortcuts import redirect
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.urls import reverse
+import random
+from django.contrib.auth.decorators import login_required
+
 @login_required
 def resend_otp(request):
     user = request.user
@@ -341,11 +350,15 @@ def resend_otp(request):
     new_otp = random.randint(100000, 999999)
 
     # Store OTP in session
-    request.session["otp"] = new_otp
+    request.session["otp"] = str(new_otp)  # Store as string to avoid serialization issues
     request.session.modified = True  # Ensure session updates
 
     # Check user's preferred OTP method
-    preferred_method = getattr(user.profile, "otp_method", "email")  # Default to email
+    try:
+        preferred_method = getattr(user.profile, "otp_method", "email")  # Default to email
+    except AttributeError:
+        preferred_method = "email"  # Fallback if profile doesn't exist
+        messages.warning(request, "OTP method not set, defaulting to email.")
 
     if preferred_method == "email":
         try:
@@ -356,7 +369,7 @@ def resend_otp(request):
 
             email = EmailMultiAlternatives(
                 subject="Verification Code",
-                body="",
+                body="Your OTP code is: {}".format(new_otp),  # Plain text fallback
                 from_email="noreply@saozirobwe.co.ug",
                 to=[user.email],
             )
@@ -365,13 +378,13 @@ def resend_otp(request):
 
             messages.success(request, "A new OTP has been sent to your email.")
         except Exception as e:
-            messages.error(request, f"Failed to send OTP: {e}")
-    
-    else:
+            messages.error(request, f"Failed to send OTP: {str(e)}")
+    elif preferred_method == "authenticator":
         messages.error(request, "Use Google Authenticator to generate the OTP.")
+    else:
+        messages.error(request, "Unsupported OTP method. Contact support.")
 
     return redirect(reverse("verify_2fa"))
-
 
 
 
@@ -397,7 +410,7 @@ def superuser_required(user):
 def superuser_or_redirect(view_func):
     def wrapper(request, *args, **kwargs):
         if not superuser_required(request.user):
-            messages.error(request, "You do not have permission to access this page. Only superusers are allowed.")
+            messages.error(request, "You do not have permission to access this page. ")
             referer = request.META.get('HTTP_REFERER', 'dashboard')
             return HttpResponseRedirect(referer)
         return view_func(request, *args, **kwargs)
@@ -831,6 +844,8 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.shortcuts import render
 from django.contrib.auth.models import User
+from .forms import CustomSetPasswordForm  # <-- Add this import
+from django.utils import timezone
 
 def users_list(request):
     users = User.objects.all().select_related('customuser__branch')
@@ -839,3 +854,24 @@ def users_list(request):
         u.branch_name = getattr(u.customuser.branch, "name", "N/A") if hasattr(u, "customuser") else "N/A"
     return render(request, 'users/user_list.html', {'users': users})
 
+@login_required
+def force_password_change(request):
+    if request.method == "POST":
+        form = CustomSetPasswordForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            # Update expiration flags
+            custom_user = request.user.customuser
+            custom_user.password_expired = False
+            custom_user.last_password_change = timezone.now()  # 👈 mark new date
+            custom_user.save()
+
+            # Save password in history
+            PasswordHistory.objects.create(user=request.user, password=request.user.password)
+
+            messages.success(request, "Password updated successfully! Please continue.")
+            return redirect("two_factor_auth")
+    else:
+        form = CustomSetPasswordForm(user=request.user)
+
+    return render(request, "users/force_password_change.html", {"form": form})
