@@ -55,7 +55,9 @@ INSTALLED_APPS = [
     'Customer',
     'delegates',
     'staff_management',
-    'Reports'
+    'Reports',
+    'Groups',
+    'Loans'
 ]
 
 MIDDLEWARE = [

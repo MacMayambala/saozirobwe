@@ -1,0 +1,295 @@
+<!-- templates/loans/portfolio.html -->
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Loan Portfolio Overview - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="header-section d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-chart-line me-2"></i>Loan Portfolio Overview</h2>
+      <p class="text-muted mb-0">View key metrics and performance of the loan portfolio</p>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-muted"><i class="fas fa-file-invoice me-2"></i>Total Loans</h6>
+          <h3 class="fw-bold">{{ summary.total_loans|default:0 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-muted"><i class="fas fa-coins me-2"></i>Total Disbursed</h6>
+          <h3 class="fw-bold">{{ summary.total_amount|default:0 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-muted"><i class="fas fa-balance-scale me-2"></i>Outstanding</h6>
+          <h3 class="fw-bold">{{ summary.total_outstanding|default:0 }}</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-muted"><i class="fas fa-exclamation-triangle me-2"></i>PAR &gt; 0</h6>
+          <h3 class="fw-bold text-danger">{{ par_0|default:0 }} ({{ par_0_pct|floatformat:1 }}%)</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-muted"><i class="fas fa-exclamation-triangle me-2"></i>PAR &gt; 30</h6>
+          <h3 class="fw-bold text-danger">{{ par_30|default:0 }} ({{ par_30_pct|floatformat:1 }}%)</h3>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body text-center">
+          <h6 class="text-muted"><i class="fas fa-exclamation-triangle me-2"></i>PAR &gt; 90</h6>
+          <h3 class="fw-bold text-danger">{{ par_90|default:0 }} ({{ par_90_pct|floatformat:1 }}%)</h3>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+          <h5 class="card-title"><i class="fas fa-chart-pie me-2"></i>Loan Status Distribution</h5>
+          <canvas id="statusChart" aria-label="Loan Status Distribution Chart"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="card shadow-sm border-0 rounded-3">
+        <div class="card-body">
+          <h5 class="card-title"><i class="fas fa-chart-bar me-2"></i>PAR Breakdown</h5>
+          <canvas id="parChart" aria-label="PAR Breakdown Chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root {
+    --primary-color: #16508e;
+    --primary-dark: #123e6b;
+    --secondary-color: #6c757d;
+    --text-dark: #2c3e50;
+    --text-light: #e9ecef;
+    --background-light: #f4f6f9;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+    --dark-card-bg: #2a3435;
+    --border-dark: #3a4445;
+    --transition: all 0.3s ease;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 15px;
+    width: 100%;
+  }
+
+  h2 {
+    color: var(--text-dark);
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem;
+    margin: 0;
+  }
+
+  .dark-mode h2 {
+    color: var(--text-light);
+  }
+
+  h3 {
+    color: var(--text-dark);
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    margin: 0;
+  }
+
+  .dark-mode h3 {
+    color: var(--text-light);
+  }
+
+  h5.card-title {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.1rem;
+  }
+
+  .dark-mode h5.card-title {
+    color: var(--text-light);
+  }
+
+  .card {
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: var(--shadow-light);
+    border: none;
+    transition: var(--transition);
+  }
+
+  .dark-mode .card {
+    background: var(--dark-card-bg);
+    border: 1px solid var(--border-dark);
+    box-shadow: var(--shadow-dark);
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .text-muted {
+    font-weight: 400;
+    font-family: 'Poppins', sans-serif;
+    color: #6c757d !important;
+    font-size: 0.9rem;
+  }
+
+  .text-danger {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+  }
+
+  canvas {
+    max-height: 300px;
+  }
+
+  /* Accessibility */
+  canvas:focus,
+  a:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 991px) {
+    .container {
+      padding: 15px 10px;
+    }
+    .card-body {
+      padding: 1.25rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 10px 8px;
+    }
+    h2 {
+      font-size: 1.6rem;
+    }
+    h3 {
+      font-size: 1.3rem;
+    }
+    h5.card-title {
+      font-size: 1rem;
+    }
+    .text-muted {
+      font-size: 0.85rem;
+    }
+    canvas {
+      max-height: 250px;
+    }
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const statusCtx = document.getElementById('statusChart').getContext('2d');
+  new Chart(statusCtx, {
+    type: 'pie',
+    data: {
+      labels: [{% for item in status_counts %}'{{ item.status|title }}',{% endfor %}],
+      datasets: [{
+        data: [{% for item in status_counts %}{{ item.count }},{% endfor %}],
+        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#ffc107', '#0dcaf0'],
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          position: 'top',
+          labels: {
+            font: {
+              family: 'Poppins, sans-serif',
+              size: 12,
+              weight: '400'
+            },
+            color: document.documentElement.classList.contains('dark-mode') ? '#e9ecef' : '#2c3e50'
+          }
+        }
+      }
+    }
+  });
+
+  const parCtx = document.getElementById('parChart').getContext('2d');
+  new Chart(parCtx, {
+    type: 'bar',
+    data: {
+      labels: ['PAR > 0', 'PAR > 30', 'PAR > 90'],
+      datasets: [{
+        label: 'Amount in Arrears',
+        data: [{{ par_0 }}, {{ par_30 }}, {{ par_90 }}],
+        backgroundColor: ['#dc3545', '#ff6b6b', '#ff3333'],
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            font: {
+              family: 'Poppins, sans-serif',
+              size: 12
+            },
+            color: document.documentElement.classList.contains('dark-mode') ? '#e9ecef' : '#2c3e50'
+          }
+        },
+        x: {
+          ticks: {
+            font: {
+              family: 'Poppins, sans-serif',
+              size: 12
+            },
+            color: document.documentElement.classList.contains('dark-mode') ? '#e9ecef' : '#2c3e50'
+          }
+        }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            font: {
+              family: 'Poppins, sans-serif',
+              size: 12
+            },
+            color: document.documentElement.classList.contains('dark-mode') ? '#e9ecef' : '#2c3e50'
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

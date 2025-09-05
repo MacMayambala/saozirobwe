@@ -3,138 +3,47 @@
 
 {% block content %}
 <div class="container py-4">
-    <style>
-        :root {
-            --primary-color: #16508e;
-            --secondary-color: #123e6b;
-            --text-color: #1a2533;
-            --muted-text: #6c757d;
-            --bg-light: #f8f9fa;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .settings-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 28px;
-            margin-top: 20px;
-        }
-
-        .settings-card {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            border-left: 4px solid var(--primary-color);
-            border-radius: 10px;
-            padding: 24px;
-            transition: all 0.25s ease;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .settings-card:hover {
-            transform: translateY(-5px);
-            border-left-color: var(--secondary-color);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-        }
-
-        .settings-card i {
-            font-size: 1.6rem;
-            color: var(--primary-color);
-            margin-bottom: 10px;
-        }
-
-        .settings-card a {
-            color: var(--primary-color);
-            font-weight: 600;
-            text-decoration: none;
-            font-size: 1.05rem;
-            margin-bottom: 6px;
-        }
-
-        .settings-card a:hover {
-            color: var(--secondary-color);
-        }
-
-        .settings-card p {
-            font-size: 0.9rem;
-            color: var(--muted-text);
-            margin: 0;
-        }
-
-        .section-heading {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--text-color);
-            margin-top: 40px;
-            margin-bottom: 16px;
-            border-left: 4px solid var(--primary-color);
-            padding-left: 12px;
-        }
-
-        .page-title {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--text-color);
-            margin-bottom: 25px;
-            text-align: left;
-        }
-
-        .breadcrumb {
-            background: transparent;
-            font-size: 0.9rem;
-        }
-
-        .breadcrumb a {
-            color: var(--primary-color);
-            text-decoration: none;
-        }
-
-        .breadcrumb a:hover {
-            text-decoration: underline;
-        }
-    </style>
-
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb mb-3">
-            <li class="breadcrumb-item"><a href="{% url 'delegate_list' %}">Home</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Settings</li>
-        </ol>
-    </nav>
-
-    <h2 class="page-title">⚙️ System Settings</h2>
+    <!-- Header Section -->
+    <header class="header-section d-flex justify-content-between align-items-center mb-4 sticky-top bg-white py-3 border-bottom shadow-sm">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-cog me-2 text-primary"></i>System Settings</h2>
+            <p class="text-muted mb-0">Manage configurations, staff, and delegates</p>
+        </div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Settings</li>
+            </ol>
+        </nav>
+    </header>
 
     <!-- Configuration Options -->
     <div class="section-heading">Configuration</div>
     <div class="settings-grid">
         <div class="settings-card">
             <i class="fas fa-users-cog"></i>
-            <a href="{% url 'user_list' %}">Manage User Access</a>
+            <a href="{% url 'user_list' %}" aria-label="Manage User Access">Manage User Access</a>
             <p>Handle permissions and user roles.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-user-plus"></i>
-            <a href="{% url 'create_user' %}">Create User</a>
+            <a href="{% url 'create_user' %}" aria-label="Create User">Create User</a>
             <p>Add new users and assign initial access.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-history"></i>
-            <a href="{% url 'audit_trails' %}">Audit Trails</a>
+            <a href="{% url 'audit_trails' %}" aria-label="Audit Trails">Audit Trails</a>
             <p>Track system activity and user logs.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-clock"></i>
-            <a href="{% url 'cron_management' %}">Manage Cron Jobs</a>
+            <a href="{% url 'cron_management' %}" aria-label="Manage Cron Jobs">Manage Cron Jobs</a>
             <p>Configure and run scheduled tasks.</p>
         </div>
         {% if 'Import' in allowed_modules %}
         <div class="settings-card">
-            <span class="icon">
-                <ion-icon name="cloud-upload-outline"></ion-icon>
-            </span>
-            <a href="{% url 'excel_import' %}">Import</a>
+            <i class="fas fa-file-upload"></i>
+            <a href="{% url 'excel_import' %}" aria-label="Import Data">Import</a>
             <p>Upload data from Excel sheets into the system.</p>
         </div>
         {% endif %}
@@ -145,27 +54,27 @@
     <div class="settings-grid">
         <div class="settings-card">
             <i class="fas fa-user-plus"></i>
-            <a href="{% url 'staff_management:add_staff' %}">Add Staff Member</a>
+            <a href="{% url 'staff_management:add_staff' %}" aria-label="Add Staff Member">Add Staff Member</a>
             <p>Onboard new employees and assign rights.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-user-shield"></i>
-            <a href="{% url 'staff_management:add_position' %}">Manage Positions</a>
+            <a href="{% url 'staff_management:add_position' %}" aria-label="Manage Positions">Manage Positions</a>
             <p>Create job roles and access levels.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-building"></i>
-            <a href="{% url 'staff_management:add_department' %}">Add Department</a>
+            <a href="{% url 'staff_management:add_department' %}" aria-label="Add Department">Add Department</a>
             <p>Organize departments and units.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-code-branch"></i>
-            <a href="{% url 'staff_management:add_branch' %}">Add Branch</a>
+            <a href="{% url 'staff_management:add_branch' %}" aria-label="Add Branch">Add Branch</a>
             <p>Create new branches for the organization.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-plus-circle"></i>
-            <a href="{% url 'staff_management:staff_target_type_create' %}">Add Target Type</a>
+            <a href="{% url 'staff_management:staff_target_type_create' %}" aria-label="Add Target Type">Add Target Type</a>
             <p>Define targets like Savings, Shares, Membership.</p>
         </div>
     </div>
@@ -175,19 +84,224 @@
     <div class="settings-grid">
         <div class="settings-card">
             <i class="fas fa-plus-circle"></i>
-            <a href="{% url 'add_target_type' %}">Add Target Type</a>
+            <a href="{% url 'add_target_type' %}" aria-label="Add Target Type">Add Target Type</a>
             <p>Define types like Savings, Shares, Membership.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-calendar-alt"></i>
-            <a href="{% url 'add_term_details' %}">Add Term Details</a>
+            <a href="{% url 'add_term_details' %}" aria-label="Add Term Details">Add Term Details</a>
             <p>Create a new election term with expiry date and officers.</p>
         </div>
         <div class="settings-card">
             <i class="fas fa-list"></i>
-            <a href="{% url 'term_details_list' %}">View Term Details</a>
+            <a href="{% url 'term_details_list' %}" aria-label="View Term Details">View Term Details</a>
             <p>View and edit existing election term details.</p>
         </div>
     </div>
 </div>
+
+<style>
+    :root {
+        --primary-color: #16508e;
+        --primary-dark: #1e3a8a;
+        --secondary-color: #6c757d;
+        --text-dark: #1f2a44;
+        --text-light: #e9ecef;
+        --background-light: #f8f9fa;
+        --error-color: #dc3545;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08);
+        --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+        --dark-card-bg: #1e272e;
+        --border-dark: #374151;
+        --neutral-gray: #e5e7eb;
+        --transition: all 0.3s ease;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
+    }
+
+    .header-section {
+        z-index: 1000;
+        border-radius: 12px;
+        background: #ffffff;
+        box-shadow: var(--shadow-light);
+    }
+
+    .dark-mode .header-section {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+    }
+
+    h2 {
+        color: var(--text-dark);
+        font-weight: 700;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.8rem;
+        margin: 0;
+    }
+
+    .dark-mode h2 {
+        color: var(--text-light);
+    }
+
+    .text-muted {
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        color: var(--secondary-color) !important;
+    }
+
+    .dark-mode .text-muted {
+        color: var(--text-light) !important;
+    }
+
+    .section-heading {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: var(--text-dark);
+        margin: 40px 0 20px;
+        border-left: 4px solid var(--primary-color);
+        padding-left: 12px;
+    }
+
+    .dark-mode .section-heading {
+        color: var(--text-light);
+    }
+
+    .settings-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-top: 20px;
+    }
+
+    .settings-card {
+        background: #ffffff;
+        border: 1px solid var(--neutral-gray);
+        border-left: 4px solid var(--primary-color);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: var(--shadow-light);
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .dark-mode .settings-card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+        box-shadow: var(--shadow-dark);
+    }
+
+    .settings-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-dark);
+        border-left-color: var(--primary-dark);
+    }
+
+    .settings-card i {
+        font-size: 1.8rem;
+        color: var(--primary-color);
+        margin-bottom: 12px;
+    }
+
+    .settings-card a {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.1rem;
+        text-decoration: none;
+        margin-bottom: 8px;
+    }
+
+    .settings-card a:hover {
+        color: var(--primary-dark);
+    }
+
+    .settings-card p {
+        font-size: 0.9rem;
+        color: var(--secondary-color);
+        margin: 0;
+    }
+
+    .dark-mode .settings-card p {
+        color: var(--text-light);
+    }
+
+    .breadcrumb {
+        background: transparent;
+        font-size: 0.9rem;
+        margin-bottom: 0;
+    }
+
+    .breadcrumb a {
+        color: var(--primary-color);
+        text-decoration: none;
+    }
+
+    .breadcrumb a:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+    }
+
+    .dark-mode .breadcrumb a {
+        color: var(--text-light);
+    }
+
+    .dark-mode .breadcrumb a:hover {
+        color: #ffffff;
+    }
+
+    /* Accessibility */
+    .settings-card a:focus,
+    .breadcrumb a:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 576px) {
+        .container {
+            padding: 15px 10px;
+        }
+
+        .header-section {
+            padding: 12px 15px;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+        }
+
+        .section-heading {
+            font-size: 1.2rem;
+            margin: 30px 0 15px;
+        }
+
+        .settings-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .settings-card {
+            padding: 16px;
+        }
+
+        .settings-card i {
+            font-size: 1.6rem;
+        }
+
+        .settings-card a {
+            font-size: 1rem;
+        }
+
+        .settings-card p {
+            font-size: 0.85rem;
+        }
+    }
+</style>
 {% endblock %}

@@ -28,5 +28,7 @@ urlpatterns = [
     path('',include('Customer.urls')),
     path('', include('delegates.urls')),
     path('', include('staff_management.urls')),
+    path('', include('Groups.urls')),
+    path('', include('Loans.urls')),
     
 ]

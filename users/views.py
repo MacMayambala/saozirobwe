@@ -468,9 +468,13 @@ def manage_group_permissions(request, group_id):
     })
 
 # Existing views (user_list, manage_user_modules, update_user_modules) remain unchanged
+
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 @superuser_or_redirect
 def user_list(request):
-    users = User.objects.all()
+    users = User.objects.all().order_by('username')
     user_data = []
     for user in users:
         group = user.groups.first()
@@ -479,7 +483,12 @@ def user_list(request):
             'user': user,
             'role': role
         })
-    return render(request, 'user_list.html', {'user_data': user_data})
+
+    paginator = Paginator(user_data, 5)  # 5 users per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'user_list.html', {'page_obj': page_obj})
 
 @superuser_or_redirect
 def manage_user_modules(request, user_id):

@@ -182,4 +182,4 @@ class Customer(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.cus_id} - {self.first_name} {self.last_name}"
+        return f"{self.cus_id} - {self.first_name} {self.surname}"

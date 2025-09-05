@@ -1,0 +1,349 @@
+<!-- templates/Groups/create_group.html -->
+{% extends "base.html" %}
+{% load static widget_tweaks %}
+{% block title %}Create New Group - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="header-section d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-users me-2"></i>Create New Group</h2>
+      <p class="text-muted mb-0">Add a new group to manage members, savings, and loans</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'group_list' %}" class="btn btn-secondary px-4" aria-label="Back to Group List">
+        <i class="fas fa-arrow-left me-2"></i>Back to Groups
+      </a>
+    </div>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Create New Group</h5>
+    </div>
+    <div class="card-body">
+      <form method="post" class="row g-3">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+          <div class="col-md-6">
+            <label for="{{ field.id_for_label }}" class="form-label fw-bold">{{ field.label }}</label>
+            {% if field.name == 'leader' %}
+              {% render_field field class="form-control select2-leader" placeholder="Search by name or member number" %}
+            {% elif field.name == 'members' %}
+              {% render_field field class="form-control select2-members" placeholder="Search members by name or member number" %}
+            {% else %}
+              {% render_field field class="form-control" %}
+            {% endif %}
+            {% if field.help_text %}
+              <small class="text-muted">{{ field.help_text }}</small>
+            {% endif %}
+            {% if field.errors %}
+              <div class="text-danger small mt-1">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+        {% endfor %}
+        <div class="col-12 mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary px-4" aria-label="Create Group">
+            <i class="fas fa-save me-2"></i>Create Group
+          </button>
+          <a href="{% url 'group_list' %}" class="btn btn-secondary px-4" aria-label="Cancel">
+            <i class="fas fa-times me-2"></i>Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root {
+    --primary-color: #16508e;
+    --primary-dark: #123e6b;
+    --secondary-color: #6c757d;
+    --text-dark: #2c3e50;
+    --text-light: #e9ecef;
+    --background-light: #f4f6f9;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+    --dark-card-bg: #2a3435;
+    --border-dark: #3a4445;
+    --transition: all 0.3s ease;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 15px;
+    width: 100%;
+  }
+
+  h2 {
+    color: var(--text-dark);
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem;
+    margin: 0;
+  }
+
+  .dark-mode h2 {
+    color: var(--text-light);
+  }
+
+  .card {
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: var(--shadow-light);
+    border: none;
+    transition: var(--transition);
+  }
+
+  .dark-mode .card {
+    background: var(--dark-card-bg);
+    border: 1px solid var(--border-dark);
+    box-shadow: var(--shadow-dark);
+  }
+
+  .card-header {
+    border-radius: 16px 16px 0 0;
+    padding: 1rem 1.5rem;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .btn-primary {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(22, 80, 142, 0.2);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(22, 80, 142, 0.3);
+  }
+
+  .btn-secondary {
+    background: var(--secondary-color);
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    transition: var(--transition);
+  }
+
+  .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+  }
+
+  .form-label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+  }
+
+  .dark-mode .form-label {
+    color: var(--text-light);
+  }
+
+  .form-control,
+  .form-select {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    background: #f8f9fa;
+    transition: var(--transition);
+  }
+
+  .dark-mode .form-control,
+  .dark-mode .form-select {
+    background: var(--border-dark);
+    color: var(--text-light);
+    border-color: var(--border-dark);
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: var(--primary-color);
+    background: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(22, 80, 142, 0.15);
+    outline: none;
+  }
+
+  .text-muted {
+    font-weight: 400;
+    font-family: 'Poppins', sans-serif;
+    color: #6c757d !important;
+  }
+
+  .text-danger {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+  }
+
+  /* Select2 Custom Styles */
+  .select2-container--default .select2-selection--single,
+  .select2-container--default .select2-selection--multiple {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 8px 15px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    background: #f8f9fa;
+    transition: var(--transition);
+  }
+
+  .dark-mode .select2-container--default .select2-selection--single,
+  .dark-mode .select2-container--default .select2-selection--multiple {
+    background: var(--border-dark);
+    border-color: var(--border-dark);
+    color: var(--text-light);
+  }
+
+  .select2-container--default .select2-selection--single:focus,
+  .select2-container--default .select2-selection--multiple:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(22, 80, 142, 0.15);
+    outline: none;
+  }
+
+  .select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background: var(--primary-color);
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 2px 8px;
+    font-size: 0.85rem;
+  }
+
+  .select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    color: #ffffff;
+    margin-right: 5px;
+  }
+
+  .select2-container--default .select2-search--dropdown .select2-search__field {
+    border-radius: 8px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+  }
+
+  /* Accessibility */
+  a:focus,
+  button:focus,
+  .form-control:focus,
+  .form-select:focus,
+  .select2-container--default .select2-selection--single:focus,
+  .select2-container--default .select2-selection--multiple:focus {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 991px) {
+    .container {
+      padding: 15px 10px;
+    }
+    .card-body {
+      padding: 1.25rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 10px 8px;
+    }
+    h2 {
+      font-size: 1.6rem;
+    }
+    .btn-primary,
+    .btn-secondary {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+    .form-label {
+      font-size: 0.9rem;
+    }
+    .form-control,
+    .form-select,
+    .select2-container--default .select2-selection--single,
+    .select2-container--default .select2-selection--multiple {
+      font-size: 0.85rem;
+    }
+  }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  $(document).ready(function() {
+    $('.select2-leader').select2({
+      placeholder: 'Search by name or member number',
+      allowClear: true,
+      minimumInputLength: 2,
+      ajax: {
+        url: '{% url "customer_search" %}',
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            q: params.term
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.map(function(customer) {
+              return {
+                id: customer.id,
+                text: customer.full_name + ' (' + (customer.member_number || 'N/A') + ')'
+              };
+            })
+          };
+        }
+      }
+    });
+
+    $('.select2-members').select2({
+      placeholder: 'Search members by name or member number',
+      allowClear: true,
+      multiple: true,
+      minimumInputLength: 2,
+      ajax: {
+        url: '{% url "customer_search" %}',
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+          return {
+            q: params.term
+          };
+        },
+        processResults: function(data) {
+          return {
+            results: data.map(function(customer) {
+              return {
+                id: customer.id,
+                text: customer.full_name + ' (' + (customer.member_number || 'N/A') + ')'
+              };
+            })
+          };
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}
