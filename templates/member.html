@@ -1,452 +1,808 @@
-{% extends "base.html" %}{% block content %}<div class="container mt-5">
-    <div class="card shadow-lg p-4">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-<style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #f8f9fa;
-    }
-    .main-content {
-        padding: 20px;
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 10px;
-    }
-    .nav-tabs .nav-link {
-        font-size: 14px;
-        font-weight: bold;
-        color: #555;
-    }
-    .nav-tabs .nav-link.active {
-        background-color: #ff7f00;
-        color: white;
-        border-radius: 5px;
-    }{% extends "base.html" %}
-
-{% block title %}Member Summary - Sao Zirobwe SACCO{% endblock %}
-
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Members - Sao Zirobwe SACCO{% endblock %}
 {% block content %}
+
+<div class="container">
+    <!-- Header -->
+    <div class="header-section d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="fas fa-users me-2"></i> Customers</h2>
+            <p class="text-muted mb-0">Manage and view all registered customer information</p>
+        </div>
+        <a href="{% url 'member_registration' %}" class="btn btn-primary px-4" aria-label="Register Customer">
+            <i class="fas fa-user-plus me-2"></i> Register Customer
+        </a>
+    </div>
+
+    <!-- Card -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+
+            <!-- Tabs -->
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active px-4" href="#" role="tab" aria-selected="true">
+                        <i class="fas fa-user me-2"></i> Individuals
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Search -->
+            <div class="search-container mb-4">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-muted"></i>
+                    </span>
+                    <input 
+                        type="text" 
+                        id="search_member" 
+                        class="form-control border-start-0 ps-0" 
+                        placeholder="Search customers by name, ID, or contact..." 
+                        aria-label="Search customers">
+                </div>
+            </div>
+
+            <!-- Spinner -->
+            <div id="loading-spinner" class="text-center my-4 d-none" aria-live="polite">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading customers...</span>
+                </div>
+            </div>
+
+            <!-- Member List -->
+            <div id="member-list" class="member-list" role="region" aria-label="Customer List">
+                {% for customer in customers %}
+                    <div class="member-card mb-3 border rounded-lg overflow-hidden">
+                        <div class="member-row d-flex align-items-center p-4">
+                            <!-- Profile -->
+                            <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if customer.profile_picture %}
+                                        <img src="{{ customer.profile_picture.url }}" 
+                                             alt="{{ customer.first_name }} {{ customer.surname }}" 
+                                             class="rounded-circle profile-placeholder"
+                                             style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--primary-color);">
+                                    {% else %}
+                                        <div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width: 48px; height: 48px; border: 2px solid var(--primary-color);
+                                                    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+                                                    color: #fff; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif;"
+                                             aria-label="Placeholder for {{ customer.first_name }} {{ customer.surname }}">
+                                             {{ customer.first_name|first }}{{ customer.surname|first }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="member-name">
+                                        <h5 class="mb-0 fw-semibold">
+                                            <a href="{% url 'memberSum' customer.cus_id %}" 
+                                               class="text-decoration-none text-dark" 
+                                               aria-label="View {{ customer.first_name }} {{ customer.surname }} details">
+                                               {{ customer.first_name }} {{ customer.surname }}
+                                            </a>
+                                        </h5>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <span class="badge bg-light text-dark">{{ customer.member_number }}</span>
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                {{ customer.branch|default:"Busiika" }} Branch
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Meta -->
+                            <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fas fa-venus-mars text-muted"></i>
+                                    <span class="text-muted">{{ customer.gender }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-birthday-cake text-muted"></i>
+                                    <span class="text-muted">
+                                        {{ customer.age|default:"N/A" }} {% if customer.age %}YEARS{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Contact -->
+                            <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fas fa-phone text-primary"></i>
+                                    <span>{{ customer.phone|default:"N/A" }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-map-marker-alt text-secondary"></i>
+                                    <span>{{ customer.village|default:"N/A" }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="member-actions">
+                                <a href="{% url 'memberSum' customer.cus_id %}" 
+                                   class="btn btn-sm btn-outline-primary rounded-pill px-3" 
+                                   aria-label="View details">
+                                    <i class="fas fa-eye me-1"></i> View
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mb-3">No customers found</h5>
+                        <p class="text-muted mb-4">Get started by registering your first customer</p>
+                        <a href="{% url 'member_registration' %}" class="btn btn-primary px-4">
+                            <i class="fas fa-user-plus me-2"></i> Register Customer
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                <div id="page-info" class="text-muted small"></div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="#" id="prev-page" class="btn btn-sm btn-outline-secondary rounded-circle" aria-label="Previous Page">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <div id="page-numbers" class="d-flex gap-1"></div>
+                    <a href="#" id="next-page" class="btn btn-sm btn-outline-secondary rounded-circle" aria-label="Next Page">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
-    .form-container {
-        width: 100%;
-        max-width: 1000px;
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
-        text-align: center;
-        margin: 20px auto;
+    :root {
+        --primary-color: #16508e;
+        --primary-dark: #123e6b;
+        --secondary-color: #6c757d;
+        --text-dark: #2c3e50;
+        --text-light: #e9ecef;
+        --background-light: #f4f6f9;
+        --error-color: #dc3545;
+        --success-color: #28a745;
+        --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08);
+        --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+        --dark-card-bg: #2a3435;
+        --border-dark: #3a4445;
+        --transition: all 0.3s ease;
     }
-    .form-container h2 {
-        margin-bottom: 15px;
-        color: #333;
-        font-size: 1.8em;
-    }
-    .form-container b {
-        font-size: 1.8em;
-        color: #4e139a;
-    }
-    .form-group {
-        margin-bottom: 12px;
-        text-align: left;
-    }
-    .image-group, .text-group {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 15px;
-        gap: 15px;
-    }
-    .image-group .form-group, .text-group .form-group {
-        flex: 1;
-        margin-bottom: 0;
-    }
-    .inline-group {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        gap: 10px;
-        text-align: left;
+    
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 15px;
         width: 100%;
     }
-    .name-group {
-        justify-content: center;
-        text-align: center;
+    
+    .main.active .container {
+        max-width: 1400px;
     }
-    .inline-group label {
-        font-weight: bold;
-        white-space: nowrap;
-        color: #555;
-        font-size: 1em;
-        min-width: 120px;
+    
+    h2 {
+        color: var(--text-dark);
+        font-weight: 700;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.8rem;
+        margin: 0;
     }
-    .inline-group .info {
-        color: #333;
-        font-size: 1em;
-        flex-grow: 1;
+    
+    .dark-mode h2 {
+        color: var(--text-light);
     }
-    label {
-        font-weight: bold;
-        display: block;
-        margin-bottom: 4px;
-        color: #555;
-        font-size: 1em;
+    
+    .card {
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: var(--shadow-light);
+        border: none;
+        transition: var(--transition);
     }
-    input[type="text"],
-    input[type="file"],
-    input[type="tel"] {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 1em;
-        transition: border-color 0.2s;
+    
+    .dark-mode .card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+        box-shadow: var(--shadow-dark);
     }
-    input[type="text"]:focus,
-    input[type="file"]:focus,
-    input[type="tel"]:focus {
-        border-color: #007bff;
+    
+    .card-body {
+        padding: 1.5rem;
+    }
+    
+    .search-container {
+        position: relative;
+    }
+    
+    .input-group-text {
+        border-radius: 12px 0 0 12px;
+    }
+    
+    .form-control {
+        border: 1px solid #e0e0e0;
+        border-radius: 0 12px 12px 0;
+        padding: 12px 15px;
+        font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 400;
+        background: #f8f9fa;
+        transition: var(--transition);
+    }
+    
+    .dark-mode .form-control {
+        background: var(--border-dark);
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 0 0.25rem rgba(22, 80, 142, 0.15);
         outline: none;
     }
-    .preview {
-        width: 80px;
-        height: 80px;
-        object-fit: cover;
-        margin-top: 5px;
-        border-radius: 50%;
-        border: 2px solid #ddd;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
+    
+    .dark-mode .form-control:focus {
+        background: #ffffff;
+        color: var(--text-dark);
     }
-    .btn {
-        background: #007bff;
-        color: white;
-        padding: 10px 15px;
-        border-radius: 5px;
+    
+    .btn-primary {
+        background: var(--primary-color);
         border: none;
-        cursor: pointer;
-        font-size: 1em;
-        margin-top: 10px;
-        transition: background 0.3s;
+        border-radius: 12px;
+        padding: 10px 20px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        color: #ffffff;
+        transition: var(--transition);
+        box-shadow: 0 4px 10px rgba(22, 80, 142, 0.2);
+    }
+    
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(22, 80, 142, 0.3);
+    }
+    
+    .btn-outline-primary {
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        border-radius: 12px;
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        transition: var(--transition);
+    }
+    
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+        transform: translateY(-2px);
+    }
+    
+    .btn-outline-secondary {
+        border-color: #dee2e6;
+        color: #6c757d;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: var(--transition);
+    }
+    
+    .btn-outline-secondary:hover {
+        background: #f8f9fa;
+        border-color: #adb5bd;
+        color: #495057;
+    }
+    
+    .btn-outline-secondary.disabled {
+        border-color: #dee2e6;
+        color: #adb5bd;
+        pointer-events: none;
+    }
+    
+    .nav-tabs {
+        border-bottom: 2px solid #f1f3f5;
+    }
+    
+    .nav-tabs .nav-link {
+        font-family: 'Poppins', sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text-dark);
+        border: none;
+        border-bottom: 2px solid transparent;
+        padding: 10px 20px;
+        transition: var(--transition);
+        border-radius: 8px 8px 0 0;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: var(--primary-dark);
+        background-color: rgba(22, 80, 142, 0.05);
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+        background: transparent;
+    }
+    
+    .dark-mode .nav-tabs {
+        border-bottom: 2px solid var(--border-dark);
+    }
+    
+    .dark-mode .nav-tabs .nav-link {
+        color: var(--text-light);
+    }
+    
+    .dark-mode .nav-tabs .nav-link:hover {
+        color: var(--text-light);
+        background-color: rgba(255, 255, 255, 0.05);
+    }
+    
+    .dark-mode .nav-tabs .nav-link.active {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--primary-color);
+    }
+    
+    .member-card {
+        border-radius: 12px;
+        background: #ffffff;
+        transition: var(--transition);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    
+    .dark-mode .member-card {
+        background: var(--dark-card-bg);
+        border: 1px solid var(--border-dark);
+    }
+    
+    .member-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-light);
+        border-color: var(--primary-color);
+    }
+    
+    .member-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
         width: 100%;
-        display: block;
+    }
+    
+    .member-info {
+        display: flex;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+    
+    .member-info .member-name {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    
+    .member-info h5 {
+        font-weight: 600;
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 200px;
+    }
+    
+    .member-info h5 a {
+        color: var(--text-dark);
+        transition: var(--transition);
+    }
+    
+    .dark-mode .member-info h5 a {
+        color: var(--text-light);
+    }
+    
+    .member-info h5 a:hover {
+        color: var(--primary-color);
+    }
+    
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.65em;
+        font-weight: 500;
+    }
+    
+    .member-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .member-meta span {
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.9rem;
+    }
+    
+    .text-primary {
+        color: var(--primary-color) !important;
+        font-weight: 600;
+        transition: var(--transition);
+    }
+    
+    .text-primary:hover {
+        color: var(--primary-dark) !important;
+    }
+    
+    .text-muted {
+        font-weight: 400;
+        font-family: 'Poppins', sans-serif;
+        color: #6c757d !important;
+    }
+    
+    .profile-placeholder {
+        transition: var(--transition);
+    }
+    
+    .dark-mode .profile-placeholder {
+        background: linear-gradient(135deg, #3a4445, #2a3435);
+        color: var(--text-light);
+        border-color: var(--text-light);
+    }
+    
+    .pagination-container {
+        margin-top: 2rem;
+    }
+    
+    .pagination a.page-number {
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-dark);
+        font-weight: 500;
+        font-size: 0.9rem;
+        font-family: 'Poppins', sans-serif;
+        background: #ffffff;
+        margin: 0 2px;
+        transition: var(--transition);
+        min-width: 40px;
         text-align: center;
     }
-    .btn:hover {
-        background: #0056b3;
-    }
-    .edit-btn {
-        background: #28a745;
-        text-decoration: none;
-    }
-    .edit-btn:hover {
-        background: #218838;
-    }
-    .tab-nav {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin-top: 15px;
-    }
-    .tab-btn {
-        background: #e9ebef;
-        color: #333333;
-        padding: 8px 15px;
-        border-radius: 5px 5px 0 0;
-        text-decoration: none;
-        font-size: 0.9em;
-        transition: background 0.3s, color 0.3s;
-        border: 1px solid #ddd;
-        border-bottom: none;
-        cursor: pointer;
-    }
-    .tab-btn:hover {
-        background: #e1e6de;
-    }
-    .tab-btn.active {
-        background: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
-    @media (max-width: 1000px) {
-        .form-container {
-            padding: 15px;
-            width: 95%;
-            margin: 10px auto;
-        }
-        .image-group, .text-group {
-            flex-direction: column;
-            gap: 10px;
-        }
-        .preview {
-            width: 60px;
-            height: 60px;
-        }
-        .btn {
-            font-size: 0.9em;
-            padding: 8px;
-            margin-top: 8px;
-        }
-        label, input, .inline-group .info {
-            font-size: 0.85em;
-        }
-        .tab-nav {
-            flex-direction: column;
-            gap: 5px;
-        }
-        .tab-btn {
-            padding: 6px 10px;
-            font-size: 0.85em;
-        }
-    }
-</style>
-
-<div class="form-container">
-    <h2>Member Summary For:</h2>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        <!-- Member Name (Centered) -->
-        <div class="form-group inline-group name-group">
-            <div class="info"><b>{{ member.first_name }}  {{ member.surname }}</b></div>
-        </div>
-        
-        <!-- Image Group (Photo, Signature, ID Card) -->
-        <div class="image-group">
-            <div class="form-group">
-                <label for="photo">Profile Photo:</label>
-                <img id="photo-preview" src="{% if member.profile_picture %}{{ member.profile_picture.url }}{% else %}https://via.placeholder.com/80{% endif %}" alt="Profile Photo" class="preview">
-                <input type="file" name="photo" id="photo" accept="image/*" onchange="previewImage(event, 'photo-preview')">
-            </div>
-            <div class="form-group">
-                <label for="signature_photo">Signature Photo:</label>
-                <img id="signature-preview" src="{% if member.signature_photo %}{{ member.signature_photo.url }}{% else %}https://via.placeholder.com/80{% endif %}" alt="Signature" class="preview">
-                <input type="file" name="signature_photo" id="signature_photo" accept="image/*" onchange="previewImage(event, 'signature-preview')">
-            </div>
-            <div class="form-group">
-                <label for="id_card_photo">Identity Card Photo:</label>
-                <img id="id-card-preview" src="{% if member.id_scan %}{{ member.id_scan.url }}{% else %}https://via.placeholder.com/80{% endif %}" alt="ID Card" class="preview">
-                <input type="file" name="id_card_photo" id="id_card_photo" accept="image/*" onchange="previewImage(event, 'id-card-preview')">
-            </div>
-        </div>
-
-        <!-- Account Details -->
-        <div class="text-group">
-            <div class="form-group inline-group">
-                <label for="account_number">Account Number:</label>
-                <div class="info">{{ member.member_number }}</div>
-            </div>
-            <div class="form-group inline-group">
-                <label for="branch">Branch:</label>
-                <div class="info">{{ member.branch }}</div>
-            </div>
-            <div class="form-group inline-group">
-                <label for="phone">Telephone Contact:</label>
-                <div class="info">{{ member.phone_number1}}</div>
-            </div>
-        </div>
-
-        <!-- Additional Member Details -->
-        <div class="text-group">
-            <div class="form-group inline-group">
-                <label for="status">Munno Mukabi:</label>
-                <div class="info">{{ member.gender }}</div>
-            </div>
-            <div class="form-group inline-group">
-                <label for="NIN">Security:</label>
-                <div class="info">{{ member.cus_id }}</div>
-            </div>
-            <div class="form-group inline-group">
-                <label for="zone">Delegate:</label>
-                <div class="info">{{ member.zone }}</div>
-            </div>
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" class="btn">Save</button>
-    </form>
-
-    <!-- Edit Button -->
-    <a href="{% url 'edit_customer'  member.cus_id %}" class="btn edit-btn">Edit</a>
-
-    <!-- Navigation Tabs -->
-    <nav class="tab-nav">
-        <a href="#" class="tab-btn">Register Member for Munno Mukabi</a>
-        <a href="#" class="tab-btn">Register Security For This Member</a>
-    </nav>
-</div>
-
-<!-- JavaScript for Image Preview -->
-<script>
-    function previewImage(event, previewId) {
-        const file = event.target.files[0];
-        const preview = document.getElementById(previewId);
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                preview.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-    }
-</script>
-{% endblock %}
-    .search-container {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-    }
-    .member-card {
-        display: flex;
-        align-items: center;
-        padding: 10px;
-        border-bottom: 1px solid #e0e0e0;
-    }
-    .member-card img {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        object-fit: cover;
-        margin-right: 10px;
-    }
-    .member-info {
-        flex-grow: 1;
-    }
-    .pagination {
-        display: flex;
-        justify-content: center;
-        padding-top: 10px;
-    }
-    .pagination a {
-        padding: 5px 10px;
-        border: 1px solid #ddd;
-        margin: 2px;
-        border-radius: 3px;
-        text-decoration: none;
-        color: #007bff;
-    }
-    .pagination a.active {
-        background-color: #007bff;
-        color: white;
-        border: none;
-    }
-</style>
-
-<!-- Header Section -->
-<div class="d-flex justify-content-between align-items-center">
-    <h2><i class="fas fa-users me-2"></i><b></b> Members</b></h2>
-    <a href="{% url 'member_registration' %}">
-        <button class="btn btn-primary"><i class="fas fa-user-plus me-2"></i> Register Customer</button>
-    </a>
-</div>
-
-<!-- Tabs for Different Customer Types -->
-<ul class="nav nav-tabs mt-3">
-    <li class="nav-item"><a class="nav-link active" href="#">INDIVIDUALS</a></li>
     
-</ul>
+    .pagination a.page-number:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+        border-color: var(--primary-color);
+    }
+    
+    .pagination a.page-number.active {
+        background: var(--primary-color);
+        color: #ffffff;
+        border-color: var(--primary-color);
+    }
+    
+    .dark-mode .pagination a.page-number {
+        background: var(--dark-card-bg);
+        color: var(--text-light);
+        border-color: var(--border-dark);
+    }
+    
+    .dark-mode .pagination a.page-number:hover {
+        background: var(--primary-color);
+        color: #ffffff;
+    }
+    
+    .dark-mode .pagination a.page-number.active {
+        background: var(--primary-color);
+        color: #ffffff;
+    }
+    
+    .spinner-border {
+        width: 2rem;
+        height: 2rem;
+        border-width: 0.3em;
+        animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 991px) {
+        .container {
+            padding: 15px 10px;
+        }
+        .card-body {
+            padding: 1.25rem;
+        }
+        .member-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .member-info,
+        .member-meta,
+        .member-actions {
+            flex-basis: 100% !important;
+            min-width: 0;
+        }
+        .member-actions {
+            justify-content: flex-start;
+            width: 100%;
+        }
+        .member-meta {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .container {
+            padding: 10px 8px;
+        }
+        .card-body {
+            padding: 1rem;
+        }
+        h2 {
+            font-size: 1.6rem;
+        }
+        .btn-primary {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        .member-info h5 {
+            font-size: 1rem;
+            max-width: 150px;
+        }
+        .member-meta span {
+            font-size: 0.85rem;
+        }
+        .member-info .member-name {
+            max-width: 100%;
+        }
+        .profile-placeholder {
+            font-size: 0.8rem;
+        }
+        .badge {
+            font-size: 0.7rem;
+        }
+    }
+    
+    /* Accessibility */
+    a:focus,
+    button:focus,
+    .form-control:focus,
+    .profile-placeholder:focus {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+</style>
 
-<!-- Search Bar -->
-<div class="search-container mt-3">
-    <input type="text" id="search_member" class="form-control w-25" placeholder="Search">
-</div>
-
-<!-- Spinner -->
-<div id="loading-spinner" class="text-center mt-3" style="display: none;">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Loading...</span>
-    </div>
-</div>
-
-<div class="Member-list mt-3" id="member-list">
-    {% for member in members %}
-    <div class="card p-3 mb-2">
-        <h5>
-            <a href="{% url 'memberSum' member.cus_id %}" class="text-decoration-none">
-                <i class="fas fa-user me-2"></i> {{ member.first_name }} {{ member.surname }}
-            </a>
-        </h5>
-        <p>{{ member.member_number }} - {{ member.branch }}</p>
-        <small>{{ member.gender }}, {{ member.village }}</small>
-    </div>
-    {% empty %}
-        <p>No members found.</p>
-    {% endfor %}
-</div>
-
-<!-- Pagination -->
-<div class="pagination">
-    {% if members.has_previous %}
-        <a href="?page=1">&laquo; First</a>
-        <a href="?page={{ members.previous_page_number }}">Previous</a>
-    {% endif %}
-
-    <span class="current-page">
-        Page {{ members.number }} of {{ members.paginator.num_pages }}
-    </span>
-
-    {% if members.has_next %}
-        <a href="?page={{ members.next_page_number }}">Next</a>
-        <a href="?page={{ members.paginator.num_pages }}">Last &raquo;</a>
-    {% endif %}
-</div>
-
-</div>
-
-</div>
-
-<!-- JavaScript for AJAX Search -->
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-       const searchInput = document.getElementById("member_number");
-       const memberList = document.getElementById("member-list");
-       const spinner = document.getElementById("loading-spinner");
-   
-       // Function to fetch members based on the query
-       function fetchMembers(query) {
-           // Show loading spinner
-           spinner.style.display = "block";  
-           
-           fetch(/members/?member_number=${query}, {
-               headers: { "X-Requested-With": "XMLHttpRequest" }
-           })
-           .then(response => response.json())
-           .then(data => {
-               spinner.style.display = "none";  // Hide spinner
-               memberList.innerHTML = "";  // Clear member list
-   
-               if (data.members.length === 0) {
-                   memberList.innerHTML = "<p class='text-center text-muted'>No members found.</p>";
-               } else {
-                   // Iterate through the member data and render cards
-                   data.members.forEach(member => {
-                       const memberCard = 
-                           <div class="card p-3 mb-2">
-                               <h5><a href="/member/${member.cus_id}/" class="text-decoration-none">
-                                   <i class="fas fa-user me-2"></i>${member.surname} ${member.first_name}
-                               </a></h5>
-                               <p>${member.member_number} - ${member.branch}</p>
-                               <small>${member.gender} - ${member.village}</small>
-                           </div>
-                       ;
-                       memberList.innerHTML += memberCard;
-                   });
-               }
-           })
-           .catch(error => {
-               spinner.style.display = "none";  // Hide spinner if there's an error
-               memberList.innerHTML = "<p class='text-center text-muted'>Error fetching data.</p>";
-           });
-       }
-   
-       // Trigger search as user types
-       searchInput.addEventListener("input", function() {
-           fetchMembers(searchInput.value);
-       });
-   
-       // Initial fetch to load first 5 members when the page loads
-       fetchMembers(""); 
-   });
+document.addEventListener("DOMContentLoaded", function() {
+    const searchInput = document.getElementById("search_member");
+    const memberList = document.getElementById("member-list");
+    const spinner = document.getElementById("loading-spinner");
+    const prevPage = document.getElementById("prev-page");
+    const nextPage = document.getElementById("next-page");
+    const pageInfo = document.getElementById("page-info");
+    const pageNumbersContainer = document.getElementById("page-numbers");
+    // Base URLs for dynamic construction
+    const searchUrl = "{% url 'search_members' %}";
+    const memberSumUrlBase = "{% url 'memberSum' 0 %}".replace('0/', '');
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalItems = 0;
+    const itemsPerPage = 5;
+    
+    function fetchMembers(query, page = 1) {
+        spinner.style.display = "block";
+        memberList.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+        fetch(`${searchUrl}?search=${encodeURIComponent(query)}&page=${page}`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+            return response.json();
+        })
+        .then(data => {
+            spinner.style.display = "none";
+            memberList.innerHTML = "";
+            if (data.customers.length === 0) {
+                memberList.innerHTML = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mb-3">No customers found</h5>
+                        <p class="text-muted mb-4">Try adjusting your search or register a new customer</p>
+                        <a href="{% url 'member_registration' %}" class="btn btn-primary px-4">
+                            <i class="fas fa-user-plus me-2"></i>Register Customer
+                        </a>
+                    </div>
+                `;
+            } else {
+                data.customers.forEach(customer => {
+                    const memberCard = `
+                        <div class="member-card mb-3 border rounded-lg overflow-hidden transition-all">
+                            <div class="member-row d-flex align-items-center p-4">
+                                <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
+                                    <div class="d-flex align-items-center gap-3">
+                                        ${customer.profile_picture ?
+                                            `<img src="${customer.profile_picture}" alt="${customer.first_name} ${customer.surname}" class="rounded-circle profile-placeholder" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--primary-color);">` :
+                                            `<div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border: 2px solid var(--primary-color); background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: #ffffff; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif;" aria-label="Placeholder for ${customer.first_name} ${customer.surname}">${customer.first_name.charAt(0)}${customer.surname.charAt(0)}</div>`}
+                                        <div class="member-name">
+                                            <h5 class="mb-0 fw-semibold">
+                                                <a href="${memberSumUrlBase}${customer.cus_id}/" class="text-decoration-none text-dark" aria-label="View ${customer.first_name} ${customer.surname} Details">
+                                                    ${customer.first_name} ${customer.surname}
+                                                </a>
+                                            </h5>
+                                            <div class="d-flex align-items-center gap-2 mt-1">
+                                                <span class="badge bg-light text-dark fw-normal">${customer.member_number}</span>
+                                                <span class="badge bg-primary-subtle text-primary fw-normal">${customer.branch || "Busiika Branch"} Branch</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fas fa-venus-mars text-muted"></i>
+                                        <span class="text-muted">${customer.gender}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-birthday-cake text-muted"></i>
+                                        <span class="text-muted">
+                                            ${customer.age ? customer.age + ' YEARS' : 'N/A'}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
+                                    <div class="d-flex align-items-center gap-2 mb-2">
+                                        <i class="fas fa-phone text-primary"></i>
+                                        <span>${customer.phone || "N/A"}</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="fas fa-map-marker-alt text-secondary"></i>
+                                        <span>${customer.village || "N/A"}</span>
+                                    </div>
+                                </div>
+                                <div class="member-actions">
+                                    <a href="${memberSumUrlBase}${customer.cus_id}/" class="btn btn-sm btn-outline-primary rounded-pill px-3" aria-label="View details">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    memberList.innerHTML += memberCard;
+                });
+                // Update pagination data
+                currentPage = data.current_page;
+                totalPages = data.total_pages;
+                totalItems = data.total_items || (data.total_pages * itemsPerPage);
+                // Update page info
+                const startItem = (currentPage - 1) * itemsPerPage + 1;
+                const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+                pageInfo.textContent = `Showing ${startItem}-${endItem} of ${totalItems} customers`;
+                // Update Previous/Next buttons
+                prevPage.classList.toggle("disabled", !data.has_previous);
+                nextPage.classList.toggle("disabled", !data.has_next);
+                // Generate dynamic page numbers
+                generatePageNumbers();
+            }
+        })
+        .catch(error => {
+            spinner.style.display = "none";
+            memberList.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="fas fa-exclamation-triangle text-warning mb-3" style="font-size: 3rem;"></i>
+                    <h5 class="text-muted mb-3">Error loading data</h5>
+                    <p class="text-muted mb-4">Please try again later</p>
+                    <button class="btn btn-primary px-4" onclick="fetchMembers('', 1)">
+                        <i class="fas fa-sync-alt me-2"></i>Retry
+                    </button>
+                </div>
+            `;
+            console.error("Error fetching customers:", error);
+        });
+    }
+    
+    function generatePageNumbers() {
+        pageNumbersContainer.innerHTML = "";
+        
+        const maxPagesToShow = 4;
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+        if (endPage - startPage + 1 < maxPagesToShow) {
+            startPage = Math.max(1, endPage - maxPagesToShow + 1);
+        }
+        if (startPage > 1) {
+            const firstPageLink = document.createElement("a");
+            firstPageLink.href = "#";
+            firstPageLink.className = "page-number";
+            firstPageLink.textContent = "1";
+            firstPageLink.setAttribute("aria-label", "Go to page 1");
+            firstPageLink.addEventListener("click", (e) => {
+                e.preventDefault();
+                fetchMembers(searchInput.value, 1);
+            });
+            pageNumbersContainer.appendChild(firstPageLink);
+            if (startPage > 2) {
+                const ellipsis = document.createElement("span");
+                ellipsis.textContent = "...";
+                ellipsis.style.margin = "0 5px";
+                pageNumbersContainer.appendChild(ellipsis);
+            }
+        }
+        for (let i = startPage; i <= endPage; i++) {
+            const pageLink = document.createElement("a");
+            pageLink.href = "#";
+            pageLink.className = `page-number${i === currentPage ? " active" : ""}`;
+            pageLink.textContent = i;
+            pageLink.setAttribute("aria-label", `Go to page ${i}`);
+            pageLink.addEventListener("click", (e) => {
+                e.preventDefault();
+                fetchMembers(searchInput.value, i);
+            });
+            pageNumbersContainer.appendChild(pageLink);
+        }
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement("span");
+                ellipsis.textContent = "...";
+                ellipsis.style.margin = "0 5px";
+                pageNumbersContainer.appendChild(ellipsis);
+            }
+            const lastPageLink = document.createElement("a");
+            lastPageLink.href = "#";
+            lastPageLink.className = "page-number";
+            lastPageLink.textContent = totalPages;
+            lastPageLink.setAttribute("aria-label", `Go to page ${totalPages}`);
+            lastPageLink.addEventListener("click", (e) => {
+                e.preventDefault();
+                fetchMembers(searchInput.value, totalPages);
+            });
+            pageNumbersContainer.appendChild(lastPageLink);
+        }
+    }
+    
+    let debounceTimeout;
+    searchInput.addEventListener("input", function() {
+        clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => fetchMembers(searchInput.value, 1), 300);
+    });
+    
+    prevPage.addEventListener("click", function(e) {
+        e.preventDefault();
+        if (currentPage > 1) fetchMembers(searchInput.value, currentPage - 1);
+    });
+    
+    nextPage.addEventListener("click", function(e) {
+        e.preventDefault();
+        if (currentPage < totalPages) fetchMembers(searchInput.value, currentPage + 1);
+    });
+    
+    // Accessibility: Keyboard navigation for pagination and tabs
+    document.querySelectorAll(".page-number, #prev-page, #next-page, .nav-link").forEach(link => {
+        link.addEventListener("keydown", function(e) {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                link.click();
+            }
+        });
+    });
+    
+    fetchMembers("");
+});
 </script>
-
 {% endblock %}

@@ -1,6 +1,5 @@
-<!-- templates/Groups/group_detail.html -->
 {% extends "base.html" %}
-{% load static %}
+{% load static widget_tweaks %}
 {% block title %}Group Dashboard - {{ group.name }} - Sao Zirobwe SACCO{% endblock %}
 {% block content %}
 <div class="container">
@@ -17,7 +16,6 @@
   </div>
 
   <div class="row g-4">
-    <!-- Group Info -->
     <div class="col-md-4">
       <div class="card shadow-sm border-0">
         <div class="card-header bg-primary text-white">
@@ -52,7 +50,6 @@
       </div>
     </div>
 
-    <!-- Loan Info -->
     <div class="col-md-4">
       <div class="card shadow-sm border-0">
         <div class="card-header bg-success text-white">
@@ -95,7 +92,6 @@
       </div>
     </div>
 
-    <!-- Members in Arrears -->
     <div class="col-md-4">
       <div class="card shadow-sm border-0">
         <div class="card-header bg-danger text-white">
@@ -123,44 +119,27 @@
     </div>
   </div>
 
-  <!-- Members Table -->
   <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
       <h5 class="mb-0"><i class="fas fa-users me-2"></i>Group Members</h5>
-      <button class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addMembersModal" aria-label="Add Members to {{ group.name }}">
+      <a href="{% url 'group_lending:add_group_members' group.id %}" class="btn btn-sm btn-primary rounded-pill px-3" aria-label="Add Members to {{ group.name }}">
         <i class="fas fa-plus me-1"></i>Add Members
-      </button>
+      </a>
     </div>
     <div class="card-body">
       <table class="table table-striped align-middle">
         <thead>
           <tr>
             <th>Name</th>
-            <th>Role</th>
-            <th>Joined</th>
-            <th>Loan Allocation</th>
-            <th>Status</th>
+            <th>Account Number</th>
+            <th>Loan Amount</th>
           </tr>
         </thead>
         <tbody>
           {% for member in members %}
           <tr>
-            <td>
-              <div class="d-flex align-items-center gap-3">
-                {% if member.customer.profile_picture %}
-                  <img src="{{ member.customer.profile_picture.url }}" alt="{{ member.customer.first_name }} {{ member.customer.surname }}" class="rounded-circle profile-placeholder" style="width: 32px; height: 32px; object-fit: cover; border: 2px solid var(--primary-color);">
-                {% else %}
-                  <div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; border: 2px solid var(--primary-color); background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: #ffffff; font-size: 0.8rem; font-weight: 600; font-family: 'Poppins', sans-serif;" aria-label="Placeholder for {{ member.customer.first_name }} {{ member.customer.surname }}">
-                    {{ member.customer.first_name|first }}{{ member.customer.surname|first }}
-                  </div>
-                {% endif %}
-                <a href="{% url 'memberSum' member.customer.cus_id %}" class="text-decoration-none text-dark" aria-label="View {{ member.customer.first_name }} {{ member.customer.surname }} Details">
-                  {{ member.customer.first_name }} {{ member.customer.surname }}
-                </a>
-              </div>
-            </td>
-            <td>{{ member.role|title }}</td>
-            <td>{{ member.joined_on }}</td>
+            <td>{{ member.customer.first_name }} {{ member.customer.surname }}</td>
+            <td>{{ member.customer.member_number|default:"N/A" }}</td>
             <td>
               {% for allocation in allocations %}
                 {% if allocation.member == member.customer %}
@@ -170,23 +149,10 @@
                 N/A
               {% endfor %}
             </td>
-            <td>
-              {% for allocation in allocations %}
-                {% if allocation.member == member.customer %}
-                  {% if allocation.status == "performing" %}
-                    <span class="badge bg-success">Performing</span>
-                  {% else %}
-                    <span class="badge bg-danger">In Arrears</span>
-                  {% endif %}
-                {% endif %}
-              {% empty %}
-                <span class="badge bg-warning text-dark">No Loan</span>
-              {% endfor %}
-            </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="5" class="text-center py-5">
+            <td colspan="3" class="text-center py-5">
               <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
               <h5 class="text-muted mb-3">No members found</h5>
             </td>
@@ -197,7 +163,6 @@
     </div>
   </div>
 
-  <!-- Repayments Table -->
   <div class="card shadow-sm border-0 mt-4">
     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
       <h5 class="mb-0"><i class="fas fa-money-bill-wave me-2"></i>Repayment History</h5>
@@ -235,7 +200,6 @@
     </div>
   </div>
 
-  <!-- Create Loan Modal -->
   {% if not active_loan %}
   <div class="modal fade" id="createLoanModal" tabindex="-1" aria-labelledby="createLoanModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -245,18 +209,42 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form method="post">
+          <form method="post" id="loanForm">
             {% csrf_token %}
             <input type="hidden" name="create_loan" value="1">
             {{ loan_form.non_field_errors }}
             <div class="row g-3">
               {% for field in loan_form %}
-                <div class="col-md-6">
-                  <label class="form-label fw-bold">{{ field.label }}</label>
-                  {{ field }}
-                  {{ field.errors }}
-                </div>
+                {% if field.name != 'allocations' %}
+                  <div class="col-md-6">
+                    <label class="form-label fw-bold">{{ field.label }}</label>
+                    {% render_field field class="form-control" %}
+                    {{ field.errors }}
+                  </div>
+                {% endif %}
               {% endfor %}
+              <div class="col-12 mt-4">
+                <h6 class="fw-bold">Loan Allocations</h6>
+                <p class="text-muted">Total allocated: <span id="totalAllocated">0</span></p>
+                <table class="table table-bordered" id="allocationsTable">
+                  <thead>
+                    <tr>
+                      <th>Member</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for member in members %}
+                      <tr>
+                        <td>{{ member.customer.first_name }} {{ member.customer.surname }}</td>
+                        <td>
+                          <input type="number" class="form-control allocation-amount" name="allocations[{{ member.customer.cus_id }}]" data-member-id="{{ member.customer.cus_id }}" step="0.01" min="0" required>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
             </div>
             <div class="mt-4 d-flex gap-2">
               <button type="submit" class="btn btn-primary px-4">Create Loan</button>
@@ -269,7 +257,6 @@
   </div>
   {% endif %}
 
-  <!-- Repayment Modal -->
   {% if active_loan %}
   <div class="modal fade" id="addRepaymentModal" tabindex="-1" aria-labelledby="addRepaymentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -287,7 +274,7 @@
               {% for field in repayment_form %}
                 <div class="col-md-6">
                   <label class="form-label fw-bold">{{ field.label }}</label>
-                  {{ field }}
+                  {% render_field field class="form-control" %}
                   {{ field.errors }}
                 </div>
               {% endfor %}
@@ -302,34 +289,6 @@
     </div>
   </div>
   {% endif %}
-
-  <!-- Add Members Modal -->
-  <div class="modal fade" id="addMembersModal" tabindex="-1" aria-labelledby="addMembersModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
-          <h5 class="modal-title" id="addMembersModalLabel">Add Members to {{ group.name }}</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <form method="post" action="{% url 'add_group_members' group.id %}">
-            {% csrf_token %}
-            <input type="hidden" name="add_members" value="1">
-            <div class="mb-3">
-              <label for="members" class="form-label fw-bold">Select Members</label>
-              <select id="members" name="members" class="form-select select2" multiple style="width: 100%;">
-                <option value="">Search and add members</option>
-              </select>
-            </div>
-            <div class="mt-4 d-flex gap-2">
-              <button type="submit" class="btn btn-primary px-4">Add Members</button>
-              <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancel</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <style>
@@ -477,16 +436,6 @@
     vertical-align: middle;
   }
 
-  .profile-placeholder {
-    transition: var(--transition);
-  }
-
-  .dark-mode .profile-placeholder {
-    background: linear-gradient(135deg, #3a4445, #2a3435);
-    color: var(--text-light);
-    border-color: var(--text-light);
-  }
-
   .modal-content {
     border-radius: 16px;
     box-shadow: var(--shadow-dark);
@@ -531,24 +480,10 @@
     outline: none;
   }
 
-  .select2-container--default .select2-selection--multiple {
-    border: 1px solid #e0e0e0;
-    border-radius: 12px;
-    background: #f8f9fa;
-  }
-
-  .dark-mode .select2-container--default .select2-selection--multiple {
-    background: var(--border-dark);
-    border-color: var(--border-dark);
-    color: var(--text-light);
-  }
-
-  /* Accessibility */
   a:focus,
   button:focus,
   .form-control:focus,
-  .form-select:focus,
-  .profile-placeholder:focus {
+  .form-select:focus {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
   }
@@ -579,46 +514,43 @@
     .table td {
       font-size: 0.85rem;
     }
-    .profile-placeholder {
-      font-size: 0.7rem;
-      width: 28px;
-      height: 28px;
-    }
     .badge {
       font-size: 0.7rem;
     }
   }
 </style>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 <script>
 $(document).ready(function() {
-    $('#members').select2({
-        ajax: {
-            url: '{% url 'customer_search' %}',
-            dataType: 'json',
-            delay: 250,
-            data: function(params) {
-                return { q: params.term || '' };
-            },
-            processResults: function(data) {
-                return {
-                    results: data.map(function(customer) {
-                        return {
-                            id: customer.id,
-                            text: `${customer.full_name} (${customer.member_number})`
-                        };
-                    })
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 2,
-        placeholder: 'Search and add members',
-        allowClear: true
+  $('#loanForm').on('submit', function(e) {
+    const allocations = [];
+    $('#allocationsTable .allocation-amount').each(function() {
+      const amount = $(this).val();
+      const memberId = $(this).data('member-id');
+      if (amount && parseFloat(amount) > 0) {
+        allocations.push({
+          member_id: memberId,
+          amount: parseFloat(amount)
+        });
+      }
     });
+    $('<input>').attr({
+      type: 'hidden',
+      name: 'allocations',
+      value: JSON.stringify(allocations)
+    }).appendTo('#loanForm');
+  });
+
+  $('#allocationsTable .allocation-amount').on('input', function() {
+    let total = 0;
+    $('#allocationsTable .allocation-amount').each(function() {
+      const value = parseFloat($(this).val()) || 0;
+      total += value;
+    });
+    $('#totalAllocated').text(total.toFixed(2));
+  });
 });
 </script>
 {% endblock %}

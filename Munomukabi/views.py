@@ -1411,27 +1411,58 @@ from .models import Customer  # Adjust import based on your app structure
 logger = logging.getLogger(__name__)
 
 def member_list(request):
+    """
+    Initial render for members page.
+    Loads only the first page of customers instead of all,
+    since search_members handles dynamic loading with AJAX.
+    """
     try:
-        customers = Customer.objects.all().order_by('cus_id')
-        logger.debug(f"Loaded {customers.count()} customers for initial render")
-        context = {'customers': customers}
+        customers_qs = Customer.objects.all().order_by('cus_id')
+
+        # Only paginate for initial render to avoid loading 20k+ members
+        paginator = Paginator(customers_qs, 5)  # show 20 on initial load
+        page_number = request.GET.get("page", 1)
+        page_obj = paginator.get_page(page_number)
+
+        logger.debug(
+            f"Loaded {page_obj.paginator.count} total customers, "
+            f"showing page {page_number} with {len(page_obj)} records"
+        )
+
+        context = {
+            'customers': page_obj,  # only pass the page, not the full queryset
+            'page_obj': page_obj,
+        }
         return render(request, 'members.html', context)  # Adjust template path
     except Exception as e:
         logger.error(f"Error in members view: {str(e)}", exc_info=True)
-        return render(request, 'members.html', {'error': 'An error occurred while loading customers.'}, status=500)
+        return render(
+            request,
+            'members.html',
+            {'error': 'An error occurred while loading customers.'},
+            status=500
+        )
+
 
 def search_members(request):
+    """
+    Handles AJAX search + pagination.
+    Returns JSON response with filtered and paginated customer data.
+    """
     try:
         query = request.GET.get('search', '')
         page = request.GET.get('page', 1)
+
         try:
             page = int(page)
         except ValueError:
             page = 1
 
-        logger.debug(f"Search query: {query}, Page: {page}")
+        logger.debug(f"Search query: '{query}', Page: {page}")
 
         customers = Customer.objects.all()
+
+        # Apply search filters
         if query:
             customers = customers.filter(
                 Q(first_name__icontains=query) |
@@ -1442,8 +1473,9 @@ def search_members(request):
             )
 
         customers = customers.order_by('cus_id')
-        logger.debug(f"Found {customers.count()} customers")
+        logger.debug(f"Found {customers.count()} customers after filtering")
 
+        # Paginate results (5 per page for AJAX requests)
         paginator = Paginator(customers, 5)
         page_obj = paginator.get_page(page)
 
@@ -1459,7 +1491,10 @@ def search_members(request):
                     'village': customer.village,
                     'branch': str(customer.branch.name) if customer.branch else 'NA',
                     'phone': customer.phone,
-                    'profile_picture': customer.profile_picture.url if customer.profile_picture else None,
+                    'profile_picture': (
+                        customer.profile_picture.url
+                        if customer.profile_picture else None
+                    ),
                 }
                 for customer in page_obj
             ],
@@ -1470,7 +1505,9 @@ def search_members(request):
             'has_next': page_obj.has_next(),
         }
 
-        logger.debug(f"Returning {len(data['customers'])} customers in response")
+        logger.debug(
+            f"Returning {len(data['customers'])} customers on page {data['current_page']}"
+        )
         return JsonResponse(data)
     except Exception as e:
         logger.error(f"Error in search_members view: {str(e)}", exc_info=True)

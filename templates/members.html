@@ -2,122 +2,145 @@
 {% load static %}
 {% block title %}Members - Sao Zirobwe SACCO{% endblock %}
 {% block content %}
+
 <div class="container">
+    <!-- Header -->
     <div class="header-section d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="mb-1"><i class="fas fa-users me-2"></i>Customers</h2>
-            <p class="text-muted mb-0">Manage and view all customer information</p>
+            <h2 class="mb-1"><i class="fas fa-users me-2"></i> Customers</h2>
+            <p class="text-muted mb-0">Manage and view all registered customer information</p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'member_registration' %}" class="btn btn-primary px-4" aria-label="Register Customer">
-                <i class="fas fa-user-plus me-2"></i>Register Customer
-            </a>
-        </div>
+        <a href="{% url 'member_registration' %}" class="btn btn-primary px-4" aria-label="Register Customer">
+            <i class="fas fa-user-plus me-2"></i> Register Customer
+        </a>
     </div>
-    
+
+    <!-- Card -->
     <div class="card shadow-sm border-0">
         <div class="card-body p-4">
-            <!-- Tabs for Different Customer Types -->
+
+            <!-- Tabs -->
             <ul class="nav nav-tabs mb-4" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active px-4" href="#" role="tab" aria-selected="true">
-                        <i class="fas fa-user me-2"></i>INDIVIDUALS
+                        <i class="fas fa-user me-2"></i> Individuals
                     </a>
                 </li>
             </ul>
-            
-            <!-- Search Bar -->
+
+            <!-- Search -->
             <div class="search-container mb-4">
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0">
                         <i class="fas fa-search text-muted"></i>
                     </span>
-                    <input type="text" id="search_member" class="form-control border-start-0 ps-0" placeholder="Search customers by name, ID, or contact..." aria-label="Search customers">
+                    <input 
+                        type="text" 
+                        id="search_member" 
+                        class="form-control border-start-0 ps-0" 
+                        placeholder="Search customers by name, ID, or contact..." 
+                        aria-label="Search customers">
                 </div>
             </div>
-            
+
             <!-- Spinner -->
-            <div id="loading-spinner" class="text-center mt-3 mb-4" style="display: none;" aria-live="polite">
+            <div id="loading-spinner" class="text-center my-4 d-none" aria-live="polite">
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading customers...</span>
                 </div>
             </div>
-            
-            <!-- Customer List -->
-            <div class="member-list" id="member-list" role="region" aria-label="Customer List">
+
+            <!-- Member List -->
+            <div id="member-list" class="member-list" role="region" aria-label="Customer List">
                 {% for customer in customers %}
-                <div class="member-card mb-3 border rounded-lg overflow-hidden transition-all">
-                    <div class="member-row d-flex align-items-center p-4">
-                        <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
-                            <div class="d-flex align-items-center gap-3">
-                                {% if customer.profile_picture %}
-                                    <img src="{{ customer.profile_picture.url }}" alt="{{ customer.first_name }} {{ customer.surname }}" class="rounded-circle profile-placeholder" style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--primary-color);">
-                                {% else %}
-                                    <div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border: 2px solid var(--primary-color); background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: #ffffff; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif;" aria-label="Placeholder for {{ customer.first_name }} {{ customer.surname }}">
-                                        {{ customer.first_name|first }}{{ customer.surname|first }}
-                                    </div>
-                                {% endif %}
-                                <div class="member-name">
-                                    <h5 class="mb-0 fw-semibold">
-                                        <a href="{% url 'memberSum' customer.cus_id %}" class="text-decoration-none text-dark" aria-label="View {{ customer.first_name }} {{ customer.surname }} Details">
-                                            {{ customer.first_name }} {{ customer.surname }}
-                                        </a>
-                                    </h5>
-                                    <div class="d-flex align-items-center gap-2 mt-1">
-                                        <span class="badge bg-light text-dark fw-normal">{{ customer.member_number }}</span>
-                                        <span class="badge bg-primary-subtle text-primary fw-normal">{{ customer.branch|default:"Busiika Branch" }} Branch</span>
+                    <div class="member-card mb-3 border rounded-lg overflow-hidden">
+                        <div class="member-row d-flex align-items-center p-4">
+                            <!-- Profile -->
+                            <div class="member-info flex-2" style="flex-basis: 35%; min-width: 250px;">
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if customer.profile_picture %}
+                                        <img src="{{ customer.profile_picture.url }}" 
+                                             alt="{{ customer.first_name }} {{ customer.surname }}" 
+                                             class="rounded-circle profile-placeholder"
+                                             style="width: 48px; height: 48px; object-fit: cover; border: 2px solid var(--primary-color);">
+                                    {% else %}
+                                        <div class="profile-placeholder rounded-circle d-flex align-items-center justify-content-center"
+                                             style="width: 48px; height: 48px; border: 2px solid var(--primary-color);
+                                                    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+                                                    color: #fff; font-size: 1rem; font-weight: 600; font-family: 'Poppins', sans-serif;"
+                                             aria-label="Placeholder for {{ customer.first_name }} {{ customer.surname }}">
+                                             {{ customer.first_name|first }}{{ customer.surname|first }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="member-name">
+                                        <h5 class="mb-0 fw-semibold">
+                                            <a href="{% url 'memberSum' customer.cus_id %}" 
+                                               class="text-decoration-none text-dark" 
+                                               aria-label="View {{ customer.first_name }} {{ customer.surname }} details">
+                                               {{ customer.first_name }} {{ customer.surname }}
+                                            </a>
+                                        </h5>
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <span class="badge bg-light text-dark">{{ customer.member_number }}</span>
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                {{ customer.branch|default:"Busiika" }} Branch
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas fa-venus-mars"></i>
-                                <span class="text-muted">{{ customer.gender }}</span>
+                            
+                            <!-- Meta -->
+                            <div class="member-meta flex-1" style="flex-basis: 20%; min-width: 150px;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fas fa-venus-mars text-muted"></i>
+                                    <span class="text-muted">{{ customer.gender }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-birthday-cake text-muted"></i>
+                                    <span class="text-muted">
+                                        {{ customer.age|default:"N/A" }} {% if customer.age %}YEARS{% endif %}
+                                    </span>
+                                </div>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fa-solid fa-venus-mars"></i>
-                                <span class="text-muted">
-                                    {% if customer.age %}
-                                        {{ customer.age }} YEARS
-                                    {% else %}
-                                        N/A
-                                    {% endif %}
-                                </span>
+
+                            <!-- Contact -->
+                            <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fas fa-phone text-primary"></i>
+                                    <span>{{ customer.phone|default:"N/A" }}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="fas fa-map-marker-alt text-secondary"></i>
+                                    <span>{{ customer.village|default:"N/A" }}</span>
+                                </div>
                             </div>
-                        </div>
-                       <div class="member-meta flex-1" style="flex-basis: 25%; min-width: 200px;">
-                            <div class="d-flex align-items-center gap-2 mb-2">
-                                <i class="fas fa-phone text-primary"></i>
-                                <span>{{ customer.phone|default:"N/A" }}</span>
+
+                            <!-- Actions -->
+                            <div class="member-actions">
+                                <a href="{% url 'memberSum' customer.cus_id %}" 
+                                   class="btn btn-sm btn-outline-primary rounded-pill px-3" 
+                                   aria-label="View details">
+                                    <i class="fas fa-eye me-1"></i> View
+                                </a>
                             </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <i class="fas fa-map-marker-alt text-secondary"></i>
-                                <span>{{ customer.village|default:"N/A" }}</span>
-                            </div>
-                        </div>
-                        <div class="member-actions">
-                            <a href="{% url 'memberSum' customer.cus_id %}" class="btn btn-sm btn-outline-primary rounded-pill px-3" aria-label="View details">
-                                <i class="fas fa-eye me-1"></i>View
-                            </a>
                         </div>
                     </div>
-                </div>
                 {% empty %}
-                <div class="text-center py-5">
-                    <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
-                    <h5 class="text-muted mb-3">No customers found</h5>
-                    <p class="text-muted mb-4">Get started by registering your first customer</p>
-                    <a href="{% url 'member_registration' %}" class="btn btn-primary px-4">
-                        <i class="fas fa-user-plus me-2"></i>Register Customer
-                    </a>
-                </div>
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-slash text-muted mb-3" style="font-size: 3rem;"></i>
+                        <h5 class="text-muted mb-3">No customers found</h5>
+                        <p class="text-muted mb-4">Get started by registering your first customer</p>
+                        <a href="{% url 'member_registration' %}" class="btn btn-primary px-4">
+                            <i class="fas fa-user-plus me-2"></i> Register Customer
+                        </a>
+                    </div>
                 {% endfor %}
             </div>
-            
+
             <!-- Pagination -->
             <div class="pagination-container d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                <div id="page-info" class="text-muted"></div>
+                <div id="page-info" class="text-muted small"></div>
                 <div class="d-flex align-items-center gap-2">
                     <a href="#" id="prev-page" class="btn btn-sm btn-outline-secondary rounded-circle" aria-label="Previous Page">
                         <i class="fas fa-chevron-left"></i>

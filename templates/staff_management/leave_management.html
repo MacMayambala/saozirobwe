@@ -1,10 +1,8 @@
 {% extends 'base.html' %}
-
 {% block title %}Leave Management - {{ staff.full_name }} - Sao Zirobwe SACCO{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-    <!-- Header -->
     <header class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h2"><i class="bi bi-calendar-check me-2"></i>Leave Management - {{ staff.full_name }}</h1>
         <a href="{% url 'staff_management:view_performance' staff_id=staff.id %}" class="btn btn-outline-secondary">
@@ -12,7 +10,6 @@
         </a>
     </header>
 
-    <!-- Current Leave Status -->
     <section class="card shadow-sm mb-4">
         <div class="card-body">
             <h2 class="h3 mb-3">Current Leave Status</h2>
@@ -37,7 +34,6 @@
         </div>
     </section>
 
-    <!-- Flash Messages -->
     {% if messages %}
         <div class="mb-4">
             {% for message in messages %}
@@ -49,10 +45,14 @@
         </div>
     {% endif %}
 
-    <!-- Request New Leave Form -->
     <section class="card shadow-sm mb-4">
         <div class="card-body">
             <h2 class="h3 mb-3">Request New Leave</h2>
+            <!-- {% if allow_backdate %}
+                <div class="alert alert-warning mb-3">Backdating is enabled. You can select past dates.</div>
+            {% else %}
+                <div class="alert alert-info mb-3">Backdating is disabled. Dates must be today or later.</div>
+            {% endif %} -->
             <form method="POST" action="{% url 'staff_management:leave_management' staff_id=staff.id %}" id="leaveRequestForm" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="action" value="request">
@@ -70,12 +70,14 @@
                 </div>
                 <div class="mb-3">
                     <label for="start_date" class="form-label">Start Date <span class="text-danger">*</span></label>
-                    <input type="date" name="start_date" id="start_date" class="form-control" required min="{% now 'Y-m-d' %}" aria-describedby="startDateError">
+                    <input type="date" name="start_date" id="start_date" class="form-control" required
+                           {% if not allow_backdate %}min="{% now 'Y-m-d' %}"{% endif %} aria-describedby="startDateError">
                     <div id="startDateError" class="invalid-feedback">Please select a valid start date.</div>
                 </div>
                 <div class="mb-3">
                     <label for="end_date" class="form-label">End Date <span class="text-danger">*</span></label>
-                    <input type="date" name="end_date" id="end_date" class="form-control" required min="{% now 'Y-m-d' %}" aria-describedby="endDateError">
+                    <input type="date" name="end_date" id="end_date" class="form-control" required
+                           {% if not allow_backdate %}min="{% now 'Y-m-d' %}"{% endif %} aria-describedby="endDateError">
                     <div id="endDateError" class="invalid-feedback">Please select a valid end date.</div>
                 </div>
                 <div class="mb-3">
@@ -88,7 +90,6 @@
         </div>
     </section>
 
-    <!-- Leave History Table -->
     <section class="card shadow-sm">
         <div class="card-body">
             <h2 class="h3 mb-3">Leave History</h2>
@@ -152,7 +153,6 @@
     </section>
 </div>
 
-<!-- Leave Action Modal -->
 <div class="modal fade" id="leavePasswordModal" tabindex="-1" aria-labelledby="leavePasswordModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content shadow-lg">
@@ -185,22 +185,65 @@
     </div>
 </div>
 
-<!-- JavaScript for Modal and Form Validation -->
 <script>
 (function () {
     'use strict';
 
-    // Form validation for leave request form
     const leaveRequestForm = document.getElementById('leaveRequestForm');
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const allowBackdate = {{ allow_backdate|yesno:"true,false" }};
+    console.log('allow_backdate in template:', allowBackdate);
+
     leaveRequestForm.addEventListener('submit', function (event) {
         if (!leaveRequestForm.checkValidity()) {
             event.preventDefault();
             event.stopPropagation();
         }
+
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        console.log('Start date:', startDateInput.value, 'End date:', endDateInput.value);
+
+        if (startDate > endDate) {
+            event.preventDefault();
+            endDateInput.setCustomValidity('End date must be on or after start date.');
+            endDateInput.classList.add('is-invalid');
+            document.getElementById('endDateError').textContent = 'End date must be on or after start date.';
+        } else {
+            endDateInput.setCustomValidity('');
+            endDateInput.classList.remove('is-invalid');
+        }
+
+        if (!allowBackdate) {
+            const today = new Date('{% now "Y-m-d" %}');
+            console.log('Today:', today, 'Allow backdate:', allowBackdate);
+            if (startDate < today) {
+                event.preventDefault();
+                startDateInput.setCustomValidity('Backdating is not allowed.');
+                startDateInput.classList.add('is-invalid');
+                document.getElementById('startDateError').textContent = 'Backdating is not allowed.';
+            } else {
+                startDateInput.setCustomValidity('');
+                startDateInput.classList.remove('is-invalid');
+            }
+        }
+
         leaveRequestForm.classList.add('was-validated');
     }, false);
 
-    // Form validation and submission for leave action modal (AJAX)
+    startDateInput.addEventListener('input', function () {
+        startDateInput.setCustomValidity('');
+        startDateInput.classList.remove('is-invalid');
+        document.getElementById('startDateError').textContent = 'Please select a valid start date.';
+    });
+
+    endDateInput.addEventListener('input', function () {
+        endDateInput.setCustomValidity('');
+        endDateInput.classList.remove('is-invalid');
+        document.getElementById('endDateError').textContent = 'Please select a valid end date.';
+    });
+
     const leavePasswordForm = document.getElementById('leavePasswordForm');
     leavePasswordForm.addEventListener('submit', function (event) {
         event.preventDefault();
@@ -211,6 +254,7 @@
         }
 
         const formData = new FormData(leavePasswordForm);
+        console.log('Submitting leave action:', formData.get('action'), 'for leave ID:', formData.get('leave_id'));
         fetch("{% url 'staff_management:leave_management' staff_id=staff.id %}", {
             method: 'POST',
             body: formData,
@@ -219,22 +263,29 @@
                 'X-CSRFToken': formData.get('csrfmiddlewaretoken')
             }
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Leave action response status:', response.status);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('Leave action response data:', data);
             if (data.success) {
-                window.location.reload(); // Refresh to show updated leave status and flash messages
+                window.location.reload();
             } else {
                 alert(data.error || 'An error occurred while processing the request.');
             }
         })
         .catch(error => {
-            alert('An error occurred while processing the request.');
             console.error('Error:', error);
+            alert('An error occurred while processing the request.');
         });
     }, false);
 
-    // Open leave action modal
     window.openLeaveModal = function (leaveId, actionType) {
+        console.log('Opening modal for leave ID:', leaveId, 'Action:', actionType);
         const modal = new bootstrap.Modal(document.getElementById('leavePasswordModal'), {
             keyboard: true,
             backdrop: 'static'

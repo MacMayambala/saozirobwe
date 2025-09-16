@@ -180,6 +180,14 @@ class Customer(models.Model):
                 setattr(self, field, None)
 
         super().save(*args, **kwargs)
+    class Meta:
+        indexes = [
+            models.Index(fields=['first_name']),
+            models.Index(fields=['surname']),
+            models.Index(fields=['member_number']),
+            models.Index(fields=['cus_id']),
+            models.Index(fields=['phone']),
+        ]
 
     def __str__(self):
         return f"{self.cus_id} - {self.first_name} {self.surname}"

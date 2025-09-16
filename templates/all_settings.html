@@ -40,12 +40,24 @@
             <a href="{% url 'cron_management' %}" aria-label="Manage Cron Jobs">Manage Cron Jobs</a>
             <p>Configure and run scheduled tasks.</p>
         </div>
-        {% if 'Import' in allowed_modules %}
         <div class="settings-card">
-            <i class="fas fa-file-upload"></i>
-            <a href="{% url 'excel_import' %}" aria-label="Import Data">Import</a>
-            <p>Upload data from Excel sheets into the system.</p>
+            <i class="fas fa-calendar-minus"></i>
+            <label class="form-check-label mb-2">
+                <input type="checkbox" id="allow-backdate" name="allow_backdate" class="form-check-input"
+                       {% if setting.allow_backdate %}checked{% endif %}>
+                Allow Backdating
+            </label>
+            <p>Enable users to record past dates in the system.</p>
+            <span id="backdate-status" class="text-muted small">
+                <span id="backdate-loading" class="d-none"><i class="fas fa-spinner fa-spin"></i> Saving...</span>
+            </span>
         </div>
+        {% if 'Import' in allowed_modules %}
+            <div class="settings-card">
+                <i class="fas fa-file-upload"></i>
+                <a href="{% url 'excel_import' %}" aria-label="Import Data">Import</a>
+                <p>Upload data from Excel sheets into the system.</p>
+            </div>
         {% endif %}
     </div>
 
@@ -98,6 +110,55 @@
             <p>View and edit existing election term details.</p>
         </div>
     </div>
+
+    <!-- JavaScript for AJAX Toggle -->
+    <script>
+        document.getElementById('allow-backdate').addEventListener('change', function() {
+            const isChecked = this.checked;
+            const statusElement = document.getElementById('backdate-status');
+            const loadingElement = document.getElementById('backdate-loading');
+            console.log('Toggling allow_backdate to:', isChecked);
+            statusElement.textContent = '';
+            loadingElement.classList.remove('d-none');
+            
+            fetch("{% url 'staff_management:system_settings' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ allow_backdate: isChecked })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    if (response.status === 403) {
+                        window.location.href = "{% url 'login' %}?next={% url 'staff_management:system_settings' %}";
+                        throw new Error('Authentication required. Redirecting to login...');
+                    }
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                loadingElement.classList.add('d-none');
+                if (data.status === 'success') {
+                    statusElement.textContent = data.message;
+                    statusElement.classList.remove('text-danger');
+                    statusElement.classList.add('text-success');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingElement.classList.add('d-none');
+                statusElement.textContent = error.message || 'Error updating setting';
+                statusElement.classList.remove('text-success');
+                statusElement.classList.add('text-danger');
+                this.checked = !isChecked;
+            });
+        });
+    </script>
 </div>
 
 <style>
@@ -256,14 +317,18 @@
         color: #ffffff;
     }
 
-    /* Accessibility */
-    .settings-card a:focus,
-    .breadcrumb a:focus {
-        outline: 2px solid var(--primary-color);
-        outline-offset: 2px;
+    .text-success {
+        color: var(--success-color) !important;
     }
 
-    /* Responsive Design */
+    .text-danger {
+        color: var(--error-color) !important;
+    }
+
+    .fa-spinner {
+        margin-right: 5px;
+    }
+
     @media (max-width: 576px) {
         .container {
             padding: 15px 10px;

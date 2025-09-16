@@ -1,6 +1,7 @@
 from django.db import models
 
-# loans/models.py
+# Create your models here.
+
 from django.db import models
 from Customer.models import Customer
 
@@ -44,7 +45,7 @@ class Repayment(models.Model):
     received_by = models.CharField(max_length=255, null=True, blank=True)
     member = models.ForeignKey(
         Customer, on_delete=models.CASCADE, null=True, blank=True
-    )  # Track member for group loans
+    )
 
     def __str__(self):
         return f"Repayment {self.amount} for Loan {self.loan.id}"

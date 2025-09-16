@@ -713,6 +713,7 @@ from datetime import datetime
 import logging
 import requests
 from .models import Staff, Leave
+from .utils import is_backdate_allowed
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -747,29 +748,72 @@ def send_sms_speedamobile(phone_number, message_text):
         logger.error(f"SMS API error for {phone_number}: {str(e)}")
         return {"status": "F", "remarks": str(e)}
 
+import logging
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from .models import Staff, Leave, SystemSetting, is_backdate_allowed
+from datetime import datetime
+
+logger = logging.getLogger(__name__)
+
+import logging
+from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import SystemSetting
+
+logger = logging.getLogger(__name__)
+
+@login_required
+@csrf_protect
+def system_settings(request):
+    setting = SystemSetting.get_instance()
+    logger.debug(f"SystemSetting fetched: id={setting.id}, allow_backdate={setting.allow_backdate}")
+    
+    if request.method == "POST":
+        try:
+            allow_backdate = 'allow_backdate' in request.POST  # Checkbox sends 'on' or nothing
+            logger.debug(f"POST received: allow_backdate={allow_backdate}")
+            setting.allow_backdate = allow_backdate
+            setting.save()
+            logger.debug(f"SystemSetting updated: id={setting.id}, allow_backdate={setting.allow_backdate}")
+            messages.success(request, f"Backdating {'enabled' if allow_backdate else 'disabled'}")
+            return JsonResponse({
+                "status": "success",
+                "allow_backdate": setting.allow_backdate,
+                "message": f"Backdating {'enabled' if setting.allow_backdate else 'disabled'}"
+            })
+        except Exception as e:
+            logger.error(f"Error saving SystemSetting: {str(e)}")
+            messages.error(request, f"Failed to update backdate setting: {str(e)}")
+            return JsonResponse({
+                "status": "error",
+                "message": f"Failed to update: {str(e)}"
+            }, status=500)
+    
+    return render(request, "all_settings.html", {
+        "setting": setting,
+        "allowed_modules": ["Import"]
+    })
+
 @login_required
 def leave_management(request, staff_id):
-    """
-    Handle leave management for a specific staff member, including requesting, reviewing,
-    approving, or rejecting leaves. Sends notifications for actions and enforces business rules.
-    
-    Args:
-        request: HTTP request object.
-        staff_id: ID of the staff member.
-    
-    Returns:
-        Rendered template for GET requests or redirects/JSON responses for POST requests.
-    """
-    # Fetch staff and related data
+    """Handle leave management for a specific staff member."""
     staff = get_object_or_404(Staff, id=staff_id)
     leaves = staff.leaves.all().order_by('-created_at')
     user = request.user
+    has_approved_leave = staff.leaves.filter(status='Approved', end_date__gte=timezone.now().date()).exists()
+    latest_approved_leave = staff.leaves.filter(status='Approved', end_date__gte=timezone.now().date()).first() if has_approved_leave else None
 
-    # Check for approved leaves
-    has_approved_leave = staff.leaves.filter(status='Approved').exists()
-    latest_approved_leave = staff.leaves.filter(status='Approved').order_by('-created_at').first() if has_approved_leave else None
-
-    # Group-based permissions
     authorized_groups = ['Manager', 'HR Manager', 'General Manager']
     can_reject_statuses = ['Pending', 'Reviewed', 'HR_Reviewed']
     is_authorized = user.groups.filter(name__in=authorized_groups).exists()
@@ -782,7 +826,6 @@ def leave_management(request, staff_id):
         action = request.POST.get('action')
         input_password = request.POST.get('password', '')
 
-        # Password verification for sensitive actions
         if action in ['review', 'hr_review', 'approve', 'reject'] and not user.check_password(input_password):
             logger.warning(f"Invalid password attempt by user {user.username} for action {action}")
             messages.error(request, "Incorrect password.")
@@ -790,9 +833,8 @@ def leave_management(request, staff_id):
 
         leave_id = request.POST.get('leave_id')
         leave = get_object_or_404(Leave, id=leave_id) if leave_id else None
-        comment = request.POST.get('comment', '').strip()[:500]  # Limit comment length
+        comment = request.POST.get('comment', '').strip()[:500]
 
-        # === Request New Leave ===
         if action == 'request' and not leave_id:
             try:
                 leave_type = request.POST.get('leave_type')
@@ -800,10 +842,8 @@ def leave_management(request, staff_id):
                 end_date_str = request.POST.get('end_date')
                 reason = request.POST.get('reason', '').strip()[:500]
 
-                # Input validation
                 if not all([leave_type, start_date_str, end_date_str]):
                     raise ValueError("Leave type, start date, and end date are required.")
-
                 try:
                     start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
                     end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
@@ -812,27 +852,21 @@ def leave_management(request, staff_id):
 
                 if end_date < start_date:
                     raise ValueError("End date must be after start date.")
-                if start_date < timezone.now().date():
+                if not is_backdate_allowed() and start_date < timezone.now().date():
                     raise ValueError("Start date cannot be in the past.")
 
-                # Business rules
                 ongoing_same_leave = staff.leaves.filter(
-                    leave_type=leave_type,
-                    status='Approved',
-                    end_date__gte=timezone.now().date()
+                    leave_type=leave_type, status='Approved', end_date__gte=timezone.now().date()
                 ).exists()
                 past_two_leaves = staff.leaves.filter(
-                    leave_type=leave_type,
-                    start_date__year=timezone.now().year
+                    leave_type=leave_type, start_date__year=timezone.now().year
                 ).count()
-
                 if ongoing_same_leave:
                     raise ValueError(f"You are already on {leave_type} leave.")
                 if past_two_leaves >= 2:
                     raise ValueError(f"You cannot request {leave_type} leave more than twice this year.")
 
-                # Create leave request
-                leave = Leave.objects.create(
+                leave = Leave(
                     staff=staff,
                     leave_type=leave_type,
                     start_date=start_date,
@@ -840,17 +874,17 @@ def leave_management(request, staff_id):
                     reason=reason or None,
                     created_at=timezone.now()
                 )
-                logger.info(f"Leave request created for {staff.full_name}: {leave_type} from {start_date} to {end_date}")
+                leave.full_clean()
+                leave.save()
+                logger.info(f"Leave request created for {staff.full_name}: {leave_type} from {start_date} to {end_date}, allow_backdate={is_backdate_allowed()}")
 
-                # Send confirmation notification
                 subject = "Leave Request Submitted"
                 message_text = f"Dear {staff.full_name},\n\nYour {leave_type} leave request from {start_date} to {end_date} has been submitted and is pending review."
-                contact_info = f"Contact: {staff.phone}"
+                contact_info = f"Contact: {staff.phone}" if staff.phone else ""
                 if staff.next_of_kin_phone:
                     contact_info += f" | Emergency: {staff.next_of_kin_phone}"
                 message_text += f"\n{contact_info}\nSAO ZIROBWE SACCO"
 
-                # Email notification
                 if staff.email:
                     try:
                         context = {
@@ -876,7 +910,6 @@ def leave_management(request, staff_id):
                     except Exception as e:
                         logger.error(f"Failed to send confirmation email to {staff.email}: {str(e)}")
 
-                # SMS notification
                 if staff.phone:
                     sms_result = send_sms_speedamobile(staff.phone, message_text)
                     if sms_result.get("status") != "S":
@@ -884,23 +917,24 @@ def leave_management(request, staff_id):
 
                 messages.success(request, "Leave request submitted successfully.")
                 return redirect('staff_management:leave_management', staff_id=staff.id)
-
             except ValueError as e:
                 logger.error(f"Leave request error for {staff.full_name}: {str(e)}")
                 messages.error(request, str(e))
+                return redirect('staff_management:leave_management', staff_id=staff.id)
+            except ValidationError as e:
+                logger.error(f"Leave validation error for {staff.full_name}: {e}")
+                messages.error(request, f"Validation error: {e}")
                 return redirect('staff_management:leave_management', staff_id=staff.id)
             except Exception as e:
                 logger.error(f"Unexpected error in leave request for {staff.full_name}: {str(e)}")
                 messages.error(request, "An unexpected error occurred.")
                 return redirect('staff_management:leave_management', staff_id=staff.id)
 
-        # === Review / Approve / Reject Leave ===
         elif action in ['review', 'hr_review', 'approve', 'reject'] and leave:
             try:
                 action_success = False
                 subject = None
                 message_text = None
-
                 if action == 'review' and is_manager and leave.status == 'Pending':
                     leave.status = 'Reviewed'
                     leave.manager_reviewed_by = reviewing_staff.user if reviewing_staff else None
@@ -908,7 +942,6 @@ def leave_management(request, staff_id):
                     subject = "Leave Reviewed by Manager"
                     message_text = f"Dear {staff.full_name},\n\nYour {leave.leave_type} leave has been reviewed by a manager."
                     action_success = True
-
                 elif action == 'hr_review' and is_hr_manager and leave.status == 'Reviewed':
                     leave.status = 'HR_Reviewed'
                     leave.hr_reviewed_by = reviewing_staff.user if reviewing_staff else None
@@ -916,7 +949,6 @@ def leave_management(request, staff_id):
                     subject = "Leave Reviewed by HR"
                     message_text = f"Dear {staff.full_name},\n\nYour {leave.leave_type} leave has been reviewed by HR."
                     action_success = True
-
                 elif action == 'approve' and is_general_manager and leave.status == 'HR_Reviewed':
                     leave.status = 'Approved'
                     leave.gm_approved_by = reviewing_staff.user if reviewing_staff else None
@@ -924,7 +956,6 @@ def leave_management(request, staff_id):
                     subject = "Leave Approved"
                     message_text = f"Dear {staff.full_name},\n\nYour {leave.leave_type} leave from {leave.start_date} to {leave.end_date} has been approved."
                     action_success = True
-
                 elif action == 'reject' and is_authorized and leave.status in can_reject_statuses:
                     leave.status = 'Rejected'
                     leave.comment = comment or None
@@ -937,13 +968,11 @@ def leave_management(request, staff_id):
                     leave.save()
                     logger.info(f"Leave {action} successful for {staff.full_name}: {leave.leave_type} (ID: {leave.id})")
 
-                    # Add contact info to message
-                    contact_info = f"Contact: {staff.phone}"
+                    contact_info = f"Contact: {staff.phone}" if staff.phone else ""
                     if staff.next_of_kin_phone:
                         contact_info += f" | Emergency: {staff.next_of_kin_phone}"
                     message_text += f"\n{contact_info}\nSAO ZIROBWE SACCO"
 
-                    # Email notification
                     if staff.email:
                         try:
                             context = {
@@ -970,7 +999,6 @@ def leave_management(request, staff_id):
                         except Exception as e:
                             logger.error(f"Failed to send {action} email to {staff.email}: {str(e)}")
 
-                    # SMS notification
                     if staff.phone:
                         sms_result = send_sms_speedamobile(staff.phone, message_text)
                         if sms_result.get("status") != "S":
@@ -978,23 +1006,19 @@ def leave_management(request, staff_id):
 
                     messages.success(request, f"Leave {action} successful.")
                     return JsonResponse({'success': True, 'message': f"Leave {action} successful."})
-
                 else:
                     logger.warning(f"Invalid action or permissions for user {user.username}: {action} on leave {leave.id}")
                     messages.error(request, "Invalid action or insufficient permissions.")
                     return JsonResponse({'success': False, 'error': 'Invalid action or insufficient permissions.'}, status=403)
-
             except Exception as e:
                 logger.error(f"Error processing {action} for leave {leave.id}: {str(e)}")
                 messages.error(request, "An unexpected error occurred.")
                 return JsonResponse({'success': False, 'error': 'An unexpected error occurred.'}, status=500)
-
         else:
             logger.warning(f"Invalid POST request by {user.username}: action={action}, leave_id={leave_id}")
             messages.error(request, "Invalid request.")
             return JsonResponse({'success': False, 'error': 'Invalid request.'}, status=400)
 
-    # GET request - render page
     context = {
         'staff': staff,
         'leaves': leaves,
@@ -1004,5 +1028,6 @@ def leave_management(request, staff_id):
         'is_manager': is_manager,
         'is_hr_manager': is_hr_manager,
         'is_general_manager': is_general_manager,
+        'allow_backdate': is_backdate_allowed()
     }
     return render(request, 'staff_management/leave_management.html', context)

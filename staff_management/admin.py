@@ -110,3 +110,16 @@ class TargetAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+# admin.py
+from django.contrib import admin
+from .models import Leave, SystemSetting
+
+@admin.register(Leave)
+class LeaveAdmin(admin.ModelAdmin):
+    list_display = ('staff', 'leave_type', 'start_date', 'end_date', 'status')
+
+@admin.register(SystemSetting)
+class SystemSettingAdmin(admin.ModelAdmin):
+    list_display = ('allow_backdate',)

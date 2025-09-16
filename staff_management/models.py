@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.core.exceptions import ValidationError
 
+
 class Branch(models.Model):
     code = models.CharField(max_length=10, unique=True, verbose_name="Branch Code")
     name = models.CharField(max_length=100, unique=True, verbose_name="Branch Name")
@@ -61,6 +62,7 @@ class Position(models.Model):
     def __str__(self):
         return self.name
 from django.db import models
+
 
 
 
@@ -224,8 +226,44 @@ class TargetTransaction(models.Model):
 
 
 ################################################################################################################
-class Leave(models.Model):
-    staff = models.ForeignKey('Staff', on_delete=models.CASCADE, related_name='leaves')
+# models.py
+from django.db import models
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+class BaseModel(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        abstract = True
+
+class SystemSetting(models.Model):
+    id = models.IntegerField(primary_key=True, default=1)
+    allow_backdate = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"System Settings (Backdate: {self.allow_backdate})"
+
+    class Meta:
+        verbose_name = "System Setting"
+        verbose_name_plural = "System Settings"
+
+    @classmethod
+    def get_instance(cls):
+        instance, created = cls.objects.get_or_create(id=1, defaults={'allow_backdate': False})
+        if created:
+            print(f"Created new SystemSetting instance: allow_backdate={instance.allow_backdate}")
+        return instance
+def is_backdate_allowed():
+    setting = SystemSetting.get_instance()
+    return setting.allow_backdate
+
+
+
+class Leave(BaseModel):
+    staff = models.ForeignKey(Staff, on_delete=models.CASCADE, related_name='leaves')
     leave_type = models.CharField(max_length=50, choices=[
         ('Annual', 'Annual'),
         ('Sick', 'Sick'),
@@ -236,8 +274,7 @@ class Leave(models.Model):
     start_date = models.DateField()
     end_date = models.DateField()
     reason = models.TextField(blank=True, null=True)
-    comment = models.TextField(blank=True, null=True)  # Added comment
-
+    comment = models.TextField(blank=True, null=True)
     status = models.CharField(max_length=20, choices=[
         ('Pending', 'Pending'),
         ('Reviewed', 'Manager Reviewed'),
@@ -245,13 +282,15 @@ class Leave(models.Model):
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected')
     ], default='Pending')
-
-    manager_reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='manager_reviews')
-    hr_reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='hr_reviews')
-    gm_approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='gm_approvals')
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    manager_reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='manager_reviews'
+    )
+    hr_reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='hr_reviews'
+    )
+    gm_approved_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name='gm_approvals'
+    )
 
     def __str__(self):
         return f"{self.staff.full_name} - {self.leave_type} ({self.status})"
@@ -262,12 +301,15 @@ class Leave(models.Model):
 
     @property
     def remaining_days(self):
-        from datetime import date
-        today = date.today()
+        today = timezone.now().date()
         if self.status == 'Approved' and today <= self.end_date:
             return (self.end_date - today).days + 1
         return 0
 
-    class Meta:
-        verbose_name = "Leave"
-        verbose_name_plural = "Leaves"
+    def clean(self):
+        super().clean()
+        today = timezone.now().date()
+        if not is_backdate_allowed() and self.start_date < today:
+            raise ValidationError("Backdating is not allowed.")
+        if self.end_date < self.start_date:
+            raise ValidationError("End date cannot be before start date.")

@@ -1,34 +1,28 @@
-# group_lending/forms.py
 from django import forms
-from .models import GroupMember, GroupSavings, LoanGroup, GroupLoan, MemberLoanAllocation
+from django.db.models import Q
+from .models import AuditLog, LoanGroup, GroupMember, GroupLoan, MemberLoanAllocation, GroupSavings
+from Customer.models import Customer
 from Loans.models import Loan, Repayment
-
-# Groups/forms.py
-from django import forms
-from .models import LoanGroup
-from Customer.models import Customer
-
-# Groups/forms.py
-from django import forms
-from django.db import models
-from .models import LoanGroup
-from Customer.models import Customer
+from decimal import Decimal
 
 class LoanGroupForm(forms.ModelForm):
-    leader = forms.CharField(
-        max_length=255,
+    leader = forms.ModelChoiceField(
+        queryset=Customer.objects.all(),
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control select2-leader', 'placeholder': 'Search by name or member number'})
+        widget=forms.Select(attrs={'class': 'form-control select2-leader'}),
+        to_field_name='cus_id',
+        empty_label='Select a leader'
     )
-    members = forms.CharField(
-        max_length=1000,
+    members = forms.ModelMultipleChoiceField(
+        queryset=Customer.objects.all(),
         required=False,
-        widget=forms.TextInput(attrs={'class': 'form-control select2-members', 'placeholder': 'Search members by name or member number'})
+        widget=forms.SelectMultiple(attrs={'class': 'form-control select2-members'}),
+        to_field_name='cus_id'
     )
 
     class Meta:
         model = LoanGroup
-        fields = ['name', 'leader', 'members', 'meeting_day', 'meeting_frequency', 'location']
+        fields = ['name', 'leader', 'meeting_day', 'meeting_frequency', 'location']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter group name'}),
             'meeting_day': forms.Select(attrs={'class': 'form-select'}),
@@ -36,40 +30,85 @@ class LoanGroupForm(forms.ModelForm):
             'location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter meeting location'}),
         }
 
-    def clean_leader(self):
-        leader_query = self.cleaned_data.get('leader')
-        if not leader_query:
-            return None
-        try:
-            leader = Customer.objects.filter(
-                models.Q(first_name__icontains=leader_query) |
-                models.Q(surname__icontains=leader_query) |
-                models.Q(member_number__icontains=leader_query)
-            ).first()
-            if not leader:
-                raise forms.ValidationError("No customer found matching the provided name or member number.")
-            return leader
-        except Customer.DoesNotExist:
-            raise forms.ValidationError("Invalid customer selected.")
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        leader = cleaned_data.get('leader')
+        members = cleaned_data.get('members')
+        name = cleaned_data.get('name')
+
+        if LoanGroup.objects.filter(name=name).exclude(id=self.instance.id).exists():
+            self.add_error('name', 'A group with this name already exists.')
+
+        if leader and members and leader in members:
+            self.add_error('members', 'The group leader cannot be added as a regular member.')
+
+        if members:
+            member_ids = set(m.cus_id for m in members)
+            if len(member_ids) != len(members):
+                self.add_error('members', 'Duplicate members selected.')
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        group = super().save(commit=False)
+        if commit:
+            group.save()
+            for member in self.cleaned_data['members']:
+                GroupMember.objects.create(group=group, customer=member, role='member')
+                AuditLog.objects.create(
+                    action=f'Added member {member.first_name} {member.surname} to group {group.name}',
+                    user=self.request.user if self.request else None,
+                    group=group
+                )
+        return group
+
+class AddGroupMembersForm(forms.Form):
+    members = forms.ModelMultipleChoiceField(
+        queryset=Customer.objects.all(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={'class': 'form-select select2', 'multiple': 'multiple'}),
+        to_field_name='cus_id'
+    )
+
+    def __init__(self, *args, **kwargs):
+        self.group = kwargs.pop('group', None)
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
 
     def clean_members(self):
-        members_query = self.cleaned_data.get('members')
-        if not members_query:
+        members = self.cleaned_data.get('members')
+        if not members:
             return []
-        try:
-            member_ids = members_query.split(',')
-            members = Customer.objects.filter(id__in=[id.strip() for id in member_ids if id.strip().isdigit()])
-            if not members:
-                raise forms.ValidationError("No valid members selected.")
-            return members
-        except Exception:
-            raise forms.ValidationError("Invalid member selection.")
-class GroupMemberForm(forms.ModelForm):
-    class Meta:
-        model = GroupMember
-        fields = ['group', 'customer', 'role']
+
+        existing_members = set(self.group.members.values_list('customer__cus_id', flat=True))
+        new_member_ids = set(m.cus_id for m in members)
+        if existing_members.intersection(new_member_ids):
+            raise forms.ValidationError("One or more selected members are already in the group.")
+
+        if self.group.leader and self.group.leader.cus_id in new_member_ids:
+            raise forms.ValidationError("The group leader cannot be added as a regular member.")
+
+        return members
+
+    def save(self, commit=True):
+        members = self.cleaned_data.get('members')
+        if members and commit:
+            for member in members:
+                GroupMember.objects.create(group=self.group, customer=member, role='member')
+                AuditLog.objects.create(
+                    action=f'Added member {member.first_name} {member.surname} to group {self.group.name}',
+                    user=self.request.user if self.request else None,
+                    group=self.group
+                )
+        return self.group
 
 class GroupLoanForm(forms.ModelForm):
+    allocations = forms.JSONField(required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = Loan
         fields = ['amount', 'interest_rate', 'term_months', 'disbursement_date', 'maturity_date']
@@ -78,21 +117,55 @@ class GroupLoanForm(forms.ModelForm):
             'maturity_date': forms.DateInput(attrs={'type': 'date'}),
         }
 
-    def save(self, group, commit=True):
+    def __init__(self, *args, **kwargs):
+        self.group = kwargs.pop('group', None)
+        self.request = kwargs.pop('request', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_allocations(self):
+        allocations = self.cleaned_data.get('allocations')
+        total_amount = self.cleaned_data.get('amount')
+
+        if not allocations:
+            raise forms.ValidationError("Loan allocations must be provided.")
+
+        total_allocated = sum(Decimal(str(alloc['amount'])) for alloc in allocations)
+        if abs(total_allocated - Decimal(str(total_amount))) > Decimal('0.01'):
+            raise forms.ValidationError("Total allocated amount must equal the loan amount.")
+
+        member_ids = [alloc['member_id'] for alloc in allocations]
+        members = Customer.objects.filter(
+    cus_id__in=member_ids,
+    group_memberships__group=self.group,
+    group_memberships__is_active=True
+)
+
+        if len(members) != len(member_ids):
+            raise forms.ValidationError("One or more selected members are not active in this group.")
+
+        return allocations
+    
+
+    def save(self, commit=True):
         loan = super().save(commit=False)
         loan.status = 'active'
         if commit:
             loan.save()
-            GroupLoan.objects.create(group=group, loan=loan)
-            members = group.members.filter(is_active=True)
-            if members:
-                per_member = loan.amount / members.count()
-                for member in members:
-                    MemberLoanAllocation.objects.create(
-                        group_loan=GroupLoan.objects.get(loan=loan),
-                        member=member.customer,
-                        allocated_amount=per_member
-                    )
+            group_loan = GroupLoan.objects.create(group=self.group, loan=loan)
+            for alloc in self.cleaned_data['allocations']:
+                member = Customer.objects.get(cus_id=alloc['member_id'])
+                MemberLoanAllocation.objects.create(
+                    group_loan=group_loan,
+                    member=member,
+                    allocated_amount=alloc['amount'],
+                    status='performing'
+                )
+                AuditLog.objects.create(
+                    action=f'Allocated {alloc["amount"]} to {member.first_name} {member.surname} for loan {loan.id}',
+                    user=self.request.user if self.request else None,
+                    group=self.group,
+                    loan=loan
+                )
         return loan
 
 class GroupSavingsForm(forms.ModelForm):
@@ -106,40 +179,3 @@ class RepaymentForm(forms.ModelForm):
         model = Repayment
         fields = ['loan', 'amount', 'payment_date', 'member', 'received_by']
         widgets = {'payment_date': forms.DateInput(attrs={'type': 'date'})}
-
-
-
-# Groups/forms.py
-from django import forms
-from Customer.models import Customer
-
-class AddGroupMembersForm(forms.Form):
-    members = forms.CharField(widget=forms.HiddenInput(), required=False)
-
-    def clean_members(self):
-        member_ids = self.data.getlist('members')
-        if member_ids:
-            try:
-                members = Customer.objects.filter(cus_id__in=member_ids)
-                if len(members) != len(member_ids):
-                    raise forms.ValidationError("One or more selected members are invalid.")
-                return member_ids
-            except Customer.DoesNotExist:
-                raise forms.ValidationError("Invalid members selected.")
-        return []
-
-    def clean(self):
-        cleaned_data = super().clean()
-        member_ids = cleaned_data.get('members')
-        if member_ids and hasattr(self, 'group'):
-            if self.group.leader and self.group.leader.cus_id in member_ids:
-                raise forms.ValidationError("The group leader cannot be added as a member.")
-        return cleaned_data
-
-    def save(self, group, commit=True):
-        self.group = group  # Store group for clean method
-        member_ids = self.cleaned_data.get('members')
-        if member_ids and commit:
-            members = Customer.objects.filter(cus_id__in=member_ids)
-            group.members.add(*members)
-        return group

@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+{% load static widget_tweaks %}
+{% block title %}Add Members to {{ group.name }} - Sao Zirobwe SACCO{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="header-section d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="mb-1"><i class="fas fa-users me-2"></i>Add Members to {{ group.name }}</h2>
+      <p class="text-muted mb-0">Search and add customers to the group</p>
+    </div>
+    <a href="{% url 'group_lending:group_detail' group.id %}" class="btn btn-secondary px-4" aria-label="Back to Group Dashboard">
+      <i class="fas fa-arrow-left me-2"></i>Back to Group
+    </a>
+  </div>
+
+  <div class="card shadow-sm border-0 rounded-3">
+    <div class="card-header bg-primary text-white">
+      <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Add Group Members</h5>
+    </div>
+    <div class="card-body">
+      <form method="post" action="{% url 'group_lending:add_group_members' group.id %}" id="addMembersForm">
+        {% csrf_token %}
+        <input type="hidden" name="add_members" value="1">
+        <div class="mb-3">
+          <label for="memberSearch" class="form-label fw-bold">Search Members</label>
+          <input type="text" class="form-control" id="memberSearch" placeholder="Enter name or member number" aria-label="Search members by name or member number">
+        </div>
+        <div class="mb-3">
+          <h6 class="fw-bold">Search Results</h6>
+          <table class="table table-striped align-middle" id="searchResults">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Member Number</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p class="text-muted" id="noResults" style="display: none;">No members found</p>
+        </div>
+        <div class="mb-3">
+          <h6 class="fw-bold">Selected Members</h6>
+          <ul class="list-group" id="selectedMembers">
+            <!-- Selected members will be appended here -->
+          </ul>
+          <input type="hidden" name="members" id="membersInput">
+        </div>
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary px-4" aria-label="Add Members">Add Members</button>
+          <a href="{% url 'group_lending:group_detail' group.id %}" class="btn btn-secondary px-4" aria-label="Cancel">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+  :root {
+    --primary-color: #16508e;
+    --primary-dark: #123e6b;
+    --secondary-color: #6c757d;
+    --text-dark: #2c3e50;
+    --text-light: #e9ecef;
+    --background-light: #f4f6f9;
+    --error-color: #dc3545;
+    --success-color: #28a745;
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.08);
+    --shadow-dark: 0 6px 20px rgba(0, 0, 0, 0.15);
+    --dark-card-bg: #2a3435;
+    --border-dark: #3a4445;
+    --transition: all 0.3s ease;
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 15px;
+    width: 100%;
+  }
+
+  h2 {
+    color: var(--text-dark);
+    font-weight: 700;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.8rem;
+    margin: 0;
+  }
+
+  .dark-mode h2 {
+    color: var(--text-light);
+  }
+
+  .card {
+    border-radius: 16px;
+    background: #ffffff;
+    box-shadow: var(--shadow-light);
+    border: none;
+    transition: var(--transition);
+  }
+
+  .dark-mode .card {
+    background: var(--dark-card-bg);
+    border: 1px solid var(--border-dark);
+    box-shadow: var(--shadow-dark);
+  }
+
+  .card-header {
+    border-radius: 16px 16px 0 0;
+    padding: 1rem 1.5rem;
+  }
+
+  .card-body {
+    padding: 1.5rem;
+  }
+
+  .btn-primary {
+    background: var(--primary-color);
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    transition: var(--transition);
+    box-shadow: 0 4px 10px rgba(22, 80, 142, 0.2);
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(22, 80, 142, 0.3);
+  }
+
+  .btn-secondary {
+    background: var(--secondary-color);
+    border: none;
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    transition: var(--transition);
+  }
+
+  .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+  }
+
+  .btn-success {
+    background: var(--success-color);
+    border: none;
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    color: #ffffff;
+    transition: var(--transition);
+  }
+
+  .btn-success:hover {
+    background: #218838;
+    transform: translateY(-2px);
+  }
+
+  .form-label {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-dark);
+  }
+
+  .dark-mode .form-label {
+    color: var(--text-light);
+  }
+
+  .form-control {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 12px 15px;
+    font-size: 0.95rem;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    background: #f8f9fa;
+    transition: var(--transition);
+  }
+
+  .dark-mode .form-control {
+    background: var(--border-dark);
+    color: var(--text-light);
+    border-color: var(--border-dark);
+  }
+
+  .form-control:focus {
+    border-color: var(--primary-color);
+    background: #ffffff;
+    box-shadow: 0 0 0 0.25rem rgba(22, 80, 142, 0.15);
+    outline: none;
+  }
+
+  .table th,
+  .table td {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    vertical-align: middle;
+  }
+
+  .list-group-item {
+    border: none;
+    padding: 0.75rem 1.25rem;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+  }
+
+  .text-muted {
+    font-weight: 400;
+    font-family: 'Poppins', sans-serif;
+    color: #6c757d !important;
+  }
+
+  @media (max-width: 991px) {
+    .container {
+      padding: 15px 10px;
+    }
+    .card-body {
+      padding: 1.25rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .container {
+      padding: 10px 8px;
+    }
+    h2 {
+      font-size: 1.6rem;
+    }
+    .btn-primary,
+    .btn-secondary {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+    .table th,
+    .table td {
+      font-size: 0.85rem;
+    }
+  }
+</style>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+$(document).ready(function() {
+  let selectedMembers = [];
+
+  $('#memberSearch').on('input', function() {
+    const query = $(this).val().trim();
+    if (query.length < 2) {
+      $('#searchResults tbody').empty();
+      $('#noResults').show();
+      return;
+    }
+
+    $.ajax({
+      url: '{% url "group_lending:customer_search" %}',
+      data: { q: query },
+      dataType: 'json',
+      success: function(data) {
+        $('#searchResults tbody').empty();
+        if (data.results.length === 0) {
+          $('#noResults').show();
+          return;
+        }
+        $('#noResults').hide();
+        data.results.forEach(function(member) {
+          const isSelected = selectedMembers.includes(member.id);
+          $('#searchResults tbody').append(`
+            <tr>
+              <td>${member.text}</td>
+              <td>${member.member_number || 'N/A'}</td>
+              <td>
+                <button type="button" class="btn btn-success btn-sm add-member" data-id="${member.id}" data-name="${member.text}" data-member-number="${member.member_number || 'N/A'}" ${isSelected ? 'disabled' : ''}>
+                  Add
+                </button>
+              </td>
+            </tr>
+          `);
+        });
+      },
+      error: function() {
+        $('#searchResults tbody').empty();
+        $('#noResults').show();
+      }
+    });
+  });
+
+  $(document).on('click', '.add-member', function() {
+    const memberId = $(this).data('id');
+    const memberName = $(this).data('name');
+    const memberNumber = $(this).data('member-number');
+    if (!selectedMembers.includes(memberId)) {
+      selectedMembers.push(memberId);
+      $('#selectedMembers').append(`
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          ${memberName} (${memberNumber})
+          <button type="button" class="btn btn-danger btn-sm remove-member" data-id="${memberId}">Remove</button>
+        </li>
+      `);
+      $(this).prop('disabled', true);
+      updateMembersInput();
+    }
+  });
+
+  $(document).on('click', '.remove-member', function() {
+    const memberId = $(this).data('id');
+    selectedMembers = selectedMembers.filter(id => id !== memberId);
+    $(this).closest('li').remove();
+    $(`#searchResults .add-member[data-id="${memberId}"]`).prop('disabled', false);
+    updateMembersInput();
+  });
+
+  function updateMembersInput() {
+    $('#membersInput').val(selectedMembers.join(','));
+  }
+
+  $('#addMembersForm').on('submit', function(e) {
+    if (selectedMembers.length === 0) {
+      e.preventDefault();
+      alert('Please select at least one member to add.');
+    }
+  });
+});
+</script>
+{% endblock %}

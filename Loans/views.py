@@ -1,22 +1,22 @@
 from django.shortcuts import render
 
-# # loans/views.py
+# Create your views here.
+from django.shortcuts import render
 from django.db.models import Sum, Count
 from django.utils.timezone import now
 from datetime import timedelta
-
-from Groups.models import LoanGroup
 from .models import Loan
+from Groups.models import LoanGroup
+import csv
+from django.http import HttpResponse
 
 def loan_portfolio(request):
-    # Basic aggregates
     summary = Loan.objects.aggregate(
         total_loans=Count('id'),
         total_amount=Sum('amount'),
         total_outstanding=Sum('amount') - Sum('repayments__amount')
     )
 
-    # PAR calculations
     today = now().date()
     par_0 = Loan.objects.filter(status='arrears').aggregate(
         total=Sum('amount') - Sum('repayments__amount')
@@ -35,10 +35,9 @@ def loan_portfolio(request):
     par_30_pct = (par_30 / total_outstanding * 100) if total_outstanding > 0 else 0
     par_90_pct = (par_90 / total_outstanding * 100) if total_outstanding > 0 else 0
 
-    # Loan status counts
     status_counts = Loan.objects.values('status').annotate(count=Count('id'))
 
-    return render(request, 'Loans/portfolio.html', {
+    return render(request, 'loans/portfolio.html', {
         'summary': summary,
         'par_0': par_0,
         'par_30': par_30,
@@ -48,12 +47,6 @@ def loan_portfolio(request):
         'par_90_pct': par_90_pct,
         'status_counts': status_counts,
     })
-
-
-########################################################################################################
-# loans/views.py
-from django.http import HttpResponse
-import csv
 
 def export_par(request):
     response = HttpResponse(content_type='text/csv')
