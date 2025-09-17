@@ -5,24 +5,25 @@ from Customer.models import Customer
 from Loans.models import Loan, Repayment
 from decimal import Decimal
 
+from django import forms
+from django.db.models import Q
+from django.core.exceptions import ValidationError
+from .models import AuditLog, LoanGroup, GroupMember
+from Customer.models import Customer
+
 class LoanGroupForm(forms.ModelForm):
-    leader = forms.ModelChoiceField(
-        queryset=Customer.objects.all(),
+    group_leader = forms.CharField(
         required=False,
-        widget=forms.Select(attrs={'class': 'form-control select2-leader'}),
-        to_field_name='cus_id',
-        empty_label='Select a leader'
+        widget=forms.HiddenInput(attrs={'id': 'groupLeaderInput'})
     )
-    members = forms.ModelMultipleChoiceField(
-        queryset=Customer.objects.all(),
+    members = forms.CharField(
         required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'form-control select2-members'}),
-        to_field_name='cus_id'
+        widget=forms.HiddenInput(attrs={'id': 'membersInput'})
     )
 
     class Meta:
         model = LoanGroup
-        fields = ['name', 'leader', 'meeting_day', 'meeting_frequency', 'location']
+        fields = ['name', 'group_leader', 'members', 'meeting_day', 'meeting_frequency', 'location']
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter group name'}),
             'meeting_day': forms.Select(attrs={'class': 'form-select'}),
@@ -34,16 +35,41 @@ class LoanGroupForm(forms.ModelForm):
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
 
+    def clean_group_leader(self):
+        group_leader_id = self.cleaned_data.get('group_leader')
+        if group_leader_id:
+            try:
+                group_leader = Customer.objects.get(cus_id=group_leader_id)
+                return group_leader
+            except Customer.DoesNotExist:
+                raise ValidationError("Selected group leader does not exist.")
+        return None
+
+    def clean_members(self):
+        members_str = self.cleaned_data.get('members')
+        if not members_str:
+            return []
+
+        member_ids = members_str.split(',')
+        member_ids = [id.strip() for id in member_ids if id.strip()]
+        try:
+            members = Customer.objects.filter(cus_id__in=member_ids)
+            if len(members) != len(member_ids):
+                raise ValidationError("One or more selected members do not exist.")
+            return list(members)
+        except ValueError:
+            raise ValidationError("Invalid member IDs provided.")
+
     def clean(self):
         cleaned_data = super().clean()
-        leader = cleaned_data.get('leader')
-        members = cleaned_data.get('members')
         name = cleaned_data.get('name')
+        group_leader = cleaned_data.get('group_leader')
+        members = cleaned_data.get('members')
 
         if LoanGroup.objects.filter(name=name).exclude(id=self.instance.id).exists():
             self.add_error('name', 'A group with this name already exists.')
 
-        if leader and members and leader in members:
+        if group_leader and members and group_leader in members:
             self.add_error('members', 'The group leader cannot be added as a regular member.')
 
         if members:
@@ -55,6 +81,9 @@ class LoanGroupForm(forms.ModelForm):
 
     def save(self, commit=True):
         group = super().save(commit=False)
+        group_leader = self.cleaned_data.get('group_leader')
+        if group_leader:
+            group.group_leader = group_leader
         if commit:
             group.save()
             for member in self.cleaned_data['members']:

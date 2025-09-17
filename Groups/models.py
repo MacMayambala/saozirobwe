@@ -11,7 +11,7 @@ from Loans.models import Loan
 
 class LoanGroup(models.Model):
     name = models.CharField(max_length=255, unique=True)
-    leader = models.ForeignKey(
+    group_leader = models.ForeignKey(
         Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='led_groups'
     )
     created_on = models.DateField(auto_now_add=True)
